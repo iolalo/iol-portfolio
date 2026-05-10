@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IOL Portfolio</title>
+  <link rel="stylesheet" href="assets/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>IOL Portfolio</h1>
+    <span id="last-updated">Cargando…</span>
+  </header>
+
+  <main>
+    <section class="summary-row">
+      <div class="card">
+        <span class="label">Valor total</span>
+        <span class="value" id="total-ars">—</span>
+      </div>
+      <div class="card">
+        <span class="label">Posiciones</span>
+        <span class="value" id="total-positions">—</span>
+      </div>
+      <div class="card card--alert">
+        <span class="label">Alertas activas</span>
+        <span class="value" id="alert-count">—</span>
+      </div>
+    </section>
+
+    <section id="alerts-section" class="hidden">
+      <h2>Alertas</h2>
+      <div id="alerts-container"></div>
+    </section>
+
+    <section>
+      <h2>Posiciones</h2>
+      <div class="table-wrapper">
+        <table id="positions-table">
+          <thead>
+            <tr>
+              <th>Ticker</th>
+              <th>Empresa</th>
+              <th>Cantidad</th>
+              <th>Precio</th>
+              <th>Total</th>
+              <th>Día %</th>
+              <th>PPC</th>
+              <th>G/P %</th>
+              <th>MA20</th>
+              <th>RSI</th>
+              <th>Tendencia</th>
+              <th>Recomendación</th>
+            </tr>
+          </thead>
+          <tbody id="positions-body">
+            <tr><td colspan="12" class="loading">Cargando portafolio…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Gráficos (últimos 30 días)</h2>
+      <div id="charts-grid"></div>
+    </section>
+  </main>
+
+  <footer>
+    Datos obtenidos vía API Invertir Online · Actualización automática de lunes a viernes ~18:15 hs
+  </footer>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

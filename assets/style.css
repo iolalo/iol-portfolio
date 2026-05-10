@@ -1,0 +1,165 @@
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --border: #2a2d3a;
+  --text: #e2e8f0;
+  --muted: #8892a4;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #f59e0b;
+  --blue: #3b82f6;
+  --purple: #a78bfa;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+header h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+
+#last-updated { color: var(--muted); font-size: 12px; }
+
+main { padding: 24px 32px; display: flex; flex-direction: column; gap: 32px; }
+
+h2 { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Summary cards */
+.summary-row { display: flex; gap: 16px; flex-wrap: wrap; }
+
+.card {
+  flex: 1;
+  min-width: 160px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.card .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+.card .value { font-size: 26px; font-weight: 700; }
+.card--alert .value { color: var(--yellow); }
+
+/* Alerts */
+#alerts-section { }
+#alerts-container { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.alert-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  min-width: 200px;
+}
+
+.alert-card.COMPRAR { border-left: 3px solid var(--green); }
+.alert-card.VENDER  { border-left: 3px solid var(--red); }
+.alert-card.ALERTA  { border-left: 3px solid var(--yellow); }
+
+.alert-card h3 { font-size: 16px; font-weight: 700; }
+.alert-card .rec { font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+.alert-card .rec.COMPRAR { color: var(--green); }
+.alert-card .rec.VENDER  { color: var(--red); }
+.alert-card .rec.ALERTA  { color: var(--yellow); }
+.alert-card ul { padding-left: 16px; color: var(--muted); font-size: 12px; }
+
+/* Table */
+.table-wrapper { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+thead th {
+  background: #22253a;
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+tbody tr { border-top: 1px solid var(--border); }
+tbody tr:hover { background: #1f2235; }
+tbody td { padding: 10px 14px; }
+
+.loading { color: var(--muted); text-align: center; padding: 32px !important; }
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.badge.COMPRAR { background: rgba(34,197,94,.15); color: var(--green); }
+.badge.VENDER  { background: rgba(239,68,68,.15);  color: var(--red); }
+.badge.ALERTA  { background: rgba(245,158,11,.15); color: var(--yellow); }
+.badge.MANTENER { background: rgba(136,146,164,.1); color: var(--muted); }
+
+/* Positive/Negative text */
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+.neu { color: var(--muted); }
+
+/* RSI coloring */
+.rsi-high { color: var(--red); font-weight: 600; }
+.rsi-low  { color: var(--green); font-weight: 600; }
+
+/* Charts grid */
+#charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.chart-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.chart-card .chart-meta { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+
+.hidden { display: none; }
+
+footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 11px;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 600px) {
+  header, main { padding: 16px; }
+  .summary-row { flex-direction: column; }
+}
