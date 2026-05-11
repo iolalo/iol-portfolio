@@ -159,7 +159,40 @@ footer {
   border-top: 1px solid var(--border);
 }
 
+/* Header refresh indicator */
+header { flex-wrap: wrap; gap: 8px; }
+.refresh-status { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.countdown { font-variant-numeric: tabular-nums; color: var(--blue); font-weight: 600; min-width: 36px; }
+
+/* Bot trade card */
+.card--bot .value { color: var(--purple); }
+
+/* Trade cards */
+#trades-container { display: flex; flex-direction: column; gap: 10px; }
+
+.trade-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--muted);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+.trade-card.COMPRAR { border-left-color: var(--green); }
+.trade-card.VENDER  { border-left-color: var(--red); }
+.trade-card.dry-run { opacity: 0.65; }
+
+.trade-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+.trade-date   { color: var(--muted); font-size: 11px; }
+.trade-body   { color: var(--text); font-size: 12px; margin-bottom: 4px; }
+.trade-reason { color: var(--muted); font-size: 11px; font-style: italic; }
+
 @media (max-width: 600px) {
   header, main { padding: 16px; }
   .summary-row { flex-direction: column; }
+  .refresh-status { width: 100%; }
 }

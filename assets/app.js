@@ -1,4 +1,6 @@
-const DATA_URL = "data/portfolio.json";
+const DATA_URL   = "data/portfolio.json";
+const TRADES_URL = "data/trades_log.json";
+const REFRESH_MS = 10 * 60 * 1000; // 10 minutos
 
 async function loadData() {
   const resp = await fetch(`${DATA_URL}?t=${Date.now()}`);
@@ -218,18 +220,100 @@ function renderCharts(positions) {
     });
 }
 
+async function loadTrades() {
+  try {
+    const resp = await fetch(`${TRADES_URL}?t=${Date.now()}`);
+    if (!resp.ok) return null;
+    return resp.json();
+  } catch {
+    return null;
+  }
+}
+
+function renderTrades(tradesData) {
+  const section   = document.getElementById("trades-section");
+  const container = document.getElementById("trades-container");
+  const botCard   = document.getElementById("bot-trades");
+
+  if (!tradesData || !tradesData.trades || tradesData.trades.length === 0) {
+    section.classList.add("hidden");
+    botCard.textContent = "0 ops";
+    return;
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const todayTrades = tradesData.trades.filter(t => t.date === today);
+  const allTrades   = [...tradesData.trades].reverse().slice(0, 20);
+
+  botCard.textContent = `${todayTrades.length} ops`;
+  section.classList.toggle("hidden", allTrades.length === 0);
+
+  container.innerHTML = allTrades.map(t => {
+    const isBuy  = t.action === "compra";
+    const icon   = t.dry_run ? "🔵" : (isBuy ? "🟢" : "🔴");
+    const label  = (t.dry_run ? "[SIM] " : "") + (isBuy ? "COMPRA" : "VENTA");
+    const status = t.error
+      ? `<span class="neg">Error: ${t.error}</span>`
+      : t.order_id
+        ? `<span class="pos">Orden #${t.order_id}</span>`
+        : `<span class="neu">Pendiente</span>`;
+    return `
+      <div class="trade-card ${isBuy ? "COMPRAR" : "VENDER"}${t.dry_run ? " dry-run" : ""}">
+        <div class="trade-header">
+          <span>${icon} <strong>${t.symbol}</strong> — ${label}</span>
+          <span class="trade-date">${t.timestamp || t.date}</span>
+        </div>
+        <div class="trade-body">
+          ${t.quantity}x @ $${fmt(t.price)} = $${fmt(t.total)} · ${status}
+        </div>
+        <div class="trade-reason">${t.reason}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+// ── Countdown timer ───────────────────────────────────────────────────────────
+
+let _refreshAt = Date.now() + REFRESH_MS;
+
+function startCountdown() {
+  const el = document.getElementById("refresh-countdown");
+  setInterval(() => {
+    const remaining = Math.max(0, _refreshAt - Date.now());
+    const m = Math.floor(remaining / 60000);
+    const s = Math.floor((remaining % 60000) / 1000);
+    el.textContent = `${m}:${String(s).padStart(2, "0")}`;
+  }, 1000);
+}
+
+// ── Main render ──────────────────────────────────────────────────────────────
+
 async function init() {
   try {
-    const data = await loadData();
+    const [data, tradesData] = await Promise.all([loadData(), loadTrades()]);
+    // Destroy old charts before re-render
+    Chart.helpers.each(Chart.instances, c => c.destroy());
     renderSummary(data);
     renderAlerts(data.positions);
     renderTable(data.positions);
     drawSparklines(data.positions);
     renderCharts(data.positions);
+    renderTrades(tradesData);
   } catch (err) {
     document.getElementById("positions-body").innerHTML =
       `<tr><td colspan="12" class="loading">Error al cargar datos: ${err.message}</td></tr>`;
   }
 }
 
+// Auto-refresh every 10 min
+function scheduleRefresh() {
+  _refreshAt = Date.now() + REFRESH_MS;
+  setTimeout(async () => {
+    await init();
+    scheduleRefresh();
+  }, REFRESH_MS);
+}
+
+startCountdown();
 init();
+scheduleRefresh();

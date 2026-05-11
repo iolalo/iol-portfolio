@@ -2,8 +2,8 @@ name: Update Portfolio
 
 on:
   schedule:
-    # Lunes a viernes 18:15 ART (21:15 UTC)
-    - cron: "15 21 * * 1-5"
+    # Cada 10 min durante horario BYMA: 11:00-17:30 ART = 14:00-20:30 UTC, L-V
+    - cron: "*/10 14-20 * * 1-5"
   workflow_dispatch:
 
 permissions:
@@ -24,12 +24,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r scripts/requirements.txt
 
-      - name: Fetch portfolio & send alerts
+      - name: Fetch portfolio data
         env:
           IOL_USERNAME: ${{ secrets.IOL_USERNAME }}
           IOL_PASSWORD: ${{ secrets.IOL_PASSWORD }}
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python scripts/fetch_portfolio.py
 
       - name: Commit updated data

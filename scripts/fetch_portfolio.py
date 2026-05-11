@@ -6,8 +6,6 @@ from datetime import datetime, timedelta
 IOL_BASE = "https://api.invertironline.com"
 IOL_USER = os.environ["IOL_USERNAME"]
 IOL_PASS = os.environ["IOL_PASSWORD"]
-TG_TOKEN = os.environ["TELEGRAM_TOKEN"]
-TG_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
 
 def get_token():
@@ -92,15 +90,6 @@ def get_recommendation(rsi, price, ma20, daily_pct):
     return "MANTENER", signals
 
 
-def send_telegram(text):
-    url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
-    requests.post(
-        url,
-        json={"chat_id": TG_CHAT_ID, "text": text, "parse_mode": "Markdown"},
-        timeout=10,
-    )
-
-
 def main():
     token = get_token()
     raw = iol_get(token, "/api/v2/portafolio/argentina")
@@ -160,28 +149,6 @@ def main():
     os.makedirs("data", exist_ok=True)
     with open("data/portfolio.json", "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
-
-    emoji = {"COMPRAR": "🟢", "VENDER": "🔴", "ALERTA": "⚠️", "MANTENER": "⚪"}
-
-    if alerts:
-        lines = ["📊 *IOL Portfolio — Alertas*\n"]
-        for a in alerts:
-            e = emoji.get(a["recommendation"], "⚪")
-            lines.append(f"{e} *{a['symbol']}* — {a['recommendation']}")
-            lines.append(f"Precio: ${a['unit_price']:,.0f} | Día: {a['daily_change_pct']:+.2f}%")
-            if a["rsi"] and a["ma20"]:
-                lines.append(f"RSI: {a['rsi']} | MA20: ${a['ma20']:,.0f}")
-            for s in a["signals"]:
-                lines.append(f"  • {s}")
-            lines.append("")
-        send_telegram("\n".join(lines))
-    else:
-        send_telegram(
-            f"📊 *IOL Portfolio — Resumen diario*\n\n"
-            f"✅ Sin alertas activas\n"
-            f"Total: ${total_ars:,.0f} ARS\n"
-            f"Actualizado: {output['last_updated']}"
-        )
 
     print(f"Done. {len(alerts)} alerts. Total ARS: {total_ars:,.0f}")
 

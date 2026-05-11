@@ -9,8 +9,14 @@
 </head>
 <body>
   <header>
-    <h1>IOL Portfolio</h1>
-    <span id="last-updated">Cargando…</span>
+    <div>
+      <h1>IOL Portfolio</h1>
+      <span id="last-updated">Cargando…</span>
+    </div>
+    <div class="refresh-status">
+      <span id="refresh-label">Próxima actualización en</span>
+      <span id="refresh-countdown" class="countdown">10:00</span>
+    </div>
   </header>
 
   <main>
@@ -26,6 +32,10 @@
       <div class="card card--alert">
         <span class="label">Alertas activas</span>
         <span class="value" id="alert-count">—</span>
+      </div>
+      <div class="card card--bot">
+        <span class="label">Bot hoy</span>
+        <span class="value" id="bot-trades">—</span>
       </div>
     </section>
 
@@ -65,10 +75,15 @@
       <h2>Gráficos (últimos 30 días)</h2>
       <div id="charts-grid"></div>
     </section>
+
+    <section id="trades-section" class="hidden">
+      <h2>Operaciones del bot</h2>
+      <div id="trades-container"></div>
+    </section>
   </main>
 
   <footer>
-    Datos obtenidos vía API Invertir Online · Actualización automática de lunes a viernes ~18:15 hs
+    Datos vía API Invertir Online · Web actualiza cada 10 min (horario BYMA) · Telegram: resumen diario 18:15 hs
   </footer>
 
   <script src="assets/app.js"></script>
