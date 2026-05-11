@@ -3,7 +3,6 @@ name: Trade Bot
 on:
   schedule:
     # 17:35 ART = 20:35 UTC (35 min después del cierre BYMA 17:00), L-V
-    # IMPORTANTE: cambiar DRY_RUN a 'false' cuando estés listo para operar en real
     - cron: "35 20 * * 1-5"
   workflow_dispatch:
     inputs:
@@ -35,8 +34,7 @@ jobs:
         env:
           IOL_USERNAME: ${{ secrets.IOL_USERNAME }}
           IOL_PASSWORD: ${{ secrets.IOL_PASSWORD }}
-          # Cambiar 'true' → 'false' para activar trading real en el cron
-          DRY_RUN: ${{ github.event.inputs.dry_run || 'true' }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
         run: python scripts/trade_bot.py
 
       - name: Commit trade log
