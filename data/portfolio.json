@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-05-12 21:45",
+  "last_updated": "2026-05-13 16:27",
   "total_ars": 0,
   "alert_count": 0,
   "positions": [
@@ -7,72 +7,72 @@
       "symbol": "ALUA",
       "description": "Aluar",
       "quantity": 109.0,
-      "unit_price": 928.0,
-      "total_value": 101152.0,
+      "unit_price": 938.0,
+      "total_value": 102242.0,
       "currency": "peso_Argentino",
       "ppc": 846.298,
-      "gain_pct": 9.65,
+      "gain_pct": 10.83,
       "daily_change_pct": 0,
       "rsi": null,
       "ma20": null,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        928.0
+        938.0
       ]
     },
     {
       "symbol": "BBAR",
       "description": "Bbva",
       "quantity": 2.0,
-      "unit_price": 7350.0,
-      "total_value": 14700.0,
+      "unit_price": 7245.0,
+      "total_value": 14490.0,
       "currency": "peso_Argentino",
       "ppc": 8225.0,
-      "gain_pct": -10.63,
+      "gain_pct": -11.91,
       "daily_change_pct": 0,
       "rsi": null,
       "ma20": null,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        7350.0
+        7245.0
       ]
     },
     {
       "symbol": "GBAN",
       "description": "Gas Natural Ban",
       "quantity": 19.0,
-      "unit_price": 2050.0,
-      "total_value": 38950.0,
+      "unit_price": 2005.0,
+      "total_value": 38095.0,
       "currency": "peso_Argentino",
       "ppc": 2060.0,
-      "gain_pct": -0.48,
+      "gain_pct": -2.66,
       "daily_change_pct": 0,
       "rsi": null,
       "ma20": null,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        2050.0
+        2005.0
       ]
     },
     {
       "symbol": "YPFD",
       "description": "Ypf",
       "quantity": 2.0,
-      "unit_price": 66175.0,
-      "total_value": 132350.0,
+      "unit_price": 65500.0,
+      "total_value": 131000.0,
       "currency": "peso_Argentino",
       "ppc": 67200.0,
-      "gain_pct": -1.52,
+      "gain_pct": -2.52,
       "daily_change_pct": 0,
       "rsi": null,
       "ma20": null,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        66175.0
+        65500.0
       ]
     }
   ]
