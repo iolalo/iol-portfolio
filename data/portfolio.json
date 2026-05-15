@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-05-15 19:48",
+  "last_updated": "2026-05-15 20:50",
   "total_ars": 0,
   "alert_count": 0,
   "positions": [
@@ -7,36 +7,36 @@
       "symbol": "ALUA",
       "description": "Aluar",
       "quantity": 109.0,
-      "unit_price": 933.5,
-      "total_value": 101751.5,
+      "unit_price": 940.0,
+      "total_value": 102460.0,
       "currency": "peso_Argentino",
       "ppc": 846.298,
-      "gain_pct": 10.3,
+      "gain_pct": 11.07,
       "daily_change_pct": 0,
       "rsi": null,
       "ma20": null,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        933.5
+        940.0
       ]
     },
     {
       "symbol": "BBAR",
       "description": "Bbva",
       "quantity": 2.0,
-      "unit_price": 7070.0,
-      "total_value": 14140.0,
+      "unit_price": 7060.0,
+      "total_value": 14120.0,
       "currency": "peso_Argentino",
       "ppc": 8225.0,
-      "gain_pct": -14.04,
+      "gain_pct": -14.16,
       "daily_change_pct": 0,
       "rsi": null,
       "ma20": null,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        7070.0
+        7060.0
       ]
     },
     {
@@ -61,18 +61,18 @@
       "symbol": "YPFD",
       "description": "Ypf",
       "quantity": 2.0,
-      "unit_price": 64975.0,
-      "total_value": 129950.0,
+      "unit_price": 65000.0,
+      "total_value": 130000.0,
       "currency": "peso_Argentino",
       "ppc": 67200.0,
-      "gain_pct": -3.31,
+      "gain_pct": -3.27,
       "daily_change_pct": 0,
       "rsi": null,
       "ma20": null,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        64975.0
+        65000.0
       ]
     }
   ]
