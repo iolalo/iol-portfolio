@@ -419,14 +419,53 @@ async function loadAndRender() {
   }
 }
 
+// ── Trades log ────────────────────────────────────────────────────────────────
+
+async function loadAndRenderTrades() {
+  try {
+    const resp = await fetch(`data/trades_log.json?t=${Date.now()}`);
+    if (!resp.ok) return;
+    const log = await resp.json();
+    if (!Array.isArray(log) || log.length === 0) return;
+
+    document.getElementById("trades-section").classList.remove("hidden");
+
+    const today    = new Date().toISOString().slice(0, 10);
+    const todayOps = log.filter(t => t.date?.startsWith(today) && t.status === "executed").length;
+    const botEl    = document.getElementById("bot-ops");
+    if (botEl) botEl.textContent = `${todayOps} op${todayOps !== 1 ? "s" : ""}`;
+
+    document.getElementById("trades-body").innerHTML = [...log].reverse().slice(0, 50).map(t => {
+      const sideLabel  = t.side === "buy" ? "COMPRA" : "VENTA";
+      const sideClass  = t.side === "buy" ? "pos" : "neg";
+      const statusBadge = t.status === "executed"
+        ? `<span class="badge COMPRAR">OK</span>`
+        : `<span class="badge ALERTA">ERROR</span>`;
+      return `
+        <tr>
+          <td>${(t.date || "").slice(0, 16).replace("T", " ")}</td>
+          <td><strong>${t.symbol}</strong></td>
+          <td class="${sideClass}"><strong>${sideLabel}</strong></td>
+          <td>${t.reason || "—"}</td>
+          <td>${t.quantity}</td>
+          <td>$${fmt(t.price)}</td>
+          <td>$${fmt(t.limit_price, 2)}</td>
+          <td>${statusBadge}</td>
+        </tr>`;
+    }).join("");
+  } catch (_) {}
+}
+
 async function init() {
   setupPeriodTabs();
   setupSearch();
   await loadAndRender();
+  await loadAndRenderTrades();
   startCountdown();
 
   setInterval(async () => {
     await loadAndRender();
+    await loadAndRenderTrades();
     startCountdown();
   }, REFRESH_MS);
 }

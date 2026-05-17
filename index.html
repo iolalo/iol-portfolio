@@ -42,6 +42,10 @@
         <span class="label">Alertas activas</span>
         <span class="value" id="alert-count">—</span>
       </div>
+      <div class="card card--bot">
+        <span class="label">Bot hoy</span>
+        <span class="value" id="bot-ops">—</span>
+      </div>
     </section>
 
     <!-- Alerts -->
@@ -89,6 +93,28 @@
         </div>
       </div>
       <div id="charts-grid"></div>
+    </section>
+
+    <!-- Trades history -->
+    <section id="trades-section" class="hidden">
+      <h2>Operaciones del bot</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Ticker</th>
+              <th>Acción</th>
+              <th>Motivo</th>
+              <th>Cantidad</th>
+              <th>Precio ref.</th>
+              <th>Límite</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="trades-body"></tbody>
+        </table>
+      </div>
     </section>
 
     <!-- Watchlist -->

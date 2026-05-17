@@ -28,16 +28,24 @@ jobs:
 
       - name: Fetch portfolio & send alerts
         env:
-          IOL_USERNAME:   ${{ secrets.IOL_USERNAME }}
-          IOL_PASSWORD:   ${{ secrets.IOL_PASSWORD }}
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          IOL_USERNAME:    ${{ secrets.IOL_USERNAME }}
+          IOL_PASSWORD:    ${{ secrets.IOL_PASSWORD }}
+          TELEGRAM_TOKEN:  ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python scripts/fetch_portfolio.py
+
+      - name: Execute trades (BYMA hours only)
+        env:
+          IOL_USERNAME:    ${{ secrets.IOL_USERNAME }}
+          IOL_PASSWORD:    ${{ secrets.IOL_PASSWORD }}
+          TELEGRAM_TOKEN:  ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scripts/trade_executor.py
 
       - name: Commit updated data
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/portfolio.json
+          git add data/portfolio.json data/trades_log.json
           git diff --cached --quiet || git commit -m "chore: update portfolio $(date -u +'%Y-%m-%d %H:%M UTC')"
           git push
