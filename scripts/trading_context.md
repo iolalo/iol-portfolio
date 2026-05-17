@@ -11,7 +11,6 @@ limit_slippage_pct: 0.5
 ---
 
 ## Notas por ticker
-- BBAR: no_sell=true (ya está -14% del PPC, decidir manualmente cuándo salir)
 
 ## Contexto de mercado
 - Mayo 2026: posiciones activas ALUA/GBAN/YPFD/BBAR. Saldo disponible ~$8.000 ARS.
