@@ -42,11 +42,23 @@ RSI compra: 35 | RSI venta: 65
 Stop-loss: 8 % | Take-profit: 25 %
 Cash por operación: 70 % | Reserva mínima: $500 ARS"""
 
-url  = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
-resp = requests.post(url, json={
+base = f"https://api.telegram.org/bot{TG_TOKEN}"
+
+resp = requests.post(f"{base}/sendMessage", json={
     "chat_id":    TG_CHAT_ID,
     "text":       MSG,
     "parse_mode": "Markdown",
 })
 resp.raise_for_status()
-print("Enviado OK:", resp.json().get("result", {}).get("message_id"))
+msg_id = resp.json()["result"]["message_id"]
+print("Enviado OK:", msg_id)
+
+pin = requests.post(f"{base}/pinChatMessage", json={
+    "chat_id":              TG_CHAT_ID,
+    "message_id":           msg_id,
+    "disable_notification": True,
+})
+if pin.ok:
+    print("Fijado OK")
+else:
+    print("No se pudo fijar (el bot necesita ser admin del grupo):", pin.text)
