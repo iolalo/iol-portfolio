@@ -9,15 +9,30 @@
 </head>
 <body>
   <header>
-    <h1>IOL Portfolio</h1>
-    <span id="last-updated">Cargando…</span>
+    <div class="header-left">
+      <h1>IOL Portfolio</h1>
+      <span id="last-updated">Cargando…</span>
+    </div>
+    <div class="header-right">
+      <span class="refresh-label">Próxima actualización en <span id="countdown">—</span></span>
+    </div>
   </header>
 
   <main>
+    <!-- Summary cards -->
     <section class="summary-row">
       <div class="card">
-        <span class="label">Valor total</span>
+        <span class="label">Valor Total</span>
         <span class="value" id="total-ars">—</span>
+      </div>
+      <div class="card">
+        <span class="label">Invertido</span>
+        <span class="value" id="total-invested">—</span>
+      </div>
+      <div class="card card--gain" id="gain-card">
+        <span class="label">Ganancia / Pérdida</span>
+        <span class="value" id="total-gain">—</span>
+        <span class="sublabel" id="total-gain-pct"></span>
       </div>
       <div class="card">
         <span class="label">Posiciones</span>
@@ -29,11 +44,13 @@
       </div>
     </section>
 
+    <!-- Alerts -->
     <section id="alerts-section" class="hidden">
       <h2>Alertas</h2>
       <div id="alerts-container"></div>
     </section>
 
+    <!-- Positions table -->
     <section>
       <h2>Posiciones</h2>
       <div class="table-wrapper">
@@ -61,14 +78,38 @@
       </div>
     </section>
 
-    <section>
-      <h2>Gráficos (últimos 30 días)</h2>
+    <!-- Portfolio charts -->
+    <section id="charts-section">
+      <div class="section-header">
+        <h2>Gráficos — Portafolio</h2>
+        <div class="period-tabs" id="period-tabs">
+          <button class="period-btn active" data-period="30">30D</button>
+          <button class="period-btn" data-period="90">90D</button>
+          <button class="period-btn" data-period="all">Desde compra</button>
+        </div>
+      </div>
       <div id="charts-grid"></div>
+    </section>
+
+    <!-- Watchlist -->
+    <section id="watchlist-section" class="hidden">
+      <div class="section-header">
+        <h2>Watchlist</h2>
+        <div class="search-wrapper">
+          <input
+            type="text"
+            id="ticker-search"
+            placeholder="Buscar ticker… (ej: GGAL, MELI)"
+            autocomplete="off"
+          />
+        </div>
+      </div>
+      <div id="watchlist-grid"></div>
     </section>
   </main>
 
   <footer>
-    Datos obtenidos vía API Invertir Online · Actualización automática de lunes a viernes ~18:15 hs
+    Datos vía API Invertir Online · Web actualiza cada 10 min (horario BYMA) · Telegram: resumen diario 18:15 hs
   </footer>
 
   <script src="assets/app.js"></script>
