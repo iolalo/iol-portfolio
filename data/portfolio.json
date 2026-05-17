@@ -1,6 +1,79 @@
 {
-  "last_updated": "pendiente de primera ejecución",
+  "last_updated": "2026-05-15 20:50",
   "total_ars": 0,
   "alert_count": 0,
-  "positions": []
+  "positions": [
+    {
+      "symbol": "ALUA",
+      "description": "Aluar",
+      "quantity": 109.0,
+      "unit_price": 940.0,
+      "total_value": 102460.0,
+      "currency": "peso_Argentino",
+      "ppc": 846.298,
+      "gain_pct": 11.07,
+      "daily_change_pct": 0,
+      "rsi": null,
+      "ma20": null,
+      "recommendation": "MANTENER",
+      "signals": [],
+      "sparkline": [
+        940.0
+      ]
+    },
+    {
+      "symbol": "BBAR",
+      "description": "Bbva",
+      "quantity": 2.0,
+      "unit_price": 7060.0,
+      "total_value": 14120.0,
+      "currency": "peso_Argentino",
+      "ppc": 8225.0,
+      "gain_pct": -14.16,
+      "daily_change_pct": 0,
+      "rsi": null,
+      "ma20": null,
+      "recommendation": "MANTENER",
+      "signals": [],
+      "sparkline": [
+        7060.0
+      ]
+    },
+    {
+      "symbol": "GBAN",
+      "description": "Gas Natural Ban",
+      "quantity": 19.0,
+      "unit_price": 1950.0,
+      "total_value": 37050.0,
+      "currency": "peso_Argentino",
+      "ppc": 2060.0,
+      "gain_pct": -5.33,
+      "daily_change_pct": 0,
+      "rsi": null,
+      "ma20": null,
+      "recommendation": "MANTENER",
+      "signals": [],
+      "sparkline": [
+        1950.0
+      ]
+    },
+    {
+      "symbol": "YPFD",
+      "description": "Ypf",
+      "quantity": 2.0,
+      "unit_price": 65000.0,
+      "total_value": 130000.0,
+      "currency": "peso_Argentino",
+      "ppc": 67200.0,
+      "gain_pct": -3.27,
+      "daily_change_pct": 0,
+      "rsi": null,
+      "ma20": null,
+      "recommendation": "MANTENER",
+      "signals": [],
+      "sparkline": [
+        65000.0
+      ]
+    }
+  ]
 }
