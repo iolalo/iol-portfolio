@@ -68,7 +68,7 @@ def iol_post(token, path, body):
     return resp.json()
 
 
-def get_historical(token, symbol, days=60):
+def get_historical_iol(token, symbol, days=60):
     today = datetime.now()
     date_from = (today - timedelta(days=days)).strftime("%Y-%m-%d")
     date_to = today.strftime("%Y-%m-%d")
@@ -88,7 +88,39 @@ def get_historical(token, symbol, days=60):
                         return data[key]
         except Exception:
             continue
-    print(f"  Warning: histórico {symbol} — todos los endpoints fallaron")
+    return None
+
+
+# CEDEARs en BCBA mapean al ticker US en Yahoo Finance
+_CEDEAR_MAP = {
+    "AAPL": "AAPL", "GOOGL": "GOOGL", "AMZN": "AMZN", "MSFT": "MSFT",
+    "NVDA": "NVDA", "KO": "KO", "XOM": "XOM", "META": "META",
+}
+
+def get_historical_yfinance(symbol, days=60):
+    try:
+        import yfinance as yf
+        # Para CEDEARs usar ticker US, para acciones locales agregar .BA
+        yf_ticker = _CEDEAR_MAP.get(symbol, f"{symbol}.BA")
+        data = yf.download(yf_ticker, period=f"{days}d", interval="1d",
+                           progress=False, auto_adjust=True)
+        if data.empty:
+            return None
+        closes = data["Close"].dropna().tolist()
+        return [{"cierre": float(c)} for c in closes]
+    except Exception as e:
+        print(f"  Warning: yfinance {symbol} falló — {e}")
+        return None
+
+
+def get_historical(token, symbol, days=60):
+    data = get_historical_iol(token, symbol, days)
+    if data:
+        return data
+    data = get_historical_yfinance(symbol, days)
+    if data:
+        return data
+    print(f"  Warning: histórico {symbol} — IOL y yfinance fallaron")
     return []
 
 
