@@ -74,8 +74,16 @@ def get_historical(token, symbol, days=60):
     date_to = today.strftime("%Y-%m-%d")
     path = f"/api/v2/bCBA/Titulos/{symbol}/SeriesHistoricas/ajustada/{date_from}/{date_to}/dia"
     try:
-        return iol_get(token, path)
-    except Exception:
+        data = iol_get(token, path)
+        # API puede devolver lista directa o dict con clave de barras
+        if isinstance(data, list):
+            return data
+        for key in ("seriesHistoricas", "bars", "data", "valores"):
+            if key in data:
+                return data[key]
+        return []
+    except Exception as e:
+        print(f"  Warning: histórico {symbol} falló — {e}")
         return []
 
 
