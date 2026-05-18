@@ -142,7 +142,10 @@ def score_buy(rsi, price, ma20, daily_pct):
 def load_trades_log():
     try:
         with open("data/trades_log.json", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+            if isinstance(data, list):
+                return {"trades": data}
+            return data
     except FileNotFoundError:
         return {"trades": []}
 
@@ -221,10 +224,11 @@ def main():
     # Cash balance
     cash_ars = 0
     try:
-        balance = iol_get(token, "/api/v2/estado-cuenta")
+        balance = iol_get(token, "/api/v2/estadocuenta")
         saldos = balance.get("saldos", [])
         for s in saldos:
-            if s.get("moneda") in ("ARS", "pesos", None):
+            moneda = s.get("moneda", "")
+            if "peso" in moneda.lower() or moneda in ("ARS", ""):
                 cash_ars = s.get("disponible", s.get("total", 0))
                 break
     except Exception as e:
