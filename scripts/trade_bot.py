@@ -241,7 +241,10 @@ def main():
         qty     = pos.get("cantidad", pos.get("quantity", 0))
         price   = pos.get("ultimoPrecio", pos.get("unit_price", 0))
         daily   = pos.get("variacion", pos.get("daily_change_pct", 0))
+        ppc     = pos.get("ppc", 0)
         gain    = pos.get("gananciaPorcentaje", 0)
+        if ppc and ppc > 0 and price > 0:
+            gain = round((price - ppc) / ppc * 100, 2)
         value   = qty * price
         portfolio_value += value
         current_symbols.add(symbol)
