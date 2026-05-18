@@ -72,19 +72,24 @@ def get_historical(token, symbol, days=60):
     today = datetime.now()
     date_from = (today - timedelta(days=days)).strftime("%Y-%m-%d")
     date_to = today.strftime("%Y-%m-%d")
-    path = f"/api/v2/bCBA/Titulos/{symbol}/SeriesHistoricas/ajustada/{date_from}/{date_to}/dia"
-    try:
-        data = iol_get(token, path)
-        # API puede devolver lista directa o dict con clave de barras
-        if isinstance(data, list):
-            return data
-        for key in ("seriesHistoricas", "bars", "data", "valores"):
-            if key in data:
-                return data[key]
-        return []
-    except Exception as e:
-        print(f"  Warning: histórico {symbol} falló — {e}")
-        return []
+    candidates = [
+        f"/api/v2/bCBA/Titulos/{symbol}/SeriesHistoricas/ajustada/{date_from}/{date_to}/Dia",
+        f"/api/v2/bCBA/Titulos/{symbol}/SeriesHistoricas/sinAjustar/{date_from}/{date_to}/Dia",
+        f"/api/v2/bCBA/Titulos/{symbol}/SeriesHistoricas/ajustada/{date_from}/{date_to}/dia",
+    ]
+    for path in candidates:
+        try:
+            data = iol_get(token, path)
+            if isinstance(data, list) and data:
+                return data
+            if isinstance(data, dict):
+                for key in ("seriesHistoricas", "bars", "data", "valores"):
+                    if key in data and data[key]:
+                        return data[key]
+        except Exception:
+            continue
+    print(f"  Warning: histórico {symbol} — todos los endpoints fallaron")
+    return []
 
 
 # ── Technical indicators ─────────────────────────────────────────────────────
