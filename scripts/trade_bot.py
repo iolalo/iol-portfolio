@@ -106,8 +106,11 @@ def get_historical_yfinance(symbol, days=60):
                            progress=False, auto_adjust=True)
         if data.empty:
             return None
-        closes = data["Close"].dropna().tolist()
-        return [{"cierre": float(c)} for c in closes]
+        col = data["Close"]
+        if hasattr(col, "squeeze"):
+            col = col.squeeze()
+        closes = [float(x) for x in col.dropna().values]
+        return [{"cierre": c} for c in closes]
     except Exception as e:
         print(f"  Warning: yfinance {symbol} falló — {e}")
         return None
