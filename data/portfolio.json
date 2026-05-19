@@ -1,20 +1,20 @@
 {
-  "last_updated": "2026-05-18 19:15",
-  "total_ars": 290978.0,
+  "last_updated": "2026-05-19 17:51",
+  "total_ars": 291885.0,
   "invested": 282236.48,
-  "total_gain": 8741.52,
-  "total_gain_pct": 3.1,
+  "total_gain": 9648.52,
+  "total_gain_pct": 3.42,
   "alert_count": 0,
   "positions": [
     {
       "symbol": "ALUA",
       "description": "Aluar",
       "quantity": 109.0,
-      "unit_price": 912.0,
-      "total_value": 99408.0,
+      "unit_price": 910.0,
+      "total_value": 99190.0,
       "currency": "peso_Argentino",
       "ppc": 846.298,
-      "gain_pct": 7.76,
+      "gain_pct": 7.52,
       "daily_change_pct": 0,
       "buy_date": "2026-03-04",
       "rsi": null,
@@ -23,14 +23,14 @@
       "signals": [],
       "sparkline": [
         {
-          "date": "2026-05-18",
-          "close": 912.0
+          "date": "2026-05-19",
+          "close": 910.0
         }
       ],
       "full_history": [
         {
-          "date": "2026-05-18",
-          "close": 912.0
+          "date": "2026-05-19",
+          "close": 910.0
         }
       ]
     },
@@ -38,11 +38,11 @@
       "symbol": "BBAR",
       "description": "Bbva",
       "quantity": 2.0,
-      "unit_price": 7290.0,
-      "total_value": 14580.0,
+      "unit_price": 6975.0,
+      "total_value": 13950.0,
       "currency": "peso_Argentino",
       "ppc": 8225.0,
-      "gain_pct": -11.36,
+      "gain_pct": -15.19,
       "daily_change_pct": 0,
       "buy_date": "2026-04-20",
       "rsi": null,
@@ -51,14 +51,14 @@
       "signals": [],
       "sparkline": [
         {
-          "date": "2026-05-18",
-          "close": 7290.0
+          "date": "2026-05-19",
+          "close": 6975.0
         }
       ],
       "full_history": [
         {
-          "date": "2026-05-18",
-          "close": 7290.0
+          "date": "2026-05-19",
+          "close": 6975.0
         }
       ]
     },
@@ -66,11 +66,11 @@
       "symbol": "GBAN",
       "description": "Gas Natural Ban",
       "quantity": 19.0,
-      "unit_price": 1910.0,
-      "total_value": 36290.0,
+      "unit_price": 1905.0,
+      "total_value": 36195.0,
       "currency": "peso_Argentino",
       "ppc": 2060.0,
-      "gain_pct": -7.28,
+      "gain_pct": -7.52,
       "daily_change_pct": 0,
       "buy_date": "2026-03-11",
       "rsi": null,
@@ -79,14 +79,14 @@
       "signals": [],
       "sparkline": [
         {
-          "date": "2026-05-18",
-          "close": 1910.0
+          "date": "2026-05-19",
+          "close": 1905.0
         }
       ],
       "full_history": [
         {
-          "date": "2026-05-18",
-          "close": 1910.0
+          "date": "2026-05-19",
+          "close": 1905.0
         }
       ]
     },
@@ -94,11 +94,11 @@
       "symbol": "YPFD",
       "description": "Ypf",
       "quantity": 2.0,
-      "unit_price": 70350.0,
-      "total_value": 140700.0,
+      "unit_price": 71275.0,
+      "total_value": 142550.0,
       "currency": "peso_Argentino",
       "ppc": 67200.0,
-      "gain_pct": 4.68,
+      "gain_pct": 6.06,
       "daily_change_pct": 0,
       "buy_date": "2026-04-01",
       "rsi": null,
@@ -107,14 +107,14 @@
       "signals": [],
       "sparkline": [
         {
-          "date": "2026-05-18",
-          "close": 70350.0
+          "date": "2026-05-19",
+          "close": 71275.0
         }
       ],
       "full_history": [
         {
-          "date": "2026-05-18",
-          "close": 70350.0
+          "date": "2026-05-19",
+          "close": 71275.0
         }
       ]
     }
