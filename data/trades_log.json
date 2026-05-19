@@ -1,3 +1,17 @@
 {
-  "trades": []
+  "trades": [
+    {
+      "date": "2026-05-19",
+      "timestamp": "2026-05-19 21:56",
+      "symbol": "BBAR",
+      "action": "venta",
+      "quantity": 2.0,
+      "price": 6975.0,
+      "total": 13950.0,
+      "reason": "Trailing stop (-15.20% desde PPC)",
+      "order_id": null,
+      "error": "405 Client Error: Method Not Allowed for url: https://api.invertironline.com/api/v2/operaciones",
+      "dry_run": false
+    }
+  ]
 }
