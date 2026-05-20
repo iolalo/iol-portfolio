@@ -37,7 +37,7 @@ def main():
             e = emoji.get(a["recommendation"], "⚪")
             lines.append(f"{e} *{a['symbol']}* — {a['recommendation']}")
             lines.append(f"  Precio: ${a['unit_price']:,.0f} | Día: {a['daily_change_pct']:+.2f}%")
-            if a["rsi"] and a["ma20"]:
+            if a["rsi"] is not None and a["ma20"] is not None:
                 lines.append(f"  RSI: {a['rsi']} | MA20: ${a['ma20']:,.0f}")
         lines.append("")
     else:

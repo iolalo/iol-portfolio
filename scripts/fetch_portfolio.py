@@ -126,10 +126,10 @@ def get_recommendation(rsi, price, ma20, daily_pct):
             signals.append(f"RSI sobrecomprado ({rsi})")
     if ma20 is not None:
         if price < ma20 * 0.97:
-            votes["VENDER"] += 1
+            votes["COMPRAR"] += 1
             signals.append(f"Precio 3%+ bajo MA20 (${ma20:,.0f})")
         elif price > ma20 * 1.03:
-            votes["COMPRAR"] += 1
+            votes["VENDER"] += 1
             signals.append(f"Precio 3%+ sobre MA20 (${ma20:,.0f})")
     if votes["COMPRAR"] > votes["VENDER"]:
         return "COMPRAR", signals
