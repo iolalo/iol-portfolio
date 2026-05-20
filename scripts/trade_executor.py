@@ -141,15 +141,15 @@ def today_op_count(log):
 def get_cash(token):
     try:
         data = iol_get(token, "/api/v2/estadocuenta")
-        if isinstance(data, list):
-            for item in data:
-                moneda = str(item.get("moneda", item.get("currency", ""))).upper()
-                if any(k in moneda for k in ("ARS", "PESO", "AR$")):
-                    return float(item.get("disponible", item.get("available", 0)))
-        elif isinstance(data, dict):
-            for key in ("disponibleARS", "ars", "pesos", "disponible"):
-                if key in data:
-                    return float(data[key])
+        # Real response: {"arg_ars": {"available": {"t0": N, "t1": N}, "available_for_withdrawal": N}}
+        if isinstance(data, dict):
+            arg_ars = data.get("arg_ars", {})
+            if arg_ars:
+                withdrawal = arg_ars.get("available_for_withdrawal")
+                if withdrawal is not None:
+                    return float(withdrawal)
+                avail = arg_ars.get("available", {})
+                return float(avail.get("t0") or avail.get("t1") or 0)
     except Exception as e:
         print(f"  [WARN] Balance: {e}")
     return 0.0
