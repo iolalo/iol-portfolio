@@ -2,6 +2,11 @@ import os
 import json
 import requests
 from datetime import datetime, timedelta, timezone
+try:
+    import yfinance as yf
+    HAS_YF = True
+except ImportError:
+    HAS_YF = False
 
 IOL_BASE = "https://api.invertironline.com"
 IOL_USER = os.environ["IOL_USERNAME"]
@@ -38,19 +43,40 @@ def iol_get(token, path):
     return resp.json()
 
 
+def _yf_historical(symbol, from_date, to_date):
+    """Fallback: fetch closes from yfinance (.BA suffix for BCBA stocks)."""
+    if not HAS_YF:
+        return []
+    ticker = symbol + ".BA"
+    try:
+        df = yf.download(ticker, start=from_date.strftime("%Y-%m-%d"),
+                         end=(to_date + timedelta(days=1)).strftime("%Y-%m-%d"),
+                         progress=False, auto_adjust=True)
+        if df.empty:
+            return []
+        close = df["Close"].squeeze()
+        result = [{"date": str(d.date()), "close": round(float(v), 2)}
+                  for d, v in zip(close.index, close.values) if not (v != v)]
+        return sorted(result, key=lambda x: x["date"])
+    except Exception as e:
+        print(f"  [WARN] yfinance fallback failed for {symbol}: {e}")
+        return []
+
+
 def get_historical(token, symbol, from_date, to_date):
-    """Fetch daily OHLCV from IOL and return list of {date, close} dicts."""
+    """Fetch daily OHLCV from IOL; fallback to yfinance if IOL fails."""
     date_from = from_date.strftime("%Y-%m-%d")
     date_to   = to_date.strftime("%Y-%m-%d")
     path = (
         f"/api/v2/bCBA/Titulos/{symbol}/SeriesHistoricas"
         f"/ajustada/{date_from}/{date_to}/dia"
     )
+    raw = None
     try:
         raw = iol_get(token, path)
     except Exception as e:
-        print(f"  [WARN] Historical API error for {symbol}: {e}")
-        return []
+        print(f"  [WARN] Historical API error for {symbol}: {e} — trying yfinance")
+        return _yf_historical(symbol, from_date, to_date)
 
     # Unwrap if the response is a dict with a list inside
     if isinstance(raw, dict):
@@ -59,21 +85,19 @@ def get_historical(token, symbol, from_date, to_date):
                 raw = raw[key]
                 break
         else:
-            print(f"  [WARN] Unexpected historical response for {symbol}: keys={list(raw.keys())}")
-            return []
+            print(f"  [WARN] Unexpected historical response for {symbol} — trying yfinance")
+            return _yf_historical(symbol, from_date, to_date)
 
-    if not isinstance(raw, list):
-        return []
+    if not isinstance(raw, list) or len(raw) == 0:
+        return _yf_historical(symbol, from_date, to_date)
 
     result = []
     for item in raw:
         if not isinstance(item, dict):
             continue
-        # Close price – try Spanish and English field names
         close = item.get("cierre") or item.get("close") or item.get("ultimo")
         if not close:
             continue
-        # Date – ISO string or Unix timestamp
         fecha = item.get("fechaHora") or item.get("fecha") or item.get("date") or item.get("time")
         if isinstance(fecha, str):
             date_str = fecha[:10]
@@ -83,8 +107,9 @@ def get_historical(token, symbol, from_date, to_date):
             date_str = ""
         result.append({"date": date_str, "close": round(float(close), 2)})
 
-    # Sort by date ascending
     result.sort(key=lambda x: x["date"])
+    if not result:
+        return _yf_historical(symbol, from_date, to_date)
     return result
 
 

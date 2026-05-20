@@ -171,20 +171,32 @@ def place_order(token, symbol, side, qty, limit_price, term):
     }
     print(f"  Order body: {body}")
 
-    # Validate
+    # Step 1 — Validate, extract validacionId
+    validation_id = None
     try:
         val = iol_post(token, "/api/v2/operaciones/Validar", body)
-        print(f"  Validate: {val}")
-        msgs = val if isinstance(val, list) else val.get("mensajes", [])
+        print(f"  Validate response: {val}")
+        # API returns {"validacionId": "...", "mensajes": [...]} in Spanish
+        # or {"valid": true, "validation_id": "...", "warnings": [...]} via wrapper
+        validation_id = (
+            val.get("validacionId")
+            or val.get("validation_id")
+            or val.get("id")
+        )
+        msgs   = val.get("mensajes", val.get("warnings", []))
         errors = [m for m in msgs if isinstance(m, str) and m]
         if errors:
             return False, None, f"Validation: {errors}"
     except Exception as e:
-        print(f"  [WARN] Validate step failed ({e}), proceeding to place...")
+        print(f"  [WARN] Validate step failed ({e})")
+        return False, None, f"Validate error: {e}"
 
-    # Place
+    if not validation_id:
+        return False, None, "Validate returned no validacionId"
+
+    # Step 2 — Place using validacionId in URL path
     try:
-        resp = iol_post(token, "/api/v2/operaciones", body)
+        resp = iol_post(token, f"/api/v2/operaciones/{validation_id}", body)
         oid  = str(resp.get("id", resp.get("numeroOperacion", resp.get("numero", "?"))))
         return True, oid, f"OK #{oid}"
     except Exception as e:
