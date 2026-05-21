@@ -119,7 +119,10 @@ def parse_context():
 
 def load_log():
     if TRADES_LOG.exists():
-        return json.loads(TRADES_LOG.read_text(encoding="utf-8"))
+        data = json.loads(TRADES_LOG.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            return data.get("trades", [])
+        return data if isinstance(data, list) else []
     return []
 
 

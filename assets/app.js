@@ -403,7 +403,7 @@ async function loadAndRender() {
     globalData = await resp.json();
 
     renderSummary(globalData);
-    renderAlerts(globalData.positions);
+    renderAlerts([...globalData.positions, ...(globalData.watchlist ?? [])]);
     renderTable(globalData.positions);
     drawSparklines(globalData.positions);
 
@@ -425,8 +425,9 @@ async function loadAndRenderTrades() {
   try {
     const resp = await fetch(`data/trades_log.json?t=${Date.now()}`);
     if (!resp.ok) return;
-    const log = await resp.json();
-    if (!Array.isArray(log) || log.length === 0) return;
+    const raw = await resp.json();
+    const log = Array.isArray(raw) ? raw : (raw.trades ?? []);
+    if (log.length === 0) return;
 
     document.getElementById("trades-section").classList.remove("hidden");
 

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0f1117" />
+  <title>IOL · Portfolio</title>
+  <style>
+    :root {
+      --bg:      #0f1117;
+      --surface: #1a1d27;
+      --surface2:#22253a;
+      --border:  #2a2d3a;
+      --text:    #e2e8f0;
+      --muted:   #8892a4;
+      --green:   #22c55e;
+      --red:     #ef4444;
+      --yellow:  #f59e0b;
+      --blue:    #3b82f6;
+      --purple:  #a78bfa;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      min-height: 100dvh;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* ── Top bar ─────────────────────────────── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar-title { font-size: 17px; font-weight: 700; }
+    .topbar-meta  { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+    .refresh-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .refresh-btn:active { background: var(--surface2); }
+    .refresh-btn.loading { opacity: 0.5; pointer-events: none; }
+
+    /* ── Main layout ─────────────────────────── */
+    main { padding: 14px 14px 32px; display: flex; flex-direction: column; gap: 20px; }
+
+    /* ── Section title ───────────────────────── */
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    /* ── Balance card ────────────────────────── */
+    .balance-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .balance-total { font-size: 32px; font-weight: 800; letter-spacing: -1px; }
+    .balance-meta  { display: flex; gap: 20px; margin-top: 10px; flex-wrap: wrap; }
+    .balance-item  { display: flex; flex-direction: column; gap: 1px; }
+    .balance-item .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; }
+    .balance-item .val { font-size: 15px; font-weight: 600; }
+
+    /* ── KPI row ─────────────────────────────── */
+    .kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .kpi-card .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px; }
+    .kpi-card .val { font-size: 22px; font-weight: 700; }
+    .kpi-card.alert .val { color: var(--yellow); }
+    .kpi-card.bot   .val { color: var(--purple); }
+
+    /* ── Alert cards ─────────────────────────── */
+    .alert-list { display: flex; flex-direction: column; gap: 10px; }
+    .alert-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .alert-card.COMPRAR { border-left: 4px solid var(--green); }
+    .alert-card.VENDER  { border-left: 4px solid var(--red); }
+    .alert-card.ALERTA  { border-left: 4px solid var(--yellow); }
+
+    .alert-icon {
+      font-size: 24px;
+      min-width: 32px;
+      text-align: center;
+    }
+    .alert-body { flex: 1; min-width: 0; }
+    .alert-sym  { font-size: 17px; font-weight: 700; }
+    .alert-rec  { font-size: 12px; font-weight: 700; letter-spacing: 0.3px; margin-bottom: 3px; }
+    .alert-rec.COMPRAR { color: var(--green); }
+    .alert-rec.VENDER  { color: var(--red); }
+    .alert-rec.ALERTA  { color: var(--yellow); }
+    .alert-detail { font-size: 13px; color: var(--muted); }
+    .alert-signals { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    .alert-price { text-align: right; min-width: 70px; }
+    .alert-price .price { font-size: 17px; font-weight: 700; }
+    .alert-price .day   { font-size: 13px; }
+
+    /* ── Position cards ──────────────────────── */
+    .position-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .position-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .position-sym  { font-size: 17px; font-weight: 700; }
+    .position-desc { font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+    .position-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px 8px;
+    }
+    .position-grid .cell .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; }
+    .position-grid .cell .val { font-size: 14px; font-weight: 600; margin-top: 1px; }
+
+    /* ── Badge ───────────────────────────────── */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .badge.COMPRAR  { background: rgba(34,197,94,.15);  color: var(--green); }
+    .badge.VENDER   { background: rgba(239,68,68,.15);  color: var(--red); }
+    .badge.ALERTA   { background: rgba(245,158,11,.15); color: var(--yellow); }
+    .badge.MANTENER { background: rgba(136,146,164,.1); color: var(--muted); }
+
+    /* ── Trade list ──────────────────────────── */
+    .trade-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .trade-left .sym   { font-size: 15px; font-weight: 700; }
+    .trade-left .meta  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .trade-right       { text-align: right; }
+    .trade-right .amt  { font-size: 15px; font-weight: 700; }
+    .trade-right .status { font-size: 11px; margin-top: 2px; }
+    .status-ok  { color: var(--green); }
+    .status-err { color: var(--red); }
+
+    /* ── Color helpers ───────────────────────── */
+    .pos { color: var(--green); }
+    .neg { color: var(--red); }
+    .neu { color: var(--muted); }
+
+    /* ── Empty state ─────────────────────────── */
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+
+    /* ── Skeleton loader ─────────────────────── */
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 8px;
+      height: 18px;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div>
+    <div class="topbar-title">IOL Portfolio</div>
+    <div class="topbar-meta" id="last-updated">Cargando…</div>
+  </div>
+  <button class="refresh-btn" id="refresh-btn" onclick="reload()">
+    <span id="refresh-icon">↻</span> Actualizar
+  </button>
+</header>
+
+<main>
+  <!-- Balance -->
+  <div>
+    <div class="section-title">Resumen</div>
+    <div class="balance-card" id="balance-card">
+      <div class="skeleton" style="width:60%;height:36px;margin-bottom:14px"></div>
+      <div class="skeleton" style="width:80%;height:16px"></div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi-card alert"><div class="lbl">Alertas</div><div class="val" id="alert-count">—</div></div>
+    <div class="kpi-card bot">  <div class="lbl">Bot hoy</div><div class="val" id="bot-ops">—</div></div>
+  </div>
+
+  <!-- Alerts -->
+  <div id="alerts-section">
+    <div class="section-title">Señales activas</div>
+    <div class="alert-list" id="alerts-container">
+      <div class="empty">Sin señales activas</div>
+    </div>
+  </div>
+
+  <!-- Positions -->
+  <div>
+    <div class="section-title">Posiciones</div>
+    <div id="positions-container">
+      <div class="empty">Cargando…</div>
+    </div>
+  </div>
+
+  <!-- Trades -->
+  <div id="trades-section" style="display:none">
+    <div class="section-title">Operaciones del bot</div>
+    <div id="trades-container"></div>
+  </div>
+</main>
+
+<script>
+const DATA_URL   = "data/portfolio.json";
+const TRADES_URL = "data/trades_log.json";
+
+function fmt(n, d = 0) {
+  return new Intl.NumberFormat("es-AR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(n);
+}
+function pct(v) {
+  const cls = v > 0 ? "pos" : v < 0 ? "neg" : "neu";
+  return `<span class="${cls}">${v > 0 ? "+" : ""}${fmt(v, 2)}%</span>`;
+}
+function recIcon(r) {
+  return { COMPRAR: "🟢", VENDER: "🔴", ALERTA: "⚠️", MANTENER: "⚪" }[r] ?? "⚪";
+}
+
+function renderBalance(data) {
+  const gain    = data.total_gain ?? 0;
+  const gainPct = data.total_gain_pct ?? 0;
+  const gSign   = gain >= 0 ? "+" : "";
+  const gCls    = gain >= 0 ? "pos" : "neg";
+  document.getElementById("balance-card").innerHTML = `
+    <div class="balance-total">$${fmt(data.total_ars)}</div>
+    <div class="balance-meta">
+      <div class="balance-item">
+        <span class="lbl">Invertido</span>
+        <span class="val">$${fmt(data.invested ?? 0)}</span>
+      </div>
+      <div class="balance-item">
+        <span class="lbl">Resultado</span>
+        <span class="val ${gCls}">${gSign}$${fmt(Math.abs(gain))} (${gSign}${fmt(gainPct, 2)}%)</span>
+      </div>
+    </div>`;
+  document.getElementById("last-updated").textContent = `Actualizado: ${data.last_updated}`;
+  document.getElementById("alert-count").textContent = data.alert_count ?? 0;
+}
+
+function renderAlerts(positions, watchlist) {
+  const all    = [...positions, ...(watchlist ?? [])];
+  const alerts = all.filter(p => ["COMPRAR", "VENDER", "ALERTA"].includes(p.recommendation));
+  const cont   = document.getElementById("alerts-container");
+
+  if (alerts.length === 0) {
+    cont.innerHTML = `<div class="empty">✅ Sin señales activas</div>`;
+    return;
+  }
+
+  cont.innerHTML = alerts.map(a => `
+    <div class="alert-card ${a.recommendation}">
+      <div class="alert-icon">${recIcon(a.recommendation)}</div>
+      <div class="alert-body">
+        <div class="alert-sym">${a.symbol}</div>
+        <div class="alert-rec ${a.recommendation}">${a.recommendation}</div>
+        <div class="alert-detail">
+          RSI: ${a.rsi != null ? fmt(a.rsi, 1) : "—"} · MA20: ${a.ma20 != null ? "$" + fmt(a.ma20) : "—"}
+        </div>
+        ${a.signals?.length ? `<div class="alert-signals">${a.signals.map(s => "• " + s).join("  ")}</div>` : ""}
+      </div>
+      <div class="alert-price">
+        <div class="price">$${fmt(a.unit_price)}</div>
+        <div class="day">${pct(a.daily_change_pct ?? 0)}</div>
+      </div>
+    </div>`).join("");
+}
+
+function renderPositions(positions) {
+  const cont = document.getElementById("positions-container");
+  if (!positions.length) {
+    cont.innerHTML = `<div class="empty">Sin posiciones</div>`;
+    return;
+  }
+  cont.innerHTML = positions.map(p => {
+    const gpCls  = p.gain_pct > 0 ? "pos" : p.gain_pct < 0 ? "neg" : "neu";
+    const gpSign = p.gain_pct > 0 ? "+" : "";
+    return `
+    <div class="position-card" style="margin-bottom:10px">
+      <div class="position-header">
+        <div>
+          <div class="position-sym">${p.symbol}</div>
+          <div class="position-desc">${p.description ?? ""}</div>
+        </div>
+        <span class="badge ${p.recommendation}">${p.recommendation}</span>
+      </div>
+      <div class="position-grid">
+        <div class="cell"><div class="lbl">Precio</div><div class="val">$${fmt(p.unit_price)}</div></div>
+        <div class="cell"><div class="lbl">Hoy</div><div class="val">${pct(p.daily_change_pct ?? 0)}</div></div>
+        <div class="cell"><div class="lbl">G/P</div><div class="val ${gpCls}">${gpSign}${fmt(p.gain_pct, 2)}%</div></div>
+        <div class="cell"><div class="lbl">Cantidad</div><div class="val">${fmt(p.quantity)}</div></div>
+        <div class="cell"><div class="lbl">Total</div><div class="val">$${fmt(p.total_value)}</div></div>
+        <div class="cell"><div class="lbl">PPC</div><div class="val">$${fmt(p.ppc)}</div></div>
+        <div class="cell"><div class="lbl">RSI</div><div class="val ${p.rsi != null && p.rsi < 35 ? "pos" : p.rsi != null && p.rsi > 65 ? "neg" : ""}">${p.rsi != null ? fmt(p.rsi, 1) : "—"}</div></div>
+        <div class="cell"><div class="lbl">MA20</div><div class="val">${p.ma20 != null ? "$" + fmt(p.ma20) : "—"}</div></div>
+        <div class="cell"><div class="lbl">Compra</div><div class="val" style="font-size:12px;color:var(--muted)">${p.buy_date ?? "—"}</div></div>
+      </div>
+    </div>`; }).join("");
+}
+
+async function renderTrades() {
+  try {
+    const r   = await fetch(`${TRADES_URL}?t=${Date.now()}`);
+    if (!r.ok) return;
+    const raw  = await r.json();
+    const log  = Array.isArray(raw) ? raw : (raw.trades ?? []);
+    if (!log.length) return;
+
+    const today    = new Date().toISOString().slice(0, 10);
+    const todayOps = log.filter(t => t.date?.startsWith(today) && t.status === "executed").length;
+    document.getElementById("bot-ops").textContent = `${todayOps} op${todayOps !== 1 ? "s" : ""}`;
+
+    const section = document.getElementById("trades-section");
+    section.style.display = "";
+
+    const recent = [...log].reverse().slice(0, 10);
+    document.getElementById("trades-container").innerHTML = recent.map(t => {
+      const isBuy   = t.side === "buy";
+      const ok      = t.status === "executed";
+      const sideStr = isBuy ? "COMPRA" : "VENTA";
+      const sideCls = isBuy ? "pos" : "neg";
+      return `
+      <div class="trade-card" style="margin-bottom:8px">
+        <div class="trade-left">
+          <div class="sym"><span class="${sideCls}">${sideStr}</span> ${t.symbol}</div>
+          <div class="meta">${t.reason ?? ""} · ${(t.date ?? "").slice(0, 16).replace("T", " ")}</div>
+        </div>
+        <div class="trade-right">
+          <div class="amt">${fmt(t.quantity)} × $${fmt(t.price)}</div>
+          <div class="status ${ok ? "status-ok" : "status-err"}">${ok ? "✓ Ejecutada" : "✗ Error"}</div>
+        </div>
+      </div>`; }).join("");
+  } catch (_) {}
+}
+
+async function loadData() {
+  const btn  = document.getElementById("refresh-btn");
+  const icon = document.getElementById("refresh-icon");
+  btn.classList.add("loading");
+  icon.style.display = "none";
+
+  try {
+    const r    = await fetch(`${DATA_URL}?t=${Date.now()}`);
+    if (!r.ok) throw new Error("No se pudo cargar portfolio.json");
+    const data = await r.json();
+
+    renderBalance(data);
+    renderAlerts(data.positions, data.watchlist);
+    renderPositions(data.positions);
+    await renderTrades();
+  } catch (e) {
+    document.getElementById("balance-card").innerHTML =
+      `<div style="color:var(--red);font-size:13px">Error: ${e.message}</div>`;
+  } finally {
+    btn.classList.remove("loading");
+    icon.style.display = "";
+  }
+}
+
+function reload() { loadData(); }
+
+loadData();
+setInterval(loadData, 10 * 60 * 1000);
+</script>
+</body>
+</html>
