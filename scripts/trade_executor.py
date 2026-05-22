@@ -41,9 +41,12 @@ def iol_get(token, path):
 def iol_post(token, path, body):
     r = requests.post(f"{IOL_BASE}{path}",
                       headers={"Authorization": f"Bearer {token}",
-                               "Content-Type": "application/json"},
+                               "Content-Type": "application/json",
+                               "Accept": "application/json"},
                       json=body, timeout=20)
-    r.raise_for_status()
+    if not r.ok:
+        print(f"  [HTTP {r.status_code}] POST {path} → {r.text[:800]}")
+        r.raise_for_status()
     return r.json()
 
 
@@ -144,9 +147,10 @@ def today_op_count(log):
 def get_cash(token):
     try:
         data = iol_get(token, "/api/v2/estadocuenta")
-        # Real response: {"arg_ars": {"available": {"t0": N, "t1": N}, "available_for_withdrawal": N}}
+        print(f"  [DEBUG] Balance keys: {list(data.keys()) if isinstance(data, dict) else type(data)}")
         if isinstance(data, dict):
             arg_ars = data.get("arg_ars", {})
+            print(f"  [DEBUG] arg_ars: {arg_ars}")
             if arg_ars:
                 withdrawal = arg_ars.get("available_for_withdrawal")
                 if withdrawal is not None:
@@ -244,6 +248,8 @@ def byma_open():
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
+    now = datetime.now(ART)
+    print(f"Time ART: {now.strftime('%Y-%m-%d %H:%M')} (weekday={now.weekday()})")
     if not byma_open():
         print("BYMA closed — skipping.")
         return
