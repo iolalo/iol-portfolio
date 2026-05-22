@@ -11,5 +11,17 @@
     "order_id": null,
     "error": "405 Client Error: Method Not Allowed for url: https://api.invertironline.com/api/v2/operaciones",
     "dry_run": false
+  },
+  {
+    "date": "2026-05-22T15:23:06.620373-03:00",
+    "symbol": "GBAN",
+    "side": "sell",
+    "reason": "stop-loss",
+    "quantity": 19.0,
+    "price": 1850.0,
+    "limit_price": 1840.75,
+    "status": "failed",
+    "order_id": null,
+    "message": "Validate error: 405 Client Error: Method Not Allowed for url: https://api.invertironline.com/api/v2/operaciones/Validar"
   }
 ]
