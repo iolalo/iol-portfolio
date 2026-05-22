@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-05-22 17:22",
+  "last_updated": "2026-05-22 18:48",
   "total_ars": 261898.0,
   "invested": 243121.48,
   "total_gain": 18776.52,
@@ -17,8 +17,8 @@
       "gain_pct": 11.89,
       "daily_change_pct": 0,
       "buy_date": "2026-03-04",
-      "rsi": 55.37,
-      "ma20": 938.58,
+      "rsi": 53.29,
+      "ma20": 938.15,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -140,7 +140,7 @@
         },
         {
           "date": "2026-05-22",
-          "close": 947.0
+          "close": 938.5
         }
       ],
       "full_history": [
@@ -362,7 +362,7 @@
         },
         {
           "date": "2026-05-22",
-          "close": 947.0
+          "close": 938.5
         }
       ]
     },
@@ -1246,7 +1246,7 @@
         },
         {
           "date": "2026-03-17",
-          "close": 5984.13
+          "close": 5984.14
         },
         {
           "date": "2026-03-18",
@@ -1298,7 +1298,7 @@
         },
         {
           "date": "2026-04-08",
-          "close": 6862.14
+          "close": 6862.13
         },
         {
           "date": "2026-04-09",
@@ -1433,11 +1433,11 @@
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 20620.0,
-      "daily_change_pct": -0.05,
+      "unit_price": 20610.0,
+      "daily_change_pct": -0.1,
       "buy_date": null,
-      "rsi": 46.85,
-      "ma20": 21088.5,
+      "rsi": 46.78,
+      "ma20": 21088.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1559,7 +1559,7 @@
         },
         {
           "date": "2026-05-22",
-          "close": 20620.0
+          "close": 20610.0
         }
       ],
       "full_history": [
@@ -1809,18 +1809,18 @@
         },
         {
           "date": "2026-05-22",
-          "close": 20620.0
+          "close": 20610.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 3322.5,
-      "daily_change_pct": 0.15,
+      "unit_price": 3320.0,
+      "daily_change_pct": 0.08,
       "buy_date": null,
-      "rsi": 48.82,
-      "ma20": 3261.5,
+      "rsi": 48.73,
+      "ma20": 3261.38,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1942,7 +1942,7 @@
         },
         {
           "date": "2026-05-22",
-          "close": 3322.5
+          "close": 3320.0
         }
       ],
       "full_history": [
@@ -2192,7 +2192,7 @@
         },
         {
           "date": "2026-05-22",
-          "close": 3322.5
+          "close": 3320.0
         }
       ]
     }
