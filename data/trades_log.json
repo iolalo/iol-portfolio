@@ -71,5 +71,29 @@
     "status": "dry_run",
     "order_id": "DRY-RUN",
     "message": "DRY RUN — sell 19.0x GBAN @ 1840.75"
+  },
+  {
+    "date": "2026-05-22T16:37:54.949225-03:00",
+    "symbol": "GBAN",
+    "side": "sell",
+    "reason": "stop-loss",
+    "quantity": 19.0,
+    "price": 1850.0,
+    "limit_price": 1840.75,
+    "status": "dry_run",
+    "order_id": "DRY-RUN",
+    "message": "DRY RUN — sell 19.0x GBAN @ 1840.75"
+  },
+  {
+    "date": "2026-05-22T16:37:55.389365-03:00",
+    "symbol": "MIRG",
+    "side": "buy",
+    "reason": "RSI+MA20",
+    "quantity": 1,
+    "price": 16100.0,
+    "limit_price": 16180.5,
+    "status": "dry_run",
+    "order_id": "DRY-RUN",
+    "message": "DRY RUN — buy 1x MIRG @ 16180.5"
   }
 ]
