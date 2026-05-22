@@ -151,16 +151,27 @@ def today_op_count(log):
 def get_cash(token):
     try:
         data = iol_get(token, "/api/v2/estadocuenta")
-        print(f"  [DEBUG] Balance keys: {list(data.keys()) if isinstance(data, dict) else type(data)}")
-        if isinstance(data, dict):
-            arg_ars = data.get("arg_ars", {})
-            print(f"  [DEBUG] arg_ars: {arg_ars}")
-            if arg_ars:
-                withdrawal = arg_ars.get("available_for_withdrawal")
-                if withdrawal is not None:
-                    return float(withdrawal)
-                avail = arg_ars.get("available", {})
-                return float(avail.get("t0") or avail.get("t1") or 0)
+        if not isinstance(data, dict):
+            return 0.0
+        # Real API response: {"cuentas": [...], "estadisticas": {...}, "totalEnPesos": N}
+        cuentas = data.get("cuentas", [])
+        print(f"  [DEBUG] cuentas count={len(cuentas)}, sample={cuentas[0] if cuentas else 'empty'}")
+        for cuenta in cuentas:
+            moneda = (cuenta.get("moneda") or "").lower()
+            if "peso" in moneda or moneda in ("ars", "pesos"):
+                saldo = cuenta.get("saldo", cuenta)
+                disponible = (
+                    saldo.get("disponible")
+                    or saldo.get("disponibleOperar")
+                    or saldo.get("disponibleRetirar")
+                    or 0
+                )
+                print(f"  [DEBUG] ARS cuenta: moneda={moneda} disponible={disponible}")
+                return float(disponible)
+        # Fallback: totalEnPesos if no ARS account found
+        total = data.get("totalEnPesos", 0)
+        print(f"  [DEBUG] fallback totalEnPesos={total}")
+        return float(total or 0)
     except Exception as e:
         print(f"  [WARN] Balance: {e}")
     return 0.0
@@ -225,7 +236,7 @@ def log_and_notify(log, symbol, side, reason, qty, price, limit_price, ok, oid, 
         "quantity":    qty,
         "price":       price,
         "limit_price": limit_price,
-        "status":      "executed" if ok else "failed",
+        "status":      "dry_run" if DRY_RUN else ("executed" if ok else "failed"),
         "order_id":    oid,
         "message":     msg,
     }
