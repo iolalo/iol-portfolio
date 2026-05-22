@@ -236,18 +236,28 @@ def place_order(token, symbol, action, quantity, price, reason, log):
 
     if not DRY_RUN:
         try:
-            # Limit order with 1% tolerance (buy high, sell low to ensure fill)
             limit = price * 1.01 if action == "compra" else price * 0.99
             body = {
-                "mercado": "bCBA",
-                "simbolo": symbol,
-                "cantidad": quantity,
-                "precio": round(limit, 2),
-                "validez": "DiaSiguiente",
+                "mercado":   "bCBA",
+                "simbolo":   symbol,
+                "cantidad":  quantity,
+                "precio":    round(limit, 2),
+                "validez":   "HoyHasta",
+                "tipo":      "precioLimite",
+                "plazo":     "t1",
                 "operacion": action,
+                "monto":     None,
             }
-            result = iol_post(token, "/api/v2/operaciones", body)
-            entry["order_id"] = result.get("numeroOperacion")
+            # Step 1: validate → get validacionId
+            val = iol_post(token, "/api/v2/operaciones/Validar", body)
+            validation_id = (
+                val.get("validacionId") or val.get("validation_id") or val.get("id")
+            )
+            if not validation_id:
+                raise ValueError(f"Validate returned no validacionId: {val}")
+            # Step 2: execute with validacionId in path
+            result = iol_post(token, f"/api/v2/operaciones/{validation_id}", body)
+            entry["order_id"] = str(result.get("id", result.get("numeroOperacion", "?")))
             print(f"  → orden #{entry['order_id']} enviada")
         except Exception as e:
             entry["error"] = str(e)
@@ -273,12 +283,15 @@ def main():
     cash_ars = 0
     try:
         balance = iol_get(token, "/api/v2/estadocuenta")
-        saldos = balance.get("saldos", [])
-        for s in saldos:
-            moneda = s.get("moneda", "")
-            if "peso" in moneda.lower() or moneda in ("ARS", ""):
-                cash_ars = s.get("disponible", s.get("total", 0))
-                break
+        # Real API response: {"arg_ars": {"available_for_withdrawal": N, "available": {"t0": N, "t1": N}}}
+        arg_ars = balance.get("arg_ars", {})
+        if arg_ars:
+            withdrawal = arg_ars.get("available_for_withdrawal")
+            if withdrawal is not None:
+                cash_ars = float(withdrawal)
+            else:
+                avail = arg_ars.get("available", {})
+                cash_ars = float(avail.get("t0") or avail.get("t1") or 0)
     except Exception as e:
         print(f"Warning: no pudo obtener cash balance — {e}")
 

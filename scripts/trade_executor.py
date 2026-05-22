@@ -163,14 +163,15 @@ def get_cash(token):
 def place_order(token, symbol, side, qty, limit_price, term):
     """Validate + place a limit order. Returns (ok, order_id, msg)."""
     body = {
-        "mercado": "bCBA",
-        "simbolo": symbol,
-        "cantidad": int(qty),
-        "precio":   round(float(limit_price), 2),
-        "validez":  "HoyHasta",
-        "tipo":     "precioLimite",
-        "plazo":    term,
-        "monto":    None,
+        "mercado":   "bCBA",
+        "simbolo":   symbol,
+        "cantidad":  int(qty),
+        "precio":    round(float(limit_price), 2),
+        "validez":   "HoyHasta",
+        "tipo":      "precioLimite",
+        "plazo":     term,
+        "operacion": "compra" if side == "buy" else "venta",
+        "monto":     None,
     }
     print(f"  Order body: {body}")
 
@@ -345,6 +346,35 @@ def main():
             ok, oid, msg = place_order(token, sym, "sell", sell_qty, lp, term)
             entry = log_and_notify(log, sym, "sell", "RSI+MA20", sell_qty, price, lp, ok, oid, msg)
             if ok: executed.append(entry)
+
+    # ── Watchlist buy scan ────────────────────────────────────────────────────
+    for wpos in portfolio.get("watchlist", []):
+        if ops_today + len(executed) >= max_ops:
+            break
+
+        sym   = wpos["symbol"]
+        price = wpos["unit_price"]
+        rsi   = wpos.get("rsi")
+        ma20  = wpos.get("ma20")
+        rec   = wpos.get("recommendation", "MANTENER")
+        ov    = overrides.get(sym, {})
+
+        rsi_buy = float(ov.get("rsi_buy", rules["rsi_buy"]))
+        buy_ok  = (
+            rec == "COMPRAR"
+            and rsi is not None and rsi < rsi_buy
+            and ma20 is not None and price < ma20
+            and buy_budget >= price
+            and not ov.get("no_buy")
+        )
+        if buy_ok:
+            buy_qty = max(1, int(buy_budget // price))
+            lp      = round(price * (1 + slip), 2)
+            ok, oid, msg = place_order(token, sym, "buy", buy_qty, lp, term)
+            entry = log_and_notify(log, sym, "buy", "RSI+MA20 (watchlist)", buy_qty, price, lp, ok, oid, msg)
+            if ok:
+                buy_budget -= buy_qty * price
+                executed.append(entry)
 
     save_log(log)
     print(f"Done — {len(executed)} trade(s) executed today ({ops_today + len(executed)}/{max_ops}).")
