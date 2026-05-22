@@ -148,30 +148,25 @@ def today_op_count(log):
 
 # ── Balance ──────────────────────────────────────────────────────────────────
 
-def get_cash(token):
+def get_cash(token, term="t1"):
+    """Return available cash for the given settlement term (t0=inmediato, t1=hrs24)."""
+    liquidacion_map = {"t0": "inmediato", "t1": "hrs24", "t2": "hrs48"}
+    target_liq = liquidacion_map.get(term, "hrs24")
     try:
         data = iol_get(token, "/api/v2/estadocuenta")
         if not isinstance(data, dict):
             return 0.0
-        # Real API response: {"cuentas": [...], "estadisticas": {...}, "totalEnPesos": N}
-        cuentas = data.get("cuentas", [])
-        print(f"  [DEBUG] cuentas count={len(cuentas)}, sample={cuentas[0] if cuentas else 'empty'}")
-        for cuenta in cuentas:
+        for cuenta in data.get("cuentas", []):
             moneda = (cuenta.get("moneda") or "").lower()
-            if "peso" in moneda or moneda in ("ars", "pesos"):
-                saldo = cuenta.get("saldo", cuenta)
-                disponible = (
-                    saldo.get("disponible")
-                    or saldo.get("disponibleOperar")
-                    or saldo.get("disponibleRetirar")
-                    or 0
-                )
-                print(f"  [DEBUG] ARS cuenta: moneda={moneda} disponible={disponible}")
-                return float(disponible)
-        # Fallback: totalEnPesos if no ARS account found
-        total = data.get("totalEnPesos", 0)
-        print(f"  [DEBUG] fallback totalEnPesos={total}")
-        return float(total or 0)
+            if "peso" not in moneda:
+                continue
+            for s in cuenta.get("saldos", []):
+                if s.get("liquidacion") == target_liq:
+                    val = float(s.get("disponibleOperar") or 0)
+                    print(f"  Cash ({target_liq}): ${val:,.2f}")
+                    return val
+            # fallback: top-level disponible
+            return float(cuenta.get("disponible") or 0)
     except Exception as e:
         print(f"  [WARN] Balance: {e}")
     return 0.0
@@ -287,13 +282,13 @@ def main():
         return
 
     token = get_token()
-    cash  = get_cash(token)
+    term  = str(rules["settlement_term"])
+    cash  = get_cash(token, term)
     print(f"Cash available: ${cash:,.0f} ARS")
 
     usable     = max(0.0, cash - float(rules["cash_reserve_ars"]))
     buy_budget = usable * float(rules["buy_cash_pct"]) / 100
     slip       = float(rules["limit_slippage_pct"]) / 100
-    term       = str(rules["settlement_term"])
     executed   = []
 
     for pos in portfolio.get("positions", []):
