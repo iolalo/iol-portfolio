@@ -10,6 +10,13 @@ IOL_USER   = os.environ["IOL_USERNAME"]
 IOL_PASS   = os.environ["IOL_PASSWORD"]
 TG_TOKEN   = os.environ.get("TELEGRAM_TOKEN", "")
 TG_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
+DRY_RUN    = os.environ.get("DRY_RUN", "true").lower() == "true"
+
+_HEADERS = {
+    "Content-Type": "application/json",
+    "Accept":       "application/json",
+    "User-Agent":   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+}
 
 ART        = timezone(timedelta(hours=-3))
 SCRIPT_DIR = Path(__file__).parent
@@ -39,11 +46,8 @@ def iol_get(token, path):
 
 
 def iol_post(token, path, body):
-    r = requests.post(f"{IOL_BASE}{path}",
-                      headers={"Authorization": f"Bearer {token}",
-                               "Content-Type": "application/json",
-                               "Accept": "application/json"},
-                      json=body, timeout=20)
+    headers = {**_HEADERS, "Authorization": f"Bearer {token}"}
+    r = requests.post(f"{IOL_BASE}{path}", headers=headers, json=body, timeout=20)
     if not r.ok:
         print(f"  [HTTP {r.status_code}] POST {path} → {r.text[:800]}")
         r.raise_for_status()
@@ -175,17 +179,18 @@ def place_order(token, symbol, side, qty, limit_price, term):
         "tipo":      "precioLimite",
         "plazo":     term,
         "operacion": "compra" if side == "buy" else "venta",
-        "monto":     None,
     }
-    print(f"  Order body: {body}")
+    tag = "[DRY RUN] " if DRY_RUN else ""
+    print(f"  {tag}Order body: {body}")
+
+    if DRY_RUN:
+        return True, "DRY-RUN", f"DRY RUN — {side} {qty}x {symbol} @ {limit_price}"
 
     # Step 1 — Validate, extract validacionId
     validation_id = None
     try:
         val = iol_post(token, "/api/v2/operaciones/Validar", body)
         print(f"  Validate response: {val}")
-        # API returns {"validacionId": "...", "mensajes": [...]} in Spanish
-        # or {"valid": true, "validation_id": "...", "warnings": [...]} via wrapper
         validation_id = (
             val.get("validacionId")
             or val.get("validation_id")
