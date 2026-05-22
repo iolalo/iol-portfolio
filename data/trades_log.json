@@ -44,7 +44,7 @@
     "quantity": 19.0,
     "price": 1850.0,
     "limit_price": 1840.75,
-    "status": "executed",
+    "status": "dry_run",
     "order_id": "DRY-RUN",
     "message": "DRY RUN — sell 19.0x GBAN @ 1840.75"
   },
