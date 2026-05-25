@@ -107,5 +107,17 @@
     "status": "dry_run",
     "order_id": "DRY-RUN",
     "message": "DRY RUN — buy 1x MIRG @ 16456.88"
+  },
+  {
+    "date": "2026-05-25T15:12:03.863283-03:00",
+    "symbol": "MIRG",
+    "side": "buy",
+    "reason": "RSI+MA20",
+    "quantity": 1,
+    "price": 16375.0,
+    "limit_price": 16456.88,
+    "status": "dry_run",
+    "order_id": "DRY-RUN",
+    "message": "DRY RUN — buy 1x MIRG @ 16456.88"
   }
 ]
