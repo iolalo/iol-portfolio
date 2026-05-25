@@ -1,10 +1,12 @@
 import os
 import json
 import requests
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 TG_TOKEN = os.environ["TELEGRAM_TOKEN"]
 TG_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
+
+ART = timezone(timedelta(hours=-3))
 
 
 def send_telegram(text):
@@ -53,14 +55,19 @@ def main():
 
     try:
         with open("data/trades_log.json", encoding="utf-8") as f:
-            trades = json.load(f).get("trades", [])
-        today = datetime.now().strftime("%Y-%m-%d")
-        today_trades = [t for t in trades if t["date"] == today and not t.get("dry_run")]
+            raw = json.load(f)
+            trades = raw if isinstance(raw, list) else raw.get("trades", [])
+        today = datetime.now(ART).strftime("%Y-%m-%d")
+        today_trades = [
+            t for t in trades
+            if t.get("date", "").startswith(today)
+            and t.get("status") == "executed"
+        ]
         if today_trades:
             lines.append("\n*Operaciones ejecutadas hoy:*")
             for t in today_trades:
-                icon = "🟢" if t["action"] == "compra" else "🔴"
-                op = "COMPRA" if t["action"] == "compra" else "VENTA"
+                icon = "🟢" if t["side"] == "buy" else "🔴"
+                op = "COMPRA" if t["side"] == "buy" else "VENTA"
                 status = f"#{t['order_id']}" if t.get("order_id") else "pendiente"
                 lines.append(f"  {icon} {op} {t['quantity']}x {t['symbol']} @ ${t['price']:,.0f} ({status})")
     except FileNotFoundError:
