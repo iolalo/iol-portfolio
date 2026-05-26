@@ -119,5 +119,29 @@
     "status": "dry_run",
     "order_id": "DRY-RUN",
     "message": "DRY RUN — buy 1x MIRG @ 16456.88"
+  },
+  {
+    "date": "2026-05-26T16:35:34.226681-03:00",
+    "symbol": "MIRG",
+    "side": "buy",
+    "reason": "RSI+MA20",
+    "quantity": 1,
+    "price": 16250.0,
+    "limit_price": 16331.25,
+    "status": "dry_run",
+    "order_id": "DRY-RUN",
+    "message": "DRY RUN — buy 1x MIRG @ 16331.25"
+  },
+  {
+    "date": "2026-05-26T16:35:34.749152-03:00",
+    "symbol": "YPFD",
+    "side": "sell",
+    "reason": "RSI+MA20",
+    "quantity": 1,
+    "price": 72600.0,
+    "limit_price": 72237.0,
+    "status": "dry_run",
+    "order_id": "DRY-RUN",
+    "message": "DRY RUN — sell 1x YPFD @ 72237.0"
   }
 ]
