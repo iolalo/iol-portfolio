@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import requests
 from datetime import datetime, timedelta, timezone
 try:
@@ -26,21 +27,41 @@ def load_json_config(filename):
     return {}
 
 
-def get_token():
-    resp = requests.post(
-        f"{IOL_BASE}/token",
-        data={"username": IOL_USER, "password": IOL_PASS, "grant_type": "password"},
-        timeout=15,
-    )
-    resp.raise_for_status()
-    return resp.json()["access_token"]
+def get_token(retries=3):
+    for attempt in range(retries):
+        try:
+            resp = requests.post(
+                f"{IOL_BASE}/token",
+                data={"username": IOL_USER, "password": IOL_PASS, "grant_type": "password"},
+                timeout=30,
+            )
+            resp.raise_for_status()
+            return resp.json()["access_token"]
+        except Exception as e:
+            if attempt < retries - 1:
+                wait = 2 ** attempt * 5
+                print(f"  [WARN] Auth failed (attempt {attempt+1}/{retries}): {e} — retrying in {wait}s")
+                time.sleep(wait)
+            else:
+                raise
 
 
-def iol_get(token, path):
+def iol_get(token, path, retries=3):
     headers = {"Authorization": f"Bearer {token}"}
-    resp = requests.get(f"{IOL_BASE}{path}", headers=headers, timeout=20)
-    resp.raise_for_status()
-    return resp.json()
+    for attempt in range(retries):
+        try:
+            resp = requests.get(f"{IOL_BASE}{path}", headers=headers, timeout=45)
+            resp.raise_for_status()
+            return resp.json()
+        except requests.exceptions.Timeout as e:
+            if attempt < retries - 1:
+                wait = 2 ** attempt * 5
+                print(f"  [WARN] Timeout on {path} (attempt {attempt+1}/{retries}) — retrying in {wait}s")
+                time.sleep(wait)
+            else:
+                raise
+        except requests.exceptions.RequestException:
+            raise
 
 
 def _yf_historical(symbol, from_date, to_date):

@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import time
 import requests
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -28,30 +29,61 @@ CONTEXT_MD = SCRIPT_DIR / "trading_context.md"
 
 # ── IOL auth & HTTP ──────────────────────────────────────────────────────────
 
-def get_token():
-    r = requests.post(
-        f"{IOL_BASE}/token",
-        data={"username": IOL_USER, "password": IOL_PASS, "grant_type": "password"},
-        timeout=15,
-    )
-    r.raise_for_status()
-    return r.json()["access_token"]
+def get_token(retries=3):
+    for attempt in range(retries):
+        try:
+            r = requests.post(
+                f"{IOL_BASE}/token",
+                data={"username": IOL_USER, "password": IOL_PASS, "grant_type": "password"},
+                timeout=30,
+            )
+            r.raise_for_status()
+            return r.json()["access_token"]
+        except Exception as e:
+            if attempt < retries - 1:
+                wait = 2 ** attempt * 5
+                print(f"  [WARN] Auth failed (attempt {attempt+1}/{retries}): {e} — retrying in {wait}s")
+                time.sleep(wait)
+            else:
+                raise
 
 
-def iol_get(token, path):
-    r = requests.get(f"{IOL_BASE}{path}",
-                     headers={"Authorization": f"Bearer {token}"}, timeout=20)
-    r.raise_for_status()
-    return r.json()
+def iol_get(token, path, retries=3):
+    headers = {"Authorization": f"Bearer {token}"}
+    for attempt in range(retries):
+        try:
+            r = requests.get(f"{IOL_BASE}{path}", headers=headers, timeout=45)
+            r.raise_for_status()
+            return r.json()
+        except requests.exceptions.Timeout:
+            if attempt < retries - 1:
+                wait = 2 ** attempt * 5
+                print(f"  [WARN] Timeout on GET {path} (attempt {attempt+1}/{retries}) — retrying in {wait}s")
+                time.sleep(wait)
+            else:
+                raise
+        except requests.exceptions.RequestException:
+            raise
 
 
-def iol_post(token, path, body):
+def iol_post(token, path, body, retries=3):
     headers = {**_HEADERS, "Authorization": f"Bearer {token}"}
-    r = requests.post(f"{IOL_BASE}{path}", headers=headers, json=body, timeout=20)
-    if not r.ok:
-        print(f"  [HTTP {r.status_code}] POST {path} → {r.text[:800]}")
-        r.raise_for_status()
-    return r.json()
+    for attempt in range(retries):
+        try:
+            r = requests.post(f"{IOL_BASE}{path}", headers=headers, json=body, timeout=45)
+            if not r.ok:
+                print(f"  [HTTP {r.status_code}] POST {path} → {r.text[:800]}")
+                r.raise_for_status()
+            return r.json()
+        except requests.exceptions.Timeout:
+            if attempt < retries - 1:
+                wait = 2 ** attempt * 5
+                print(f"  [WARN] Timeout on POST {path} (attempt {attempt+1}/{retries}) — retrying in {wait}s")
+                time.sleep(wait)
+            else:
+                raise
+        except requests.exceptions.RequestException:
+            raise
 
 
 # ── Telegram ─────────────────────────────────────────────────────────────────
