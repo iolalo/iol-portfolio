@@ -143,5 +143,29 @@
     "status": "dry_run",
     "order_id": "DRY-RUN",
     "message": "DRY RUN — sell 1x YPFD @ 72237.0"
+  },
+  {
+    "date": "2026-05-27T14:27:23.343258-03:00",
+    "symbol": "ALUA",
+    "side": "sell",
+    "reason": "RSI+MA20",
+    "quantity": 54.0,
+    "price": 996.0,
+    "limit_price": 991.02,
+    "status": "dry_run",
+    "order_id": "DRY-RUN",
+    "message": "DRY RUN — sell 54.0x ALUA @ 991.02"
+  },
+  {
+    "date": "2026-05-27T14:27:23.945821-03:00",
+    "symbol": "YPFD",
+    "side": "sell",
+    "reason": "RSI+MA20",
+    "quantity": 1,
+    "price": 75800.0,
+    "limit_price": 75421.0,
+    "status": "dry_run",
+    "order_id": "DRY-RUN",
+    "message": "DRY RUN — sell 1x YPFD @ 75421.0"
   }
 ]
