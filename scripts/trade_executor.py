@@ -264,7 +264,7 @@ def today_op_count(trade_log):
     today = datetime.now(ART).strftime("%Y-%m-%d")
     return sum(1 for t in trade_log
                if t.get("date", "").startswith(today)
-               and t.get("status") in ("executed", "dry_run"))
+               and t.get("status") == "executed")
 
 # ── Balance ───────────────────────────────────────────────────────────────────
 
