@@ -431,26 +431,40 @@ async function loadAndRenderTrades() {
 
     document.getElementById("trades-section").classList.remove("hidden");
 
-    const today    = new Date().toISOString().slice(0, 10);
-    const todayOps = log.filter(t => t.date?.startsWith(today) && t.status === "executed").length;
-    const botEl    = document.getElementById("bot-ops");
-    if (botEl) botEl.textContent = `${todayOps} op${todayOps !== 1 ? "s" : ""}`;
+    const today      = new Date().toISOString().slice(0, 10);
+    const todayReal  = log.filter(t => (t.date || t.timestamp || "").startsWith(today) && t.status === "executed").length;
+    const todaySim   = log.filter(t => (t.date || t.timestamp || "").startsWith(today) && t.status === "dry_run").length;
+    const botEl      = document.getElementById("bot-ops");
+    if (botEl) {
+      if (todayReal > 0) botEl.textContent = `${todayReal} op${todayReal !== 1 ? "s" : ""}`;
+      else if (todaySim > 0) botEl.textContent = `${todaySim} sim`;
+      else botEl.textContent = "0 ops";
+    }
 
     document.getElementById("trades-body").innerHTML = [...log].reverse().slice(0, 50).map(t => {
-      const sideLabel  = t.side === "buy" ? "COMPRA" : "VENTA";
-      const sideClass  = t.side === "buy" ? "pos" : "neg";
-      const statusBadge = t.status === "executed"
+      // normalize old format (action/timestamp) to new format (side/date)
+      const side      = t.side || (t.action === "compra" ? "buy" : "sell");
+      const dateStr   = t.date || t.timestamp || "";
+      const price     = t.price ?? 0;
+      const limitPrice = t.limit_price ?? t.price ?? 0;
+      const status    = t.status || (t.dry_run ? "dry_run" : (t.error ? "failed" : "executed"));
+
+      const sideLabel  = side === "buy" ? "COMPRA" : "VENTA";
+      const sideClass  = side === "buy" ? "pos" : "neg";
+      const statusBadge = status === "executed"
         ? `<span class="badge COMPRAR">OK</span>`
-        : `<span class="badge ALERTA">ERROR</span>`;
+        : status === "dry_run"
+          ? `<span class="badge MANTENER">SIMULACIÓN</span>`
+          : `<span class="badge ALERTA">FALLO</span>`;
       return `
         <tr>
-          <td>${(t.date || "").slice(0, 16).replace("T", " ")}</td>
+          <td>${dateStr.slice(0, 16).replace("T", " ")}</td>
           <td><strong>${t.symbol}</strong></td>
           <td class="${sideClass}"><strong>${sideLabel}</strong></td>
           <td>${t.reason || "—"}</td>
           <td>${t.quantity}</td>
-          <td>$${fmt(t.price)}</td>
-          <td>$${fmt(t.limit_price, 2)}</td>
+          <td>$${fmt(price)}</td>
+          <td>$${fmt(limitPrice, 2)}</td>
           <td>${statusBadge}</td>
         </tr>`;
     }).join("");

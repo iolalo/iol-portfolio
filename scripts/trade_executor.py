@@ -264,7 +264,7 @@ def today_op_count(trade_log):
     today = datetime.now(ART).strftime("%Y-%m-%d")
     return sum(1 for t in trade_log
                if t.get("date", "").startswith(today)
-               and t.get("status") == "executed")
+               and t.get("status") in ("executed", "dry_run"))
 
 # ── Balance ───────────────────────────────────────────────────────────────────
 
@@ -357,12 +357,20 @@ def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok,
     icons      = {"buy": "🟢", "sell": "🔴"}
     e          = icons.get(side, "⚪") if ok else "❌"
     side_label = "COMPRA" if side == "buy" else "VENTA"
-    send_telegram(
-        f"{e} *{side_label} {symbol}* — {reason.upper()}\n"
-        f"{'Compré' if side == 'buy' else 'Vendí'} {qty} acc a límite ${limit_price:,.2f}\n"
-        f"Precio ref: ${price:,.0f}\n"
-        f"{'✅ Orden #' + oid if ok else '❌ ' + msg}"
-    )
+    if DRY_RUN:
+        send_telegram(
+            f"🔵 *[SIMULACIÓN] {side_label} {symbol}* — {reason.upper()}\n"
+            f"Señal: {qty} acc a límite ${limit_price:,.2f}\n"
+            f"Precio ref: ${price:,.0f}\n"
+            f"_(bot en modo DRY RUN — no se ejecutó ninguna orden real)_"
+        )
+    else:
+        send_telegram(
+            f"{e} *{side_label} {symbol}* — {reason.upper()}\n"
+            f"{'Compré' if side == 'buy' else 'Vendí'} {qty} acc a límite ${limit_price:,.2f}\n"
+            f"Precio ref: ${price:,.0f}\n"
+            f"{'✅ Orden #' + oid if ok else '❌ ' + msg}"
+        )
     log.info("%s %s %s qty=%d lp=%.2f ok=%s %s",
              side_label, symbol, reason, qty, limit_price, ok, msg)
     return entry
