@@ -1,5 +1,6 @@
 import json
 import logging
+import math
 import os
 import re
 import threading
@@ -202,6 +203,78 @@ class _IOLSession:
 
 iol = _IOLSession()
 
+# ── Tick size ─────────────────────────────────────────────────────────────────
+
+def _round_to_tick(price: float, side: str) -> float:
+    """
+    Round a limit price to the nearest valid BYMA tick.
+    Tiers are approximations — BYMA assigns ticks per instrument; update if rejections occur.
+    Buy rounds UP (aggressive), sell rounds DOWN (conservative) to improve fill probability.
+    """
+    if price < 1:          tick = 0.001
+    elif price < 10:       tick = 0.01
+    elif price < 100:      tick = 0.05
+    elif price < 1_000:    tick = 0.50
+    elif price < 10_000:   tick = 5.0
+    elif price < 100_000:  tick = 25.0
+    else:                  tick = 50.0
+
+    if side == "buy":
+        return round(math.ceil(price / tick) * tick, 6)
+    else:
+        return round(math.floor(price / tick) * tick, 6)
+
+# ── Live price ─────────────────────────────────────────────────────────────────
+
+def get_live_price(symbol: str) -> float | None:
+    """
+    Fetch last traded price for a symbol from the IOL real-time quote endpoint.
+    Returns None on any error — caller must decide whether to proceed with stale price.
+    """
+    try:
+        data = iol.get(f"/api/v2/bCBA/Titulos/{symbol}/Cotizacion")
+        price = (
+            data.get("ultimoPrecio")
+            or data.get("ultimo")
+            or data.get("ultimoCierre")
+            or data.get("last")
+        )
+        if price:
+            return float(price)
+        log.warning("Live price %s: no price field in response — keys: %s",
+                    symbol, list(data.keys())[:8])
+    except Exception as exc:
+        log.warning("Live price fetch failed for %s: %s", symbol, exc)
+    return None
+
+# ── Order status ───────────────────────────────────────────────────────────────
+
+def check_order_status(oid: str, wait_secs: int = 5) -> str:
+    """
+    Wait briefly then poll order status from IOL.
+    Returns: 'ejecutada' | 'parcial' | 'pendiente' | 'cancelada' | 'unknown'.
+    'executed' in trades_log means the order was placed; fill_status tells you if it matched.
+    """
+    if not oid or oid in ("?", "DRY-RUN"):
+        return "unknown"
+    time.sleep(wait_secs)
+    try:
+        resp  = iol.get(f"/api/v2/operaciones/{oid}")
+        estado = (
+            resp.get("estado") or resp.get("status") or resp.get("Estado") or ""
+        ).lower()
+        log.info("Order #%s fill status: '%s'", oid, estado)
+        if "ejecut" in estado:
+            return "ejecutada"
+        if "parcial" in estado:
+            return "parcial"
+        if "cancel" in estado:
+            return "cancelada"
+        return "pendiente"
+    except Exception as exc:
+        log.warning("Order status check failed for #%s: %s — assuming pending", oid, exc)
+        return "unknown"
+
 # ── Config parsing ─────────────────────────────────────────────────────────────
 
 DEFAULTS = {
@@ -297,7 +370,7 @@ def today_op_count(trade_log):
 
 # ── Balance ───────────────────────────────────────────────────────────────────
 
-def get_cash(term="t1"):
+def get_cash(term="t1") -> float | None:
     """Returns ARS cash available, or None on error (caller must abort)."""
     liquidacion_map = {"t0": "inmediato", "t1": "hrs24", "t2": "hrs48"}
     target_liq = liquidacion_map.get(term, "hrs24")
@@ -321,7 +394,7 @@ def get_cash(term="t1"):
             f"❌ *Trade Bot — ERROR de saldo*\n"
             f"No se pudo obtener el efectivo disponible:\n"
             f"`{_escape_md(str(exc)[:300])}`\n"
-            f"_Bot abortado — operando sin conocer el saldo real es peligroso._"
+            f"_Bot abortado — operar sin conocer el saldo real es peligroso._"
         )
     return None
 
@@ -333,7 +406,7 @@ def place_order(symbol, side, qty, limit_price, term):
         "mercado":   "bCBA",
         "simbolo":   symbol,
         "cantidad":  int(qty),
-        "precio":    round(float(limit_price), 2),
+        "precio":    round(float(limit_price), 6),
         "validez":   "HoyHasta",
         "tipo":      "precioLimite",
         "plazo":     term,
@@ -475,6 +548,27 @@ def main():
     if cash is None:
         return  # error already logged and Telegram-alerted
 
+    # ── Refresh live prices (fixes stale portfolio.json data) ─────────────────
+    log.info("Refreshing live prices...")
+    all_items = portfolio.get("positions", []) + portfolio.get("watchlist", [])
+    stale_syms = []
+    for item in all_items:
+        live = get_live_price(item["symbol"])
+        if live and live > 0:
+            log.info("  %s: live $%.2f (portfolio.json: $%.2f)",
+                     item["symbol"], live, item["unit_price"])
+            item["unit_price"] = live
+        else:
+            log.warning("  %s: live price unavailable — using stale $%.2f",
+                        item["symbol"], item["unit_price"])
+            stale_syms.append(item["symbol"])
+
+    if stale_syms:
+        send_telegram(
+            f"⚠️ *Trade Bot*: precios en vivo no disponibles para: "
+            f"{', '.join(stale_syms)}. Usando datos de portfolio.json."
+        )
+
     # Symbols already held — used to prevent duplicate watchlist buys
     portfolio_syms = {
         p["symbol"] for p in portfolio.get("positions", [])
@@ -485,7 +579,7 @@ def main():
     slip       = float(rules["limit_slippage_pct"]) / 100
     buy_budget = usable * float(rules["buy_cash_pct"]) / 100
 
-    # Only real (non-DRY_RUN) executions count toward daily limit
+    # Only real (non-DRY_RUN) executions count toward the daily limit
     executed: list = []
 
     # Health-check: startup notification
@@ -501,7 +595,7 @@ def main():
             break
 
         sym   = pos["symbol"]
-        price = pos["unit_price"]
+        price = pos["unit_price"]   # live price if refresh succeeded
         ppc   = pos.get("ppc", price) or price
         rsi   = pos.get("rsi")
         ma20  = pos.get("ma20")
@@ -515,10 +609,14 @@ def main():
             if ov.get("no_sell"):
                 log.info("%s: stop-loss triggered but no_sell override — skip", sym)
                 continue
-            lp  = round(price * (1 - slip), 2)
+            lp = _round_to_tick(price * (1 - slip), "sell")
             ok, oid, msg = place_order(sym, "sell", qty, lp, term)
             entry = log_and_notify(trade_log, sym, "sell", "stop-loss", qty, price, lp, ok, oid, msg)
             if ok and not DRY_RUN:
+                fill = check_order_status(oid)
+                entry["fill_status"] = fill
+                if fill not in ("ejecutada", "unknown"):
+                    log.warning("%s stop-loss order #%s not yet filled: %s", sym, oid, fill)
                 executed.append(entry)
             continue
 
@@ -529,10 +627,14 @@ def main():
                 log.info("%s: take-profit triggered but no_sell override — skip", sym)
                 continue
             sell_qty = max(1, qty // 2)
-            lp  = round(price * (1 - slip), 2)
+            lp = _round_to_tick(price * (1 - slip), "sell")
             ok, oid, msg = place_order(sym, "sell", sell_qty, lp, term)
             entry = log_and_notify(trade_log, sym, "sell", "take-profit", sell_qty, price, lp, ok, oid, msg)
             if ok and not DRY_RUN:
+                fill = check_order_status(oid)
+                entry["fill_status"] = fill
+                if fill not in ("ejecutada", "unknown"):
+                    log.warning("%s take-profit order #%s not yet filled: %s", sym, oid, fill)
                 executed.append(entry)
             continue
 
@@ -542,16 +644,20 @@ def main():
                 and rsi is not None and rsi < rsi_buy
                 and ma20 is not None and price < ma20
                 and not ov.get("no_buy")):
-            lp      = round(price * (1 + slip), 2)  # limit price first
-            buy_qty = max(1, int(buy_budget // lp))  # qty based on limit price (conservative)
+            lp      = _round_to_tick(price * (1 + slip), "buy")
+            buy_qty = max(1, int(buy_budget // lp))
             if buy_qty * lp > buy_budget:
                 log.info("%s: insufficient budget (need $%.0f, have $%.0f)", sym, buy_qty * lp, buy_budget)
                 continue
             ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
             entry = log_and_notify(trade_log, sym, "buy", "RSI+MA20", buy_qty, price, lp, ok, oid, msg)
             if ok:
-                buy_budget -= buy_qty * lp  # deduct at limit price in both modes
+                buy_budget -= buy_qty * lp
             if ok and not DRY_RUN:
+                fill = check_order_status(oid)
+                entry["fill_status"] = fill
+                if fill not in ("ejecutada", "unknown"):
+                    log.warning("%s RSI buy order #%s not yet filled: %s", sym, oid, fill)
                 executed.append(entry)
             continue
 
@@ -563,10 +669,14 @@ def main():
                 and qty > 0
                 and not ov.get("no_sell")):
             sell_qty = max(1, qty // 2)
-            lp       = round(price * (1 - slip), 2)
+            lp = _round_to_tick(price * (1 - slip), "sell")
             ok, oid, msg = place_order(sym, "sell", sell_qty, lp, term)
             entry = log_and_notify(trade_log, sym, "sell", "RSI+MA20", sell_qty, price, lp, ok, oid, msg)
             if ok and not DRY_RUN:
+                fill = check_order_status(oid)
+                entry["fill_status"] = fill
+                if fill not in ("ejecutada", "unknown"):
+                    log.warning("%s RSI sell order #%s not yet filled: %s", sym, oid, fill)
                 executed.append(entry)
 
     # ── Watchlist: open new positions ─────────────────────────────────────────
@@ -590,7 +700,7 @@ def main():
                 and rsi is not None and rsi < rsi_buy
                 and ma20 is not None and price < ma20
                 and not ov.get("no_buy")):
-            lp      = round(price * (1 + slip), 2)
+            lp      = _round_to_tick(price * (1 + slip), "buy")
             buy_qty = max(1, int(buy_budget // lp))
             if buy_qty * lp > buy_budget:
                 log.info("%s: insufficient budget (need $%.0f, have $%.0f)", sym, buy_qty * lp, buy_budget)
@@ -602,6 +712,10 @@ def main():
             if ok:
                 buy_budget -= buy_qty * lp
             if ok and not DRY_RUN:
+                fill = check_order_status(oid)
+                entry["fill_status"] = fill
+                if fill not in ("ejecutada", "unknown"):
+                    log.warning("%s watchlist buy order #%s not yet filled: %s", sym, oid, fill)
                 executed.append(entry)
 
     save_log(trade_log)
