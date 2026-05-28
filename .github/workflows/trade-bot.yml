@@ -12,6 +12,10 @@ on:
         default: "true"
         type: boolean
 
+concurrency:
+  group: trade-bot
+  cancel-in-progress: false
+
 permissions:
   contents: write
 

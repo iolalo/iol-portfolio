@@ -39,6 +39,19 @@ _HEADERS = {
     ),
 }
 
+# Argentina public holidays — update annually
+ARGENTINA_HOLIDAYS = {
+    # 2025
+    "2025-01-01", "2025-03-03", "2025-03-04", "2025-04-02", "2025-04-17",
+    "2025-04-18", "2025-05-01", "2025-05-25", "2025-06-16", "2025-06-20",
+    "2025-07-09", "2025-08-17", "2025-10-12", "2025-11-20", "2025-12-08",
+    "2025-12-25",
+    # 2026
+    "2026-01-01", "2026-02-16", "2026-02-17", "2026-04-02", "2026-04-03",
+    "2026-05-01", "2026-05-25", "2026-06-15", "2026-06-20", "2026-07-09",
+    "2026-08-17", "2026-10-12", "2026-11-20", "2026-12-08", "2026-12-25",
+}
+
 # ── Environment validation ────────────────────────────────────────────────────
 
 def _require_env(*names):
@@ -54,6 +67,29 @@ IOL_PASS   = os.environ["IOL_PASSWORD"]
 TG_TOKEN   = os.environ.get("TELEGRAM_TOKEN", "")
 TG_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 DRY_RUN    = os.environ.get("DRY_RUN", "true").lower() == "true"
+
+# ── Telegram ──────────────────────────────────────────────────────────────────
+
+def _escape_md(text: str) -> str:
+    """Escape Telegram Markdown v1 special characters in dynamic content."""
+    for ch in ("_", "*", "`", "["):
+        text = text.replace(ch, f"\\{ch}")
+    return text
+
+
+def send_telegram(text: str) -> None:
+    if not TG_TOKEN or not TG_CHAT_ID:
+        return
+    try:
+        r = requests.post(
+            f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage",
+            json={"chat_id": TG_CHAT_ID, "text": text, "parse_mode": "Markdown"},
+            timeout=10,
+        )
+        if not r.ok:
+            log.warning("Telegram error %d: %s", r.status_code, r.text[:200])
+    except Exception as exc:
+        log.warning("Telegram send failed: %s", exc)
 
 # ── HTTP session ──────────────────────────────────────────────────────────────
 
@@ -166,22 +202,6 @@ class _IOLSession:
 
 iol = _IOLSession()
 
-# ── Telegram ──────────────────────────────────────────────────────────────────
-
-def send_telegram(text):
-    if not TG_TOKEN or not TG_CHAT_ID:
-        return
-    try:
-        r = requests.post(
-            f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage",
-            json={"chat_id": TG_CHAT_ID, "text": text, "parse_mode": "Markdown"},
-            timeout=10,
-        )
-        if not r.ok:
-            log.warning("Telegram error %d: %s", r.status_code, r.text[:200])
-    except Exception as exc:
-        log.warning("Telegram send failed: %s", exc)
-
 # ── Config parsing ─────────────────────────────────────────────────────────────
 
 DEFAULTS = {
@@ -195,6 +215,18 @@ DEFAULTS = {
     "settlement_term":   "t1",
     "limit_slippage_pct":  0.5,
 }
+
+
+def _coerce(value: str, target):
+    """Robustly cast value to the same type as target. Falls back to str."""
+    if isinstance(target, bool):
+        return value.lower() in ("true", "1", "yes")
+    for cast in (type(target), int, float):
+        try:
+            return cast(value)
+        except (ValueError, TypeError):
+            continue
+    return value
 
 
 def parse_context():
@@ -218,10 +250,7 @@ def parse_context():
             k, _, v = line.partition(":")
             k, v = k.strip(), v.strip()
             if k in rules:
-                try:
-                    rules[k] = type(rules[k])(v)
-                except (ValueError, TypeError):
-                    rules[k] = v
+                rules[k] = _coerce(v, rules[k])
 
     for line in text.splitlines():
         m = re.match(r"^-\s+([A-Z.]+):\s+(.*)", line.strip())
@@ -269,12 +298,13 @@ def today_op_count(trade_log):
 # ── Balance ───────────────────────────────────────────────────────────────────
 
 def get_cash(term="t1"):
+    """Returns ARS cash available, or None on error (caller must abort)."""
     liquidacion_map = {"t0": "inmediato", "t1": "hrs24", "t2": "hrs48"}
     target_liq = liquidacion_map.get(term, "hrs24")
     try:
         data = iol.get("/api/v2/estadocuenta")
         if not isinstance(data, dict):
-            return 0.0
+            raise ValueError(f"Unexpected response type: {type(data).__name__}")
         for cuenta in data.get("cuentas", []):
             moneda = (cuenta.get("moneda") or "").lower()
             if "peso" not in moneda:
@@ -286,8 +316,14 @@ def get_cash(term="t1"):
                     return val
             return float(cuenta.get("disponible") or 0)
     except Exception as exc:
-        log.warning("Balance error: %s", exc)
-    return 0.0
+        log.error("Balance fetch failed: %s", exc)
+        send_telegram(
+            f"❌ *Trade Bot — ERROR de saldo*\n"
+            f"No se pudo obtener el efectivo disponible:\n"
+            f"`{_escape_md(str(exc)[:300])}`\n"
+            f"_Bot abortado — operando sin conocer el saldo real es peligroso._"
+        )
+    return None
 
 # ── Order execution ────────────────────────────────────────────────────────────
 
@@ -303,8 +339,7 @@ def place_order(symbol, side, qty, limit_price, term):
         "plazo":     term,
         "operacion": "compra" if side == "buy" else "venta",
     }
-    tag = "[DRY RUN] " if DRY_RUN else ""
-    log.info("%sOrder body: %s", tag, body)
+    log.info("%sOrder body: %s", "[DRY RUN] " if DRY_RUN else "", body)
 
     if DRY_RUN:
         return True, "DRY-RUN", f"DRY RUN — {side} {qty}x {symbol} @ {limit_price}"
@@ -354,9 +389,9 @@ def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok,
     }
     trade_log.append(entry)
 
-    icons      = {"buy": "🟢", "sell": "🔴"}
-    e          = icons.get(side, "⚪") if ok else "❌"
     side_label = "COMPRA" if side == "buy" else "VENTA"
+    icon       = ("🟢" if side == "buy" else "🔴") if ok else "❌"
+
     if DRY_RUN:
         send_telegram(
             f"🔵 *[SIMULACIÓN] {side_label} {symbol}* — {reason.upper()}\n"
@@ -365,12 +400,16 @@ def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok,
             f"_(bot en modo DRY RUN — no se ejecutó ninguna orden real)_"
         )
     else:
+        action = "Compré" if side == "buy" else "Vendí"
+        detail = (f"✅ Orden #{_escape_md(str(oid))}" if ok
+                  else f"❌ {_escape_md(msg[:200])}")
         send_telegram(
-            f"{e} *{side_label} {symbol}* — {reason.upper()}\n"
-            f"{'Compré' if side == 'buy' else 'Vendí'} {qty} acc a límite ${limit_price:,.2f}\n"
+            f"{icon} *{side_label} {symbol}* — {reason.upper()}\n"
+            f"{action} {qty} acc a límite ${limit_price:,.2f}\n"
             f"Precio ref: ${price:,.0f}\n"
-            f"{'✅ Orden #' + oid if ok else '❌ ' + msg}"
+            f"{detail}"
         )
+
     log.info("%s %s %s qty=%d lp=%.2f ok=%s %s",
              side_label, symbol, reason, qty, limit_price, ok, msg)
     return entry
@@ -378,14 +417,19 @@ def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok,
 # ── Market hours ───────────────────────────────────────────────────────────────
 
 def byma_open():
-    now = datetime.now(ART)
+    now     = datetime.now(ART)
+    today_s = now.strftime("%Y-%m-%d")
+    if today_s in ARGENTINA_HOLIDAYS:
+        log.info("Public holiday (%s) — BYMA closed.", today_s)
+        return False
     return now.weekday() < 5 and 11 <= now.hour < 17
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 def main():
     now = datetime.now(ART)
-    log.info("Time ART: %s (weekday=%d)", now.strftime("%Y-%m-%d %H:%M"), now.weekday())
+    log.info("Time ART: %s (weekday=%d) | DRY_RUN=%s",
+             now.strftime("%Y-%m-%d %H:%M"), now.weekday(), DRY_RUN)
 
     if not byma_open():
         log.info("BYMA closed — skipping.")
@@ -397,34 +441,63 @@ def main():
     if not PORTFOLIO.exists():
         log.error("portfolio.json missing — run fetch_portfolio.py first.")
         return
-
     try:
         portfolio = json.loads(PORTFOLIO.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         log.error("Malformed portfolio.json: %s — aborting.", exc)
         return
 
+    # Warn if portfolio data is stale
+    last_updated = portfolio.get("last_updated", "")
+    try:
+        lu_date = datetime.strptime(last_updated[:10], "%Y-%m-%d").date()
+        if lu_date < now.date():
+            log.warning("portfolio.json is stale (last updated: %s)", last_updated)
+            send_telegram(
+                f"⚠️ *Trade Bot*: portfolio.json desactualizado "
+                f"(último update: {last_updated}). "
+                f"Señales pueden ser incorrectas."
+            )
+    except Exception:
+        log.warning("Could not parse last_updated field: %s", last_updated)
+
     trade_log = load_log()
     ops_today = today_op_count(trade_log)
     max_ops   = int(rules["max_ops_per_day"])
 
-    if ops_today >= max_ops:
+    if not DRY_RUN and ops_today >= max_ops:
         log.info("Daily limit reached (%d/%d).", ops_today, max_ops)
         return
 
     iol.authenticate()
-    term  = str(rules["settlement_term"])
-    cash  = get_cash(term)
-    log.info("Cash available: $%,.0f ARS", cash)
+    term = str(rules["settlement_term"])
+    cash = get_cash(term)
+    if cash is None:
+        return  # error already logged and Telegram-alerted
+
+    # Symbols already held — used to prevent duplicate watchlist buys
+    portfolio_syms = {
+        p["symbol"] for p in portfolio.get("positions", [])
+        if p.get("quantity", 0) > 0
+    }
 
     usable     = max(0.0, cash - float(rules["cash_reserve_ars"]))
-    buy_budget = usable * float(rules["buy_cash_pct"]) / 100
     slip       = float(rules["limit_slippage_pct"]) / 100
-    executed   = []
+    buy_budget = usable * float(rules["buy_cash_pct"]) / 100
+
+    # Only real (non-DRY_RUN) executions count toward daily limit
+    executed: list = []
+
+    # Health-check: startup notification
+    mode_tag = "[SIMULACIÓN] " if DRY_RUN else ""
+    send_telegram(
+        f"🤖 *Trade Bot {mode_tag}— {now.strftime('%H:%M')} ART*\n"
+        f"💰 Cash: ${cash:,.0f} ARS | Posiciones: {len(portfolio.get('positions', []))}"
+    )
 
     # ── Portfolio: stop-loss / take-profit / RSI signals ─────────────────────
     for pos in portfolio.get("positions", []):
-        if ops_today + len(executed) >= max_ops:
+        if not DRY_RUN and ops_today + len(executed) >= max_ops:
             break
 
         sym   = pos["symbol"]
@@ -436,6 +509,7 @@ def main():
         qty   = pos.get("quantity", 0)
         ov    = overrides.get(sym, {})
 
+        # Stop-loss — sell full position
         sl_pct = float(ov.get("stop_loss_pct", rules["stop_loss_pct"]))
         if qty > 0 and ppc > 0 and price <= ppc * (1 - sl_pct / 100):
             if ov.get("no_sell"):
@@ -444,10 +518,11 @@ def main():
             lp  = round(price * (1 - slip), 2)
             ok, oid, msg = place_order(sym, "sell", qty, lp, term)
             entry = log_and_notify(trade_log, sym, "sell", "stop-loss", qty, price, lp, ok, oid, msg)
-            if ok:
+            if ok and not DRY_RUN:
                 executed.append(entry)
             continue
 
+        # Take-profit — sell half position
         tp_pct = float(ov.get("take_profit_pct", rules["take_profit_pct"]))
         if qty > 0 and ppc > 0 and price >= ppc * (1 + tp_pct / 100):
             if ov.get("no_sell"):
@@ -457,25 +532,30 @@ def main():
             lp  = round(price * (1 - slip), 2)
             ok, oid, msg = place_order(sym, "sell", sell_qty, lp, term)
             entry = log_and_notify(trade_log, sym, "sell", "take-profit", sell_qty, price, lp, ok, oid, msg)
-            if ok:
+            if ok and not DRY_RUN:
                 executed.append(entry)
             continue
 
+        # RSI buy — averaging down on existing position
         rsi_buy = float(ov.get("rsi_buy", rules["rsi_buy"]))
         if (rec == "COMPRAR"
                 and rsi is not None and rsi < rsi_buy
                 and ma20 is not None and price < ma20
-                and buy_budget >= price
                 and not ov.get("no_buy")):
-            buy_qty = max(1, int(buy_budget // price))
-            lp      = round(price * (1 + slip), 2)
+            lp      = round(price * (1 + slip), 2)  # limit price first
+            buy_qty = max(1, int(buy_budget // lp))  # qty based on limit price (conservative)
+            if buy_qty * lp > buy_budget:
+                log.info("%s: insufficient budget (need $%.0f, have $%.0f)", sym, buy_qty * lp, buy_budget)
+                continue
             ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
             entry = log_and_notify(trade_log, sym, "buy", "RSI+MA20", buy_qty, price, lp, ok, oid, msg)
             if ok:
-                buy_budget -= buy_qty * price
+                buy_budget -= buy_qty * lp  # deduct at limit price in both modes
+            if ok and not DRY_RUN:
                 executed.append(entry)
             continue
 
+        # RSI sell — sell half position
         rsi_sell = float(ov.get("rsi_sell", rules["rsi_sell"]))
         if (rec == "VENDER"
                 and rsi is not None and rsi > rsi_sell
@@ -486,15 +566,19 @@ def main():
             lp       = round(price * (1 - slip), 2)
             ok, oid, msg = place_order(sym, "sell", sell_qty, lp, term)
             entry = log_and_notify(trade_log, sym, "sell", "RSI+MA20", sell_qty, price, lp, ok, oid, msg)
-            if ok:
+            if ok and not DRY_RUN:
                 executed.append(entry)
 
-    # ── Watchlist: abrir posiciones nuevas ────────────────────────────────────
+    # ── Watchlist: open new positions ─────────────────────────────────────────
     for wpos in portfolio.get("watchlist", []):
-        if ops_today + len(executed) >= max_ops:
+        if not DRY_RUN and ops_today + len(executed) >= max_ops:
             break
 
-        sym   = wpos["symbol"]
+        sym = wpos["symbol"]
+        if sym in portfolio_syms:
+            log.info("%s: already held — skip watchlist buy", sym)
+            continue
+
         price = wpos["unit_price"]
         rsi   = wpos.get("rsi")
         ma20  = wpos.get("ma20")
@@ -505,21 +589,25 @@ def main():
         if (rec == "COMPRAR"
                 and rsi is not None and rsi < rsi_buy
                 and ma20 is not None and price < ma20
-                and buy_budget >= price
                 and not ov.get("no_buy")):
-            buy_qty = max(1, int(buy_budget // price))
             lp      = round(price * (1 + slip), 2)
+            buy_qty = max(1, int(buy_budget // lp))
+            if buy_qty * lp > buy_budget:
+                log.info("%s: insufficient budget (need $%.0f, have $%.0f)", sym, buy_qty * lp, buy_budget)
+                continue
             ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
             entry = log_and_notify(
                 trade_log, sym, "buy", "RSI+MA20 (watchlist)", buy_qty, price, lp, ok, oid, msg
             )
             if ok:
-                buy_budget -= buy_qty * price
+                buy_budget -= buy_qty * lp
+            if ok and not DRY_RUN:
                 executed.append(entry)
 
     save_log(trade_log)
+    n_real = len(executed)
     log.info("Done — %d trade(s) executed today (%d/%d).",
-             len(executed), ops_today + len(executed), max_ops)
+             n_real, ops_today + n_real, max_ops)
 
 
 if __name__ == "__main__":
