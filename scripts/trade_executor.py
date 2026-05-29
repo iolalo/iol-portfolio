@@ -12,6 +12,13 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+try:
+    import holidays as _holidays_lib
+    _HOLIDAYS_AR = _holidays_lib.country_holidays("AR")
+    HAS_HOLIDAYS = True
+except ImportError:
+    HAS_HOLIDAYS = False
+
 # ── Logging ───────────────────────────────────────────────────────────────────
 
 logging.basicConfig(
@@ -40,17 +47,33 @@ _HEADERS = {
     ),
 }
 
-# Argentina public holidays — update annually
-ARGENTINA_HOLIDAYS = {
-    # 2025
+# Static fallback holidays — used only when the `holidays` package is unavailable
+_HOLIDAYS_FALLBACK = {
     "2025-01-01", "2025-03-03", "2025-03-04", "2025-04-02", "2025-04-17",
     "2025-04-18", "2025-05-01", "2025-05-25", "2025-06-16", "2025-06-20",
     "2025-07-09", "2025-08-17", "2025-10-12", "2025-11-20", "2025-12-08",
     "2025-12-25",
-    # 2026
     "2026-01-01", "2026-02-16", "2026-02-17", "2026-04-02", "2026-04-03",
     "2026-05-01", "2026-05-25", "2026-06-15", "2026-06-20", "2026-07-09",
     "2026-08-17", "2026-10-12", "2026-11-20", "2026-12-08", "2026-12-25",
+}
+
+# Known IOL order states → normalised value
+_IOL_STATE_MAP = {
+    "ejecutada":                "ejecutada",
+    "ejecutado":                "ejecutada",
+    "operada":                  "ejecutada",
+    "parcialmente ejecutada":   "parcial",
+    "parcial":                  "parcial",
+    "activa":                   "pendiente",
+    "pendiente":                "pendiente",
+    "en proceso":               "pendiente",
+    "cancelada":                "cancelada",
+    "cancelado":                "cancelada",
+    "anulada":                  "cancelada",
+    "rechazada":                "cancelada",
+    "expirada":                 "cancelada",
+    "vencida":                  "cancelada",
 }
 
 # ── Environment validation ────────────────────────────────────────────────────
@@ -71,9 +94,13 @@ DRY_RUN    = os.environ.get("DRY_RUN", "true").lower() == "true"
 
 # ── Telegram ──────────────────────────────────────────────────────────────────
 
+_MD_SPECIAL = ("\\", "_", "*", "`", "[", "]", "(", ")", "~", ">",
+               "#", "+", "-", "=", "|", "{", "}", ".", "!")
+
+
 def _escape_md(text: str) -> str:
-    """Escape Telegram Markdown v1 special characters in dynamic content."""
-    for ch in ("_", "*", "`", "["):
+    """Escape all Telegram MarkdownV2 special characters in dynamic content."""
+    for ch in _MD_SPECIAL:
         text = text.replace(ch, f"\\{ch}")
     return text
 
@@ -208,8 +235,9 @@ iol = _IOLSession()
 def _round_to_tick(price: float, side: str) -> float:
     """
     Round a limit price to the nearest valid BYMA tick.
-    Tiers are approximations — BYMA assigns ticks per instrument; update if rejections occur.
-    Buy rounds UP (aggressive), sell rounds DOWN (conservative) to improve fill probability.
+    Tiers are approximations — update if IOL rejects specific instruments.
+    Buy rounds UP (aggressive), sell rounds DOWN (conservative) for fill probability.
+    Always returns a value > 0.
     """
     if price < 1:          tick = 0.001
     elif price < 10:       tick = 0.01
@@ -220,60 +248,87 @@ def _round_to_tick(price: float, side: str) -> float:
     else:                  tick = 50.0
 
     if side == "buy":
-        return round(math.ceil(price / tick) * tick, 6)
+        result = round(math.ceil(price / tick) * tick, 6)
     else:
-        return round(math.floor(price / tick) * tick, 6)
+        result = round(math.floor(price / tick) * tick, 6)
+
+    return max(tick, result)  # guard: never return 0 or negative
 
 # ── Live price ─────────────────────────────────────────────────────────────────
 
-def get_live_price(symbol: str) -> float | None:
+def get_live_price(symbol: str, retries: int = 2) -> float | None:
     """
-    Fetch last traded price for a symbol from the IOL real-time quote endpoint.
-    Returns None on any error — caller must decide whether to proceed with stale price.
+    Fetch last traded price from IOL real-time quote endpoint.
+    Retries up to `retries` times on transient failures.
+    Returns None only after all attempts fail — caller decides whether to proceed with stale data.
     """
-    try:
-        data = iol.get(f"/api/v2/bCBA/Titulos/{symbol}/Cotizacion")
-        price = (
-            data.get("ultimoPrecio")
-            or data.get("ultimo")
-            or data.get("ultimoCierre")
-            or data.get("last")
-        )
-        if price:
-            return float(price)
-        log.warning("Live price %s: no price field in response — keys: %s",
-                    symbol, list(data.keys())[:8])
-    except Exception as exc:
-        log.warning("Live price fetch failed for %s: %s", symbol, exc)
+    for attempt in range(retries + 1):
+        try:
+            data = iol.get(f"/api/v2/bCBA/Titulos/{symbol}/Cotizacion")
+            price = (
+                data.get("ultimoPrecio")
+                or data.get("ultimo")
+                or data.get("ultimoCierre")
+                or data.get("last")
+            )
+            if price and float(price) > 0:
+                return float(price)
+            log.warning("Live price %s: no valid price field — keys: %s",
+                        symbol, list(data.keys())[:8])
+            return None
+        except Exception as exc:
+            if attempt < retries:
+                wait = 2 * (attempt + 1)
+                log.warning("Live price fetch %s (attempt %d/%d): %s — retry in %ds",
+                            symbol, attempt + 1, retries + 1, exc, wait)
+                time.sleep(wait)
+            else:
+                log.warning("Live price fetch failed for %s after %d attempts: %s",
+                            symbol, retries + 1, exc)
     return None
 
 # ── Order status ───────────────────────────────────────────────────────────────
 
-def check_order_status(oid: str, wait_secs: int = 5) -> str:
+def check_order_status(oid: str, wait_secs: int = 5) -> tuple[str, int | None]:
     """
     Wait briefly then poll order status from IOL.
-    Returns: 'ejecutada' | 'parcial' | 'pendiente' | 'cancelada' | 'unknown'.
-    'executed' in trades_log means the order was placed; fill_status tells you if it matched.
+    Returns (normalised_status, filled_qty_or_None).
+    Statuses: 'ejecutada' | 'parcial' | 'pendiente' | 'cancelada' | 'unknown'
     """
     if not oid or oid in ("?", "DRY-RUN"):
-        return "unknown"
+        return "unknown", None
+
     time.sleep(wait_secs)
     try:
-        resp  = iol.get(f"/api/v2/operaciones/{oid}")
-        estado = (
-            resp.get("estado") or resp.get("status") or resp.get("Estado") or ""
-        ).lower()
-        log.info("Order #%s fill status: '%s'", oid, estado)
-        if "ejecut" in estado:
-            return "ejecutada"
-        if "parcial" in estado:
-            return "parcial"
-        if "cancel" in estado:
-            return "cancelada"
-        return "pendiente"
+        resp   = iol.get(f"/api/v2/operaciones/{oid}")
+        raw    = (resp.get("estado") or resp.get("status") or resp.get("Estado") or "").lower().strip()
+        status = _IOL_STATE_MAP.get(raw)
+        if status is None:
+            # Substring fallback for unexpected phrasing
+            if "ejecut" in raw:
+                status = "ejecutada"
+            elif "parcial" in raw:
+                status = "parcial"
+            elif "cancel" in raw or "anul" in raw or "rechaz" in raw or "venc" in raw or "expir" in raw:
+                status = "cancelada"
+            else:
+                status = "unknown"
+        log.info("Order #%s status: '%s' → %s", oid, raw, status)
+
+        filled_qty = None
+        for key in ("cantidadEjecutada", "cantidadOperada", "operado", "filledQty"):
+            val = resp.get(key)
+            if val is not None:
+                try:
+                    filled_qty = int(float(val))
+                except (ValueError, TypeError):
+                    pass
+                break
+
+        return status, filled_qty
     except Exception as exc:
         log.warning("Order status check failed for #%s: %s — assuming pending", oid, exc)
-        return "unknown"
+        return "unknown", None
 
 # ── Config parsing ─────────────────────────────────────────────────────────────
 
@@ -487,22 +542,55 @@ def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok,
              side_label, symbol, reason, qty, limit_price, ok, msg)
     return entry
 
+
+def _apply_fill(entry, fill_status, filled_qty, buy_budget, qty, lp, is_buy):
+    """
+    Update log entry with fill result and return adjusted buy_budget and
+    whether to count this op toward the daily limit.
+    fill_status: ejecutada | parcial | pendiente | cancelada | unknown
+    """
+    entry["fill_status"] = fill_status
+
+    if fill_status == "cancelada":
+        entry["status"] = "cancelled"
+        log.info("Order #%s cancelled — not counting toward daily limit.", entry.get("order_id"))
+        return buy_budget, False  # cancelled: no budget deduction, don't count
+
+    if fill_status == "parcial" and filled_qty is not None and is_buy:
+        actual_cost = filled_qty * lp
+        log.warning("Order #%s partially filled: %d/%d acc — deducting $%.0f",
+                    entry.get("order_id"), filled_qty, qty, actual_cost)
+        return buy_budget - actual_cost, True
+
+    # ejecutada / pendiente / unknown — deduct full amount conservatively
+    if is_buy:
+        buy_budget -= qty * lp
+    return buy_budget, True
+
 # ── Market hours ───────────────────────────────────────────────────────────────
 
 def byma_open():
     now     = datetime.now(ART)
-    today_s = now.strftime("%Y-%m-%d")
-    if today_s in ARGENTINA_HOLIDAYS:
-        log.info("Public holiday (%s) — BYMA closed.", today_s)
-        return False
+    today_d = now.date()
+    today_s = today_d.strftime("%Y-%m-%d")
+
+    if HAS_HOLIDAYS:
+        if today_d in _HOLIDAYS_AR:
+            log.info("Public holiday (dynamic) (%s) — BYMA closed.", today_s)
+            return False
+    else:
+        if today_s in _HOLIDAYS_FALLBACK:
+            log.info("Public holiday (static) (%s) — BYMA closed.", today_s)
+            return False
+
     return now.weekday() < 5 and 11 <= now.hour < 17
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 def main():
     now = datetime.now(ART)
-    log.info("Time ART: %s (weekday=%d) | DRY_RUN=%s",
-             now.strftime("%Y-%m-%d %H:%M"), now.weekday(), DRY_RUN)
+    log.info("Time ART: %s (weekday=%d) | DRY_RUN=%s | holidays_lib=%s",
+             now.strftime("%Y-%m-%d %H:%M"), now.weekday(), DRY_RUN, HAS_HOLIDAYS)
 
     if not byma_open():
         log.info("BYMA closed — skipping.")
@@ -520,19 +608,27 @@ def main():
         log.error("Malformed portfolio.json: %s — aborting.", exc)
         return
 
-    # Warn if portfolio data is stale
-    last_updated = portfolio.get("last_updated", "")
-    try:
-        lu_date = datetime.strptime(last_updated[:10], "%Y-%m-%d").date()
-        if lu_date < now.date():
-            log.warning("portfolio.json is stale (last updated: %s)", last_updated)
-            send_telegram(
-                f"⚠️ *Trade Bot*: portfolio.json desactualizado "
-                f"(último update: {last_updated}). "
-                f"Señales pueden ser incorrectas."
-            )
-    except Exception:
-        log.warning("Could not parse last_updated field: %s", last_updated)
+    # Staleness check — visible alert if field is missing or outdated
+    last_updated = portfolio.get("last_updated")
+    if not last_updated:
+        log.warning("portfolio.json has no last_updated field — data freshness unknown")
+        send_telegram(
+            "⚠️ *Trade Bot — ADVERTENCIA*\n"
+            "portfolio.json no tiene campo last\\_updated. "
+            "No se puede verificar la frescura de los datos."
+        )
+    else:
+        try:
+            lu_date = datetime.strptime(last_updated[:10], "%Y-%m-%d").date()
+            if lu_date < now.date():
+                log.warning("portfolio.json is stale (last updated: %s)", last_updated)
+                send_telegram(
+                    f"⚠️ *Trade Bot*: portfolio.json desactualizado "
+                    f"(último update: {last_updated}). "
+                    f"Señales pueden ser incorrectas."
+                )
+        except Exception:
+            log.warning("Could not parse last_updated: %s", last_updated)
 
     trade_log = load_log()
     ops_today = today_op_count(trade_log)
@@ -548,20 +644,30 @@ def main():
     if cash is None:
         return  # error already logged and Telegram-alerted
 
-    # ── Refresh live prices (fixes stale portfolio.json data) ─────────────────
+    # ── Refresh live prices ────────────────────────────────────────────────────
     log.info("Refreshing live prices...")
-    all_items = portfolio.get("positions", []) + portfolio.get("watchlist", [])
+    all_items  = portfolio.get("positions", []) + portfolio.get("watchlist", [])
     stale_syms = []
-    for item in all_items:
-        live = get_live_price(item["symbol"])
+
+    for i, item in enumerate(all_items):
+        if i > 0:
+            time.sleep(0.2)  # avoid rate-limiting on sequential calls
+        sym   = item["symbol"]
+        stale = item.get("unit_price", 0)
+
+        if stale <= 0:
+            log.error("%s: stale price is invalid ($%.4f) — skipping signal", sym, stale)
+            item["_skip"] = True
+            stale_syms.append(sym)
+            continue
+
+        live = get_live_price(sym)
         if live and live > 0:
-            log.info("  %s: live $%.2f (portfolio.json: $%.2f)",
-                     item["symbol"], live, item["unit_price"])
+            log.info("  %s: live $%.2f (portfolio.json: $%.2f)", sym, live, stale)
             item["unit_price"] = live
         else:
-            log.warning("  %s: live price unavailable — using stale $%.2f",
-                        item["symbol"], item["unit_price"])
-            stale_syms.append(item["symbol"])
+            log.warning("  %s: live unavailable — using stale $%.2f", sym, stale)
+            stale_syms.append(sym)
 
     if stale_syms:
         send_telegram(
@@ -569,7 +675,7 @@ def main():
             f"{', '.join(stale_syms)}. Usando datos de portfolio.json."
         )
 
-    # Symbols already held — used to prevent duplicate watchlist buys
+    # Symbols already held (qty > 0) — prevent duplicate watchlist buys
     portfolio_syms = {
         p["symbol"] for p in portfolio.get("positions", [])
         if p.get("quantity", 0) > 0
@@ -582,7 +688,7 @@ def main():
     # Only real (non-DRY_RUN) executions count toward the daily limit
     executed: list = []
 
-    # Health-check: startup notification
+    # Health-check startup notification
     mode_tag = "[SIMULACIÓN] " if DRY_RUN else ""
     send_telegram(
         f"🤖 *Trade Bot {mode_tag}— {now.strftime('%H:%M')} ART*\n"
@@ -593,9 +699,11 @@ def main():
     for pos in portfolio.get("positions", []):
         if not DRY_RUN and ops_today + len(executed) >= max_ops:
             break
+        if pos.get("_skip"):
+            continue
 
         sym   = pos["symbol"]
-        price = pos["unit_price"]   # live price if refresh succeeded
+        price = pos["unit_price"]
         ppc   = pos.get("ppc", price) or price
         rsi   = pos.get("rsi")
         ma20  = pos.get("ma20")
@@ -613,11 +721,10 @@ def main():
             ok, oid, msg = place_order(sym, "sell", qty, lp, term)
             entry = log_and_notify(trade_log, sym, "sell", "stop-loss", qty, price, lp, ok, oid, msg)
             if ok and not DRY_RUN:
-                fill = check_order_status(oid)
-                entry["fill_status"] = fill
-                if fill not in ("ejecutada", "unknown"):
-                    log.warning("%s stop-loss order #%s not yet filled: %s", sym, oid, fill)
-                executed.append(entry)
+                fill, fqty = check_order_status(oid)
+                buy_budget, count = _apply_fill(entry, fill, fqty, buy_budget, qty, lp, is_buy=False)
+                if count:
+                    executed.append(entry)
             continue
 
         # Take-profit — sell half position
@@ -631,11 +738,10 @@ def main():
             ok, oid, msg = place_order(sym, "sell", sell_qty, lp, term)
             entry = log_and_notify(trade_log, sym, "sell", "take-profit", sell_qty, price, lp, ok, oid, msg)
             if ok and not DRY_RUN:
-                fill = check_order_status(oid)
-                entry["fill_status"] = fill
-                if fill not in ("ejecutada", "unknown"):
-                    log.warning("%s take-profit order #%s not yet filled: %s", sym, oid, fill)
-                executed.append(entry)
+                fill, fqty = check_order_status(oid)
+                buy_budget, count = _apply_fill(entry, fill, fqty, buy_budget, sell_qty, lp, is_buy=False)
+                if count:
+                    executed.append(entry)
             continue
 
         # RSI buy — averaging down on existing position
@@ -651,14 +757,13 @@ def main():
                 continue
             ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
             entry = log_and_notify(trade_log, sym, "buy", "RSI+MA20", buy_qty, price, lp, ok, oid, msg)
-            if ok:
+            if ok and DRY_RUN:
                 buy_budget -= buy_qty * lp
-            if ok and not DRY_RUN:
-                fill = check_order_status(oid)
-                entry["fill_status"] = fill
-                if fill not in ("ejecutada", "unknown"):
-                    log.warning("%s RSI buy order #%s not yet filled: %s", sym, oid, fill)
-                executed.append(entry)
+            elif ok:
+                fill, fqty = check_order_status(oid)
+                buy_budget, count = _apply_fill(entry, fill, fqty, buy_budget, buy_qty, lp, is_buy=True)
+                if count:
+                    executed.append(entry)
             continue
 
         # RSI sell — sell half position
@@ -673,16 +778,17 @@ def main():
             ok, oid, msg = place_order(sym, "sell", sell_qty, lp, term)
             entry = log_and_notify(trade_log, sym, "sell", "RSI+MA20", sell_qty, price, lp, ok, oid, msg)
             if ok and not DRY_RUN:
-                fill = check_order_status(oid)
-                entry["fill_status"] = fill
-                if fill not in ("ejecutada", "unknown"):
-                    log.warning("%s RSI sell order #%s not yet filled: %s", sym, oid, fill)
-                executed.append(entry)
+                fill, fqty = check_order_status(oid)
+                buy_budget, count = _apply_fill(entry, fill, fqty, buy_budget, sell_qty, lp, is_buy=False)
+                if count:
+                    executed.append(entry)
 
     # ── Watchlist: open new positions ─────────────────────────────────────────
     for wpos in portfolio.get("watchlist", []):
         if not DRY_RUN and ops_today + len(executed) >= max_ops:
             break
+        if wpos.get("_skip"):
+            continue
 
         sym = wpos["symbol"]
         if sym in portfolio_syms:
@@ -709,14 +815,13 @@ def main():
             entry = log_and_notify(
                 trade_log, sym, "buy", "RSI+MA20 (watchlist)", buy_qty, price, lp, ok, oid, msg
             )
-            if ok:
+            if ok and DRY_RUN:
                 buy_budget -= buy_qty * lp
-            if ok and not DRY_RUN:
-                fill = check_order_status(oid)
-                entry["fill_status"] = fill
-                if fill not in ("ejecutada", "unknown"):
-                    log.warning("%s watchlist buy order #%s not yet filled: %s", sym, oid, fill)
-                executed.append(entry)
+            elif ok:
+                fill, fqty = check_order_status(oid)
+                buy_budget, count = _apply_fill(entry, fill, fqty, buy_budget, buy_qty, lp, is_buy=True)
+                if count:
+                    executed.append(entry)
 
     save_log(trade_log)
     n_real = len(executed)
