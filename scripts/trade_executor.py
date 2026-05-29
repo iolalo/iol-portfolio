@@ -12,15 +12,23 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+# ── Dependencias opcionales ───────────────────────────────────────────────────
 try:
     import holidays as _holidays_lib
     _HOLIDAYS_AR = _holidays_lib.country_holidays("AR")
     HAS_HOLIDAYS = True
 except ImportError:
     HAS_HOLIDAYS = False
+    print("⚠️  Librería 'holidays' no instalada – usando lista estática de feriados.")
+
+try:
+    import yfinance as yf
+    HAS_YFINANCE = True
+except ImportError:
+    HAS_YFINANCE = False
+    print("⚠️  Librería 'yfinance' no instalada – los indicadores RSI/MA20 se tomarán del portfolio.json.")
 
 # ── Logging ───────────────────────────────────────────────────────────────────
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)-8s %(message)s",
@@ -29,7 +37,6 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # ── Constants ─────────────────────────────────────────────────────────────────
-
 IOL_BASE   = "https://api.invertironline.com"
 ART        = timezone(timedelta(hours=-3))
 SCRIPT_DIR = Path(__file__).parent
@@ -47,7 +54,7 @@ _HEADERS = {
     ),
 }
 
-# Static fallback holidays — used only when the `holidays` package is unavailable
+# ── Feriados estáticos (fallback) ─────────────────────────────────────────────
 _HOLIDAYS_FALLBACK = {
     "2025-01-01", "2025-03-03", "2025-03-04", "2025-04-02", "2025-04-17",
     "2025-04-18", "2025-05-01", "2025-05-25", "2025-06-16", "2025-06-20",
@@ -58,7 +65,7 @@ _HOLIDAYS_FALLBACK = {
     "2026-08-17", "2026-10-12", "2026-11-20", "2026-12-08", "2026-12-25",
 }
 
-# Known IOL order states → normalised value
+# ── Mapeo de estados de órdenes IOL ───────────────────────────────────────────
 _IOL_STATE_MAP = {
     "ejecutada":                "ejecutada",
     "ejecutado":                "ejecutada",
@@ -77,7 +84,6 @@ _IOL_STATE_MAP = {
 }
 
 # ── Environment validation ────────────────────────────────────────────────────
-
 def _require_env(*names):
     missing = [n for n in names if not os.getenv(n)]
     if missing:
@@ -92,18 +98,18 @@ TG_TOKEN   = os.environ.get("TELEGRAM_TOKEN", "")
 TG_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 DRY_RUN    = os.environ.get("DRY_RUN", "true").lower() == "true"
 
-# ── Telegram ──────────────────────────────────────────────────────────────────
-
-_MD_SPECIAL = ("\\", "_", "*", "`", "[", "]", "(", ")", "~", ">",
-               "#", "+", "-", "=", "|", "{", "}", ".", "!")
-
+# ── Telegram helpers (MarkdownV2) ─────────────────────────────────────────────
+_MD_V2_SPECIAL = [
+    "_", "*", "[", "]", "(", ")", "~", "`", ">",
+    "#", "+", "-", "=", "|", "{", "}", ".", "!"
+]
 
 def _escape_md(text: str) -> str:
-    """Escape all Telegram MarkdownV2 special characters in dynamic content."""
-    for ch in _MD_SPECIAL:
+    """Escapa caracteres especiales para Telegram MarkdownV2."""
+    # Se debe escapar primero '\' para no duplicar
+    for ch in ["\\"] + _MD_V2_SPECIAL:
         text = text.replace(ch, f"\\{ch}")
     return text
-
 
 def send_telegram(text: str) -> None:
     if not TG_TOKEN or not TG_CHAT_ID:
@@ -111,7 +117,11 @@ def send_telegram(text: str) -> None:
     try:
         r = requests.post(
             f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage",
-            json={"chat_id": TG_CHAT_ID, "text": text, "parse_mode": "Markdown"},
+            json={
+                "chat_id": TG_CHAT_ID,
+                "text": text,
+                "parse_mode": "MarkdownV2",
+            },
             timeout=10,
         )
         if not r.ok:
@@ -120,7 +130,6 @@ def send_telegram(text: str) -> None:
         log.warning("Telegram send failed: %s", exc)
 
 # ── HTTP session ──────────────────────────────────────────────────────────────
-
 def _build_session():
     s = requests.Session()
     retry = Retry(
@@ -132,7 +141,6 @@ def _build_session():
     )
     s.mount("https://", HTTPAdapter(max_retries=retry))
     return s
-
 
 class _IOLSession:
     """Thread-safe IOL client with persistent session and auto-refresh on 401."""
@@ -227,18 +235,11 @@ class _IOLSession:
             except requests.exceptions.RequestException:
                 raise
 
-
 iol = _IOLSession()
 
 # ── Tick size ─────────────────────────────────────────────────────────────────
-
 def _round_to_tick(price: float, side: str) -> float:
-    """
-    Round a limit price to the nearest valid BYMA tick.
-    Tiers are approximations — update if IOL rejects specific instruments.
-    Buy rounds UP (aggressive), sell rounds DOWN (conservative) for fill probability.
-    Always returns a value > 0.
-    """
+    """Redondea al tick de BYMA; compra hacia arriba, venta hacia abajo."""
     if price < 1:          tick = 0.001
     elif price < 10:       tick = 0.01
     elif price < 100:      tick = 0.05
@@ -252,16 +253,11 @@ def _round_to_tick(price: float, side: str) -> float:
     else:
         result = round(math.floor(price / tick) * tick, 6)
 
-    return max(tick, result)  # guard: never return 0 or negative
+    return max(tick, result)
 
 # ── Live price ─────────────────────────────────────────────────────────────────
-
 def get_live_price(symbol: str, retries: int = 2) -> float | None:
-    """
-    Fetch last traded price from IOL real-time quote endpoint.
-    Retries up to `retries` times on transient failures.
-    Returns None only after all attempts fail — caller decides whether to proceed with stale data.
-    """
+    """Precio de mercado IOL con reintentos."""
     for attempt in range(retries + 1):
         try:
             data = iol.get(f"/api/v2/bCBA/Titulos/{symbol}/Cotizacion")
@@ -279,7 +275,7 @@ def get_live_price(symbol: str, retries: int = 2) -> float | None:
         except Exception as exc:
             if attempt < retries:
                 wait = 2 * (attempt + 1)
-                log.warning("Live price fetch %s (attempt %d/%d): %s — retry in %ds",
+                log.warning("Live price %s (attempt %d/%d): %s — retry in %ds",
                             symbol, attempt + 1, retries + 1, exc, wait)
                 time.sleep(wait)
             else:
@@ -288,28 +284,26 @@ def get_live_price(symbol: str, retries: int = 2) -> float | None:
     return None
 
 # ── Order status ───────────────────────────────────────────────────────────────
-
 def check_order_status(oid: str, wait_secs: int = 5) -> tuple[str, int | None]:
     """
-    Wait briefly then poll order status from IOL.
-    Returns (normalised_status, filled_qty_or_None).
-    Statuses: 'ejecutada' | 'parcial' | 'pendiente' | 'cancelada' | 'unknown'
+    Consulta el estado de una orden y devuelve (estado, cantidad_ejecutada).
+    Estados normalizados: 'ejecutada', 'parcial', 'pendiente', 'cancelada', 'unknown'.
     """
     if not oid or oid in ("?", "DRY-RUN"):
         return "unknown", None
 
     time.sleep(wait_secs)
     try:
-        resp   = iol.get(f"/api/v2/operaciones/{oid}")
-        raw    = (resp.get("estado") or resp.get("status") or resp.get("Estado") or "").lower().strip()
+        resp = iol.get(f"/api/v2/operaciones/{oid}")
+        raw  = (resp.get("estado") or resp.get("status") or resp.get("Estado") or "").lower().strip()
         status = _IOL_STATE_MAP.get(raw)
         if status is None:
-            # Substring fallback for unexpected phrasing
+            # Heurística
             if "ejecut" in raw:
                 status = "ejecutada"
             elif "parcial" in raw:
                 status = "parcial"
-            elif "cancel" in raw or "anul" in raw or "rechaz" in raw or "venc" in raw or "expir" in raw:
+            elif any(k in raw for k in ("cancel", "anul", "rechaz", "venc", "expir")):
                 status = "cancelada"
             else:
                 status = "unknown"
@@ -324,14 +318,51 @@ def check_order_status(oid: str, wait_secs: int = 5) -> tuple[str, int | None]:
                 except (ValueError, TypeError):
                     pass
                 break
-
         return status, filled_qty
     except Exception as exc:
         log.warning("Order status check failed for #%s: %s — assuming pending", oid, exc)
         return "unknown", None
 
-# ── Config parsing ─────────────────────────────────────────────────────────────
+# ── Indicadores técnicos (RSI / SMA) con yfinance ─────────────────────────────
+def _get_historical_prices(symbol: str, period_days: int = 60) -> list[float]:
+    """Obtiene lista de precios de cierre diarios desde Yahoo Finance (BYMA)."""
+    if not HAS_YFINANCE:
+        return []
+    try:
+        ticker = yf.Ticker(symbol + ".BA")
+        df = ticker.history(period=f"{period_days}d")
+        if df.empty:
+            log.warning("%s: sin datos históricos en Yahoo Finance.", symbol)
+            return []
+        return df["Close"].tolist()
+    except Exception as e:
+        log.warning("Error descargando histórico para %s: %s", symbol, e)
+        return []
 
+def compute_rsi(closes: list[float], period: int = 14) -> float | None:
+    """RSI estándar (Wilder) sobre lista de cierres."""
+    if len(closes) < period + 1:
+        return None
+    deltas = [closes[i] - closes[i-1] for i in range(1, len(closes))]
+    gains = [d if d > 0 else 0 for d in deltas]
+    losses = [-d if d < 0 else 0 for d in deltas]
+    avg_gain = sum(gains[:period]) / period
+    avg_loss = sum(losses[:period]) / period
+    for i in range(period, len(deltas)):
+        avg_gain = (avg_gain * (period - 1) + gains[i]) / period
+        avg_loss = (avg_loss * (period - 1) + losses[i]) / period
+    if avg_loss == 0:
+        return 100.0
+    rs = avg_gain / avg_loss
+    return 100.0 - (100.0 / (1 + rs))
+
+def compute_sma(closes: list[float], period: int = 20) -> float | None:
+    """Media móvil simple de 'period' ruedas."""
+    if len(closes) < period:
+        return None
+    return sum(closes[-period:]) / period
+
+# ── Config parsing ─────────────────────────────────────────────────────────────
 DEFAULTS = {
     "rsi_buy":            35.0,
     "rsi_sell":           65.0,
@@ -344,9 +375,8 @@ DEFAULTS = {
     "limit_slippage_pct":  0.5,
 }
 
-
 def _coerce(value: str, target):
-    """Robustly cast value to the same type as target. Falls back to str."""
+    """Convierte value al mismo tipo que target, con fallback a str."""
     if isinstance(target, bool):
         return value.lower() in ("true", "1", "yes")
     for cast in (type(target), int, float):
@@ -355,7 +385,6 @@ def _coerce(value: str, target):
         except (ValueError, TypeError):
             continue
     return value
-
 
 def parse_context():
     rules     = dict(DEFAULTS)
@@ -396,7 +425,6 @@ def parse_context():
     return rules, overrides
 
 # ── Trades log ─────────────────────────────────────────────────────────────────
-
 def load_log():
     if not TRADES_LOG.exists():
         return []
@@ -409,13 +437,11 @@ def load_log():
         log.error("Malformed trades_log.json: %s — starting fresh", exc)
         return []
 
-
 def save_log(trade_log):
     TRADES_LOG.parent.mkdir(exist_ok=True)
     TRADES_LOG.write_text(
         json.dumps(trade_log, ensure_ascii=False, indent=2), encoding="utf-8"
     )
-
 
 def today_op_count(trade_log):
     today = datetime.now(ART).strftime("%Y-%m-%d")
@@ -424,9 +450,7 @@ def today_op_count(trade_log):
                and t.get("status") == "executed")
 
 # ── Balance ───────────────────────────────────────────────────────────────────
-
 def get_cash(term="t1") -> float | None:
-    """Returns ARS cash available, or None on error (caller must abort)."""
     liquidacion_map = {"t0": "inmediato", "t1": "hrs24", "t2": "hrs48"}
     target_liq = liquidacion_map.get(term, "hrs24")
     try:
@@ -446,17 +470,15 @@ def get_cash(term="t1") -> float | None:
     except Exception as exc:
         log.error("Balance fetch failed: %s", exc)
         send_telegram(
-            f"❌ *Trade Bot — ERROR de saldo*\n"
+            "❌ *Trade Bot — ERROR de saldo*\n"
             f"No se pudo obtener el efectivo disponible:\n"
             f"`{_escape_md(str(exc)[:300])}`\n"
-            f"_Bot abortado — operar sin conocer el saldo real es peligroso._"
+            "_Bot abortado — operar sin conocer el saldo real es peligroso\\._"
         )
     return None
 
 # ── Order execution ────────────────────────────────────────────────────────────
-
 def place_order(symbol, side, qty, limit_price, term):
-    """Validate + place a limit order. Returns (ok, order_id, msg)."""
     body = {
         "mercado":   "bCBA",
         "simbolo":   symbol,
@@ -472,7 +494,7 @@ def place_order(symbol, side, qty, limit_price, term):
     if DRY_RUN:
         return True, "DRY-RUN", f"DRY RUN — {side} {qty}x {symbol} @ {limit_price}"
 
-    # Step 1 — Validar, extraer validacionId
+    # Validar
     validation_id = None
     try:
         val = iol.post("/api/v2/operaciones/Validar", body)
@@ -493,14 +515,13 @@ def place_order(symbol, side, qty, limit_price, term):
     if not validation_id:
         return False, None, "Validate returned no validacionId"
 
-    # Step 2 — Ejecutar con validacionId en el path
+    # Ejecutar
     try:
         resp = iol.post(f"/api/v2/operaciones/{validation_id}", body)
         oid  = str(resp.get("id", resp.get("numeroOperacion", resp.get("numero", "?"))))
         return True, oid, f"OK #{oid}"
     except Exception as exc:
         return False, None, str(exc)
-
 
 def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok, oid, msg):
     entry = {
@@ -522,17 +543,17 @@ def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok,
 
     if DRY_RUN:
         send_telegram(
-            f"🔵 *[SIMULACIÓN] {side_label} {symbol}* — {reason.upper()}\n"
+            f"🔵 *\\[SIMULACIÓN\\] {side_label} {_escape_md(symbol)}* — {reason.upper()}\n"
             f"Señal: {qty} acc a límite ${limit_price:,.2f}\n"
             f"Precio ref: ${price:,.0f}\n"
-            f"_(bot en modo DRY RUN — no se ejecutó ninguna orden real)_"
+            "_bot en modo DRY RUN — no se ejecutó ninguna orden real_"
         )
     else:
         action = "Compré" if side == "buy" else "Vendí"
         detail = (f"✅ Orden #{_escape_md(str(oid))}" if ok
                   else f"❌ {_escape_md(msg[:200])}")
         send_telegram(
-            f"{icon} *{side_label} {symbol}* — {reason.upper()}\n"
+            f"{icon} *{side_label} {_escape_md(symbol)}* — {reason.upper()}\n"
             f"{action} {qty} acc a límite ${limit_price:,.2f}\n"
             f"Precio ref: ${price:,.0f}\n"
             f"{detail}"
@@ -542,33 +563,43 @@ def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok,
              side_label, symbol, reason, qty, limit_price, ok, msg)
     return entry
 
-
 def _apply_fill(entry, fill_status, filled_qty, buy_budget, qty, lp, is_buy):
     """
-    Update log entry with fill result and return adjusted buy_budget and
-    whether to count this op toward the daily limit.
-    fill_status: ejecutada | parcial | pendiente | cancelada | unknown
+    Actualiza la entrada del log con el resultado del fill.
+    Devuelve (nuevo_buy_budget, debe_contar_para_limite).
     """
     entry["fill_status"] = fill_status
 
     if fill_status == "cancelada":
         entry["status"] = "cancelled"
-        log.info("Order #%s cancelled — not counting toward daily limit.", entry.get("order_id"))
-        return buy_budget, False  # cancelled: no budget deduction, don't count
+        log.info("Order #%s cancelled – no se descuenta ni cuenta para el límite.", entry.get("order_id"))
+        return buy_budget, False
 
-    if fill_status == "parcial" and filled_qty is not None and is_buy:
-        actual_cost = filled_qty * lp
-        log.warning("Order #%s partially filled: %d/%d acc — deducting $%.0f",
-                    entry.get("order_id"), filled_qty, qty, actual_cost)
-        return buy_budget - actual_cost, True
+    if fill_status == "parcial":
+        if filled_qty is not None:
+            # Cantidad conocida: actualizar el log y descontar solo lo real
+            entry["quantity"] = filled_qty
+            entry["message"] += f" (parcial: {filled_qty}/{qty})"
+            if is_buy:
+                real_cost = filled_qty * lp
+                log.warning("Orden #%s parcial: %d/%d acc – descontando $%.0f",
+                            entry.get("order_id"), filled_qty, qty, real_cost)
+                return buy_budget - real_cost, True
+            else:
+                return buy_budget, True  # venta no afecta buy_budget
+        else:
+            # No sabemos cuánto se ejecutó – conservador: no descontar nada
+            log.warning("Orden #%s parcial sin cantidad ejecutada – no se descuenta presupuesto.",
+                        entry.get("order_id"))
+            entry["message"] += " (parcial, cantidad desconocida)"
+            return buy_budget, True  # asumimos que se ejecutó algo, cuenta para el límite
 
-    # ejecutada / pendiente / unknown — deduct full amount conservatively
+    # Ejecutada totalmente o pendiente/unknown
     if is_buy:
         buy_budget -= qty * lp
     return buy_budget, True
 
 # ── Market hours ───────────────────────────────────────────────────────────────
-
 def byma_open():
     now     = datetime.now(ART)
     today_d = now.date()
@@ -576,21 +607,20 @@ def byma_open():
 
     if HAS_HOLIDAYS:
         if today_d in _HOLIDAYS_AR:
-            log.info("Public holiday (dynamic) (%s) — BYMA closed.", today_s)
+            log.info("Feriado (dinámico) (%s) — BYMA cerrado.", today_s)
             return False
     else:
         if today_s in _HOLIDAYS_FALLBACK:
-            log.info("Public holiday (static) (%s) — BYMA closed.", today_s)
+            log.info("Feriado (estático) (%s) — BYMA cerrado.", today_s)
             return False
 
     return now.weekday() < 5 and 11 <= now.hour < 17
 
 # ── Main ───────────────────────────────────────────────────────────────────────
-
 def main():
     now = datetime.now(ART)
-    log.info("Time ART: %s (weekday=%d) | DRY_RUN=%s | holidays_lib=%s",
-             now.strftime("%Y-%m-%d %H:%M"), now.weekday(), DRY_RUN, HAS_HOLIDAYS)
+    log.info("Time ART: %s (weekday=%d) | DRY_RUN=%s | holidays_lib=%s | yfinance=%s",
+             now.strftime("%Y-%m-%d %H:%M"), now.weekday(), DRY_RUN, HAS_HOLIDAYS, HAS_YFINANCE)
 
     if not byma_open():
         log.info("BYMA closed — skipping.")
@@ -608,74 +638,95 @@ def main():
         log.error("Malformed portfolio.json: %s — aborting.", exc)
         return
 
-    # Staleness check — visible alert if field is missing or outdated
+    # Verificar frescura de los datos del portfolio
     last_updated = portfolio.get("last_updated")
     if not last_updated:
-        log.warning("portfolio.json has no last_updated field — data freshness unknown")
+        log.warning("portfolio.json sin campo last_updated – no se puede verificar frescura.")
         send_telegram(
             "⚠️ *Trade Bot — ADVERTENCIA*\n"
-            "portfolio.json no tiene campo last\\_updated. "
-            "No se puede verificar la frescura de los datos."
+            "portfolio\\.json no tiene campo `last_updated`\\. "
+            "No se puede verificar la frescura de los datos\\."
         )
     else:
         try:
             lu_date = datetime.strptime(last_updated[:10], "%Y-%m-%d").date()
             if lu_date < now.date():
-                log.warning("portfolio.json is stale (last updated: %s)", last_updated)
+                log.warning("portfolio.json desactualizado (último update: %s)", last_updated)
                 send_telegram(
-                    f"⚠️ *Trade Bot*: portfolio.json desactualizado "
-                    f"(último update: {last_updated}). "
-                    f"Señales pueden ser incorrectas."
+                    f"⚠️ *Trade Bot*: portfolio\\.json desactualizado "
+                    f"\\(último update: {last_updated}\\)\\. "
+                    f"Señales pueden ser incorrectas\\."
                 )
         except Exception:
-            log.warning("Could not parse last_updated: %s", last_updated)
+            log.warning("No se pudo parsear last_updated: %s", last_updated)
 
     trade_log = load_log()
     ops_today = today_op_count(trade_log)
     max_ops   = int(rules["max_ops_per_day"])
 
     if not DRY_RUN and ops_today >= max_ops:
-        log.info("Daily limit reached (%d/%d).", ops_today, max_ops)
+        log.info("Límite diario alcanzado (%d/%d).", ops_today, max_ops)
         return
 
     iol.authenticate()
     term = str(rules["settlement_term"])
     cash = get_cash(term)
     if cash is None:
-        return  # error already logged and Telegram-alerted
+        return
 
-    # ── Refresh live prices ────────────────────────────────────────────────────
-    log.info("Refreshing live prices...")
-    all_items  = portfolio.get("positions", []) + portfolio.get("watchlist", [])
+    # ── Refrescar precios en vivo y recalcular indicadores ────────────────────
+    log.info("Refrescando precios en vivo y recalculando indicadores...")
+    all_items = portfolio.get("positions", []) + portfolio.get("watchlist", [])
     stale_syms = []
 
     for i, item in enumerate(all_items):
         if i > 0:
-            time.sleep(0.2)  # avoid rate-limiting on sequential calls
-        sym   = item["symbol"]
-        stale = item.get("unit_price", 0)
+            time.sleep(0.2)  # rate-limit
 
-        if stale <= 0:
-            log.error("%s: stale price is invalid ($%.4f) — skipping signal", sym, stale)
+        sym = item["symbol"]
+        # Precio en vivo
+        stale_price = item.get("unit_price", 0)
+        if stale_price <= 0:
+            log.error("%s: precio en portfolio.json inválido ($%.4f) — omitiendo señal.", sym, stale_price)
             item["_skip"] = True
             stale_syms.append(sym)
             continue
 
         live = get_live_price(sym)
         if live and live > 0:
-            log.info("  %s: live $%.2f (portfolio.json: $%.2f)", sym, live, stale)
+            log.info("  %s: live $%.2f (portfolio: $%.2f)", sym, live, stale_price)
             item["unit_price"] = live
         else:
-            log.warning("  %s: live unavailable — using stale $%.2f", sym, stale)
+            log.warning("  %s: precio en vivo no disponible – usando $%.2f del portfolio.", sym, stale_price)
+            stale_syms.append(sym)
+
+        # Recalcular RSI y MA20 (solo si hay datos históricos)
+        if HAS_YFINANCE:
+            closes = _get_historical_prices(sym, period_days=60)
+            if len(closes) >= 21:
+                new_rsi = compute_rsi(closes, 14)
+                new_ma20 = compute_sma(closes, 20)
+                if new_rsi is not None:
+                    item["rsi"] = round(new_rsi, 2)
+                if new_ma20 is not None:
+                    item["ma20"] = round(new_ma20, 2)
+            else:
+                log.warning("%s: histórico insuficiente – manteniendo RSI/MA del portfolio (si existen).", sym)
+
+        # Validar que tengamos los campos necesarios para las señales
+        if item.get("rsi") is None or item.get("ma20") is None:
+            log.warning("%s: falta RSI o MA20 – se omite señal para este instrumento.", sym)
+            item["_skip"] = True
             stale_syms.append(sym)
 
     if stale_syms:
         send_telegram(
-            f"⚠️ *Trade Bot*: precios en vivo no disponibles para: "
-            f"{', '.join(stale_syms)}. Usando datos de portfolio.json."
+            "⚠️ *Trade Bot*: precios en vivo no disponibles para: "
+            f"{', '.join(stale_syms)}\\. Usando datos de portfolio\\.json "
+            "y se omitirán señales si faltan indicadores\\."
         )
 
-    # Symbols already held (qty > 0) — prevent duplicate watchlist buys
+    # Conjunto de símbolos en cartera (cantidad > 0)
     portfolio_syms = {
         p["symbol"] for p in portfolio.get("positions", [])
         if p.get("quantity", 0) > 0
@@ -684,18 +735,17 @@ def main():
     usable     = max(0.0, cash - float(rules["cash_reserve_ars"]))
     slip       = float(rules["limit_slippage_pct"]) / 100
     buy_budget = usable * float(rules["buy_cash_pct"]) / 100
-
-    # Only real (non-DRY_RUN) executions count toward the daily limit
     executed: list = []
 
-    # Health-check startup notification
-    mode_tag = "[SIMULACIÓN] " if DRY_RUN else ""
+    # Notificación de inicio con resumen
+    n_pos = len(portfolio.get("positions", []))
+    n_wl  = len(portfolio.get("watchlist", []))
     send_telegram(
-        f"🤖 *Trade Bot {mode_tag}— {now.strftime('%H:%M')} ART*\n"
-        f"💰 Cash: ${cash:,.0f} ARS | Posiciones: {len(portfolio.get('positions', []))}"
+        f"🤖 *Trade Bot \\[{'SIMULACIÓN' if DRY_RUN else 'REAL'}\\] — {now.strftime('%H:%M')} ART*\n"
+        f"💰 Cash: ${cash:,.0f} ARS | Posiciones: {n_pos} | Watchlist: {n_wl}"
     )
 
-    # ── Portfolio: stop-loss / take-profit / RSI signals ─────────────────────
+    # ── Procesar posiciones (stop-loss / take-profit / RSI) ──────────────────
     for pos in portfolio.get("positions", []):
         if not DRY_RUN and ops_today + len(executed) >= max_ops:
             break
@@ -707,15 +757,14 @@ def main():
         ppc   = pos.get("ppc", price) or price
         rsi   = pos.get("rsi")
         ma20  = pos.get("ma20")
-        rec   = pos.get("recommendation", "MANTENER")
         qty   = pos.get("quantity", 0)
         ov    = overrides.get(sym, {})
 
-        # Stop-loss — sell full position
+        # Stop-loss
         sl_pct = float(ov.get("stop_loss_pct", rules["stop_loss_pct"]))
         if qty > 0 and ppc > 0 and price <= ppc * (1 - sl_pct / 100):
             if ov.get("no_sell"):
-                log.info("%s: stop-loss triggered but no_sell override — skip", sym)
+                log.info("%s: stop-loss pero no_sell override — skip", sym)
                 continue
             lp = _round_to_tick(price * (1 - slip), "sell")
             ok, oid, msg = place_order(sym, "sell", qty, lp, term)
@@ -727,11 +776,11 @@ def main():
                     executed.append(entry)
             continue
 
-        # Take-profit — sell half position
+        # Take-profit
         tp_pct = float(ov.get("take_profit_pct", rules["take_profit_pct"]))
         if qty > 0 and ppc > 0 and price >= ppc * (1 + tp_pct / 100):
             if ov.get("no_sell"):
-                log.info("%s: take-profit triggered but no_sell override — skip", sym)
+                log.info("%s: take-profit pero no_sell override — skip", sym)
                 continue
             sell_qty = max(1, qty // 2)
             lp = _round_to_tick(price * (1 - slip), "sell")
@@ -744,16 +793,15 @@ def main():
                     executed.append(entry)
             continue
 
-        # RSI buy — averaging down on existing position
+        # RSI compra (solo si estamos debajo de MA20 y RSI bajo)
         rsi_buy = float(ov.get("rsi_buy", rules["rsi_buy"]))
-        if (rec == "COMPRAR"
-                and rsi is not None and rsi < rsi_buy
-                and ma20 is not None and price < ma20
+        if (rsi is not None and ma20 is not None
+                and rsi < rsi_buy and price < ma20
                 and not ov.get("no_buy")):
             lp      = _round_to_tick(price * (1 + slip), "buy")
             buy_qty = max(1, int(buy_budget // lp))
-            if buy_qty * lp > buy_budget:
-                log.info("%s: insufficient budget (need $%.0f, have $%.0f)", sym, buy_qty * lp, buy_budget)
+            if buy_qty * lp > buy_budget + 1e-6:
+                log.info("%s: presupuesto insuficiente (necesito $%.0f, tengo $%.0f)", sym, buy_qty * lp, buy_budget)
                 continue
             ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
             entry = log_and_notify(trade_log, sym, "buy", "RSI+MA20", buy_qty, price, lp, ok, oid, msg)
@@ -766,11 +814,10 @@ def main():
                     executed.append(entry)
             continue
 
-        # RSI sell — sell half position
+        # RSI venta
         rsi_sell = float(ov.get("rsi_sell", rules["rsi_sell"]))
-        if (rec == "VENDER"
-                and rsi is not None and rsi > rsi_sell
-                and ma20 is not None and price > ma20
+        if (rsi is not None and ma20 is not None
+                and rsi > rsi_sell and price > ma20
                 and qty > 0
                 and not ov.get("no_sell")):
             sell_qty = max(1, qty // 2)
@@ -783,7 +830,7 @@ def main():
                 if count:
                     executed.append(entry)
 
-    # ── Watchlist: open new positions ─────────────────────────────────────────
+    # ── Watchlist (abrir nuevas posiciones) ───────────────────────────────────
     for wpos in portfolio.get("watchlist", []):
         if not DRY_RUN and ops_today + len(executed) >= max_ops:
             break
@@ -792,24 +839,22 @@ def main():
 
         sym = wpos["symbol"]
         if sym in portfolio_syms:
-            log.info("%s: already held — skip watchlist buy", sym)
+            log.info("%s: ya en cartera — omitir compra de watchlist.", sym)
             continue
 
         price = wpos["unit_price"]
         rsi   = wpos.get("rsi")
         ma20  = wpos.get("ma20")
-        rec   = wpos.get("recommendation", "MANTENER")
         ov    = overrides.get(sym, {})
 
         rsi_buy = float(ov.get("rsi_buy", rules["rsi_buy"]))
-        if (rec == "COMPRAR"
-                and rsi is not None and rsi < rsi_buy
-                and ma20 is not None and price < ma20
+        if (rsi is not None and ma20 is not None
+                and rsi < rsi_buy and price < ma20
                 and not ov.get("no_buy")):
             lp      = _round_to_tick(price * (1 + slip), "buy")
             buy_qty = max(1, int(buy_budget // lp))
-            if buy_qty * lp > buy_budget:
-                log.info("%s: insufficient budget (need $%.0f, have $%.0f)", sym, buy_qty * lp, buy_budget)
+            if buy_qty * lp > buy_budget + 1e-6:
+                log.info("%s: presupuesto insuficiente (necesito $%.0f, tengo $%.0f)", sym, buy_qty * lp, buy_budget)
                 continue
             ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
             entry = log_and_notify(
@@ -825,9 +870,8 @@ def main():
 
     save_log(trade_log)
     n_real = len(executed)
-    log.info("Done — %d trade(s) executed today (%d/%d).",
+    log.info("Finalizado — %d operaciones ejecutadas hoy (%d/%d).",
              n_real, ops_today + n_real, max_ops)
-
 
 if __name__ == "__main__":
     main()
