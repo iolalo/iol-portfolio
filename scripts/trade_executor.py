@@ -97,6 +97,8 @@ IOL_PASS   = os.environ["IOL_PASSWORD"]
 TG_TOKEN   = os.environ.get("TELEGRAM_TOKEN", "")
 TG_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 DRY_RUN    = os.environ.get("DRY_RUN", "true").lower() == "true"
+SCAN_BUDGET_PCT  = float(os.environ.get("SCAN_BUDGET_PCT", "30"))
+SCAN_ASSET_TYPES = os.environ.get("SCAN_ASSET_TYPES", "ACCION,CEDEAR").upper().split(",")
 
 # ── Telegram helpers (MarkdownV2) ─────────────────────────────────────────────
 _MD_V2_SPECIAL = [
@@ -105,8 +107,6 @@ _MD_V2_SPECIAL = [
 ]
 
 def _escape_md(text: str) -> str:
-    """Escapa caracteres especiales para Telegram MarkdownV2."""
-    # Se debe escapar primero '\' para no duplicar
     for ch in ["\\"] + _MD_V2_SPECIAL:
         text = text.replace(ch, f"\\{ch}")
     return text
@@ -143,8 +143,6 @@ def _build_session():
     return s
 
 class _IOLSession:
-    """Thread-safe IOL client with persistent session and auto-refresh on 401."""
-
     def __init__(self):
         self._session = _build_session()
         self._token   = None
@@ -239,7 +237,6 @@ iol = _IOLSession()
 
 # ── Tick size ─────────────────────────────────────────────────────────────────
 def _round_to_tick(price: float, side: str) -> float:
-    """Redondea al tick de BYMA; compra hacia arriba, venta hacia abajo."""
     if price < 1:          tick = 0.001
     elif price < 10:       tick = 0.01
     elif price < 100:      tick = 0.05
@@ -257,7 +254,6 @@ def _round_to_tick(price: float, side: str) -> float:
 
 # ── Live price ─────────────────────────────────────────────────────────────────
 def get_live_price(symbol: str, retries: int = 2) -> float | None:
-    """Precio de mercado IOL con reintentos."""
     for attempt in range(retries + 1):
         try:
             data = iol.get(f"/api/v2/bCBA/Titulos/{symbol}/Cotizacion")
@@ -269,8 +265,6 @@ def get_live_price(symbol: str, retries: int = 2) -> float | None:
             )
             if price and float(price) > 0:
                 return float(price)
-            log.warning("Live price %s: no valid price field — keys: %s",
-                        symbol, list(data.keys())[:8])
             return None
         except Exception as exc:
             if attempt < retries:
@@ -279,16 +273,11 @@ def get_live_price(symbol: str, retries: int = 2) -> float | None:
                             symbol, attempt + 1, retries + 1, exc, wait)
                 time.sleep(wait)
             else:
-                log.warning("Live price fetch failed for %s after %d attempts: %s",
-                            symbol, retries + 1, exc)
+                log.warning("Live price fetch failed for %s: %s", symbol, exc)
     return None
 
 # ── Order status ───────────────────────────────────────────────────────────────
 def check_order_status(oid: str, wait_secs: int = 5) -> tuple[str, int | None]:
-    """
-    Consulta el estado de una orden y devuelve (estado, cantidad_ejecutada).
-    Estados normalizados: 'ejecutada', 'parcial', 'pendiente', 'cancelada', 'unknown'.
-    """
     if not oid or oid in ("?", "DRY-RUN"):
         return "unknown", None
 
@@ -298,7 +287,6 @@ def check_order_status(oid: str, wait_secs: int = 5) -> tuple[str, int | None]:
         raw  = (resp.get("estado") or resp.get("status") or resp.get("Estado") or "").lower().strip()
         status = _IOL_STATE_MAP.get(raw)
         if status is None:
-            # Heurística
             if "ejecut" in raw:
                 status = "ejecutada"
             elif "parcial" in raw:
@@ -323,16 +311,14 @@ def check_order_status(oid: str, wait_secs: int = 5) -> tuple[str, int | None]:
         log.warning("Order status check failed for #%s: %s — assuming pending", oid, exc)
         return "unknown", None
 
-# ── Indicadores técnicos (RSI / SMA) con yfinance ─────────────────────────────
+# ── Indicadores técnicos ──────────────────────────────────────────────────────
 def _get_historical_prices(symbol: str, period_days: int = 60) -> list[float]:
-    """Obtiene lista de precios de cierre diarios desde Yahoo Finance (BYMA)."""
     if not HAS_YFINANCE:
         return []
     try:
         ticker = yf.Ticker(symbol + ".BA")
         df = ticker.history(period=f"{period_days}d")
         if df.empty:
-            log.warning("%s: sin datos históricos en Yahoo Finance.", symbol)
             return []
         return df["Close"].tolist()
     except Exception as e:
@@ -340,7 +326,6 @@ def _get_historical_prices(symbol: str, period_days: int = 60) -> list[float]:
         return []
 
 def compute_rsi(closes: list[float], period: int = 14) -> float | None:
-    """RSI estándar (Wilder) sobre lista de cierres."""
     if len(closes) < period + 1:
         return None
     deltas = [closes[i] - closes[i-1] for i in range(1, len(closes))]
@@ -357,10 +342,87 @@ def compute_rsi(closes: list[float], period: int = 14) -> float | None:
     return 100.0 - (100.0 / (1 + rs))
 
 def compute_sma(closes: list[float], period: int = 20) -> float | None:
-    """Media móvil simple de 'period' ruedas."""
     if len(closes) < period:
         return None
     return sum(closes[-period:]) / period
+
+# ── Market scanner ────────────────────────────────────────────────────────────
+def get_merval_tickers() -> list[tuple[str, str]]:
+    """Obtiene todos los instrumentos del panel bCBA con su tipo."""
+    try:
+        data = iol.get("/api/v2/bCBA/Titulos")
+        tickers = []
+        for item in data.get("titulos", []):
+            simbolo = item.get("simbolo") or item.get("symbol")
+            tipo = (item.get("tipo") or item.get("type") or "").upper()
+            if simbolo:
+                tickers.append((simbolo, tipo))
+        log.info("Panel bCBA: %d instrumentos obtenidos.", len(tickers))
+        return tickers
+    except Exception as exc:
+        log.error("No se pudo obtener la lista de instrumentos: %s", exc)
+        return []
+
+def scan_market(rules: dict, overrides: dict, portfolio_syms: set, budget: float) -> list[dict]:
+    if budget <= 0 or not HAS_YFINANCE:
+        return []
+
+    all_tickers = get_merval_tickers()
+    if not all_tickers:
+        return []
+
+    allowed_types = set(SCAN_ASSET_TYPES)
+    excluded = portfolio_syms.copy()
+    excluded.update(sym for sym, ov in overrides.items() if ov.get("no_buy"))
+
+    candidates = [
+        sym for sym, tipo in all_tickers
+        if tipo in allowed_types and sym not in excluded
+    ]
+
+    log.info("Scanner: %d tickers después de filtrar tipo=%s y excluir %d conocidos.",
+             len(candidates), SCAN_ASSET_TYPES, len(excluded))
+
+    rsi_buy = float(rules["rsi_buy"])
+    slip    = float(rules["limit_slippage_pct"]) / 100
+
+    opportunities = []
+    for i, sym in enumerate(candidates):
+        if i > 0:
+            time.sleep(0.15)
+
+        price = get_live_price(sym)
+        if not price or price <= 0:
+            continue
+
+        lp = _round_to_tick(price * (1 + slip), "buy")
+        if lp > budget:
+            continue
+
+        closes = _get_historical_prices(sym, period_days=60)
+        if len(closes) < 21:
+            continue
+
+        rsi = compute_rsi(closes, 14)
+        ma20 = compute_sma(closes, 20)
+        if rsi is None or ma20 is None:
+            continue
+
+        if rsi < rsi_buy and price < ma20:
+            discount  = (ma20 - price) / ma20
+            rsi_score = (rsi_buy - rsi) / rsi_buy
+            score     = discount * 0.6 + rsi_score * 0.4
+            opportunities.append({
+                "symbol": sym,
+                "price":  price,
+                "rsi":    round(rsi, 2),
+                "ma20":   round(ma20, 2),
+                "score":  round(score, 4),
+            })
+
+    opportunities.sort(key=lambda x: x["score"], reverse=True)
+    log.info("Scanner: %d oportunidades encontradas.", len(opportunities))
+    return opportunities
 
 # ── Config parsing ─────────────────────────────────────────────────────────────
 DEFAULTS = {
@@ -376,7 +438,6 @@ DEFAULTS = {
 }
 
 def _coerce(value: str, target):
-    """Convierte value al mismo tipo que target, con fallback a str."""
     if isinstance(target, bool):
         return value.lower() in ("true", "1", "yes")
     for cast in (type(target), int, float):
@@ -494,7 +555,6 @@ def place_order(symbol, side, qty, limit_price, term):
     if DRY_RUN:
         return True, "DRY-RUN", f"DRY RUN — {side} {qty}x {symbol} @ {limit_price}"
 
-    # Validar
     validation_id = None
     try:
         val = iol.post("/api/v2/operaciones/Validar", body)
@@ -515,7 +575,6 @@ def place_order(symbol, side, qty, limit_price, term):
     if not validation_id:
         return False, None, "Validate returned no validacionId"
 
-    # Ejecutar
     try:
         resp = iol.post(f"/api/v2/operaciones/{validation_id}", body)
         oid  = str(resp.get("id", resp.get("numeroOperacion", resp.get("numero", "?"))))
@@ -564,10 +623,6 @@ def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok,
     return entry
 
 def _apply_fill(entry, fill_status, filled_qty, buy_budget, qty, lp, is_buy):
-    """
-    Actualiza la entrada del log con el resultado del fill.
-    Devuelve (nuevo_buy_budget, debe_contar_para_limite).
-    """
     entry["fill_status"] = fill_status
 
     if fill_status == "cancelada":
@@ -577,24 +632,19 @@ def _apply_fill(entry, fill_status, filled_qty, buy_budget, qty, lp, is_buy):
 
     if fill_status == "parcial":
         if filled_qty is not None:
-            # Cantidad conocida: actualizar el log y descontar solo lo real
             entry["quantity"] = filled_qty
             entry["message"] += f" (parcial: {filled_qty}/{qty})"
             if is_buy:
                 real_cost = filled_qty * lp
-                log.warning("Orden #%s parcial: %d/%d acc – descontando $%.0f",
-                            entry.get("order_id"), filled_qty, qty, real_cost)
                 return buy_budget - real_cost, True
             else:
-                return buy_budget, True  # venta no afecta buy_budget
+                return buy_budget, True
         else:
-            # No sabemos cuánto se ejecutó – conservador: no descontar nada
             log.warning("Orden #%s parcial sin cantidad ejecutada – no se descuenta presupuesto.",
                         entry.get("order_id"))
             entry["message"] += " (parcial, cantidad desconocida)"
-            return buy_budget, True  # asumimos que se ejecutó algo, cuenta para el límite
+            return buy_budget, True
 
-    # Ejecutada totalmente o pendiente/unknown
     if is_buy:
         buy_budget -= qty * lp
     return buy_budget, True
@@ -638,7 +688,7 @@ def main():
         log.error("Malformed portfolio.json: %s — aborting.", exc)
         return
 
-    # Verificar frescura de los datos del portfolio
+    # Frescura del portfolio
     last_updated = portfolio.get("last_updated")
     if not last_updated:
         log.warning("portfolio.json sin campo last_updated – no se puede verificar frescura.")
@@ -674,17 +724,16 @@ def main():
     if cash is None:
         return
 
-    # ── Refrescar precios en vivo y recalcular indicadores ────────────────────
+    # ── Refrescar precios e indicadores para posiciones/watchlist ───────────
     log.info("Refrescando precios en vivo y recalculando indicadores...")
     all_items = portfolio.get("positions", []) + portfolio.get("watchlist", [])
     stale_syms = []
 
     for i, item in enumerate(all_items):
         if i > 0:
-            time.sleep(0.2)  # rate-limit
+            time.sleep(0.2)
 
         sym = item["symbol"]
-        # Precio en vivo
         stale_price = item.get("unit_price", 0)
         if stale_price <= 0:
             log.error("%s: precio en portfolio.json inválido ($%.4f) — omitiendo señal.", sym, stale_price)
@@ -700,7 +749,6 @@ def main():
             log.warning("  %s: precio en vivo no disponible – usando $%.2f del portfolio.", sym, stale_price)
             stale_syms.append(sym)
 
-        # Recalcular RSI y MA20 (solo si hay datos históricos)
         if HAS_YFINANCE:
             closes = _get_historical_prices(sym, period_days=60)
             if len(closes) >= 21:
@@ -713,9 +761,8 @@ def main():
             else:
                 log.warning("%s: histórico insuficiente – manteniendo RSI/MA del portfolio (si existen).", sym)
 
-        # Validar que tengamos los campos necesarios para las señales
         if item.get("rsi") is None or item.get("ma20") is None:
-            log.warning("%s: falta RSI o MA20 – se omite señal para este instrumento.", sym)
+            log.warning("%s: falta RSI o MA20 – se omite señal.", sym)
             item["_skip"] = True
             stale_syms.append(sym)
 
@@ -726,7 +773,6 @@ def main():
             "y se omitirán señales si faltan indicadores\\."
         )
 
-    # Conjunto de símbolos en cartera (cantidad > 0)
     portfolio_syms = {
         p["symbol"] for p in portfolio.get("positions", [])
         if p.get("quantity", 0) > 0
@@ -737,7 +783,7 @@ def main():
     buy_budget = usable * float(rules["buy_cash_pct"]) / 100
     executed: list = []
 
-    # Notificación de inicio con resumen
+    # Notificación de inicio
     n_pos = len(portfolio.get("positions", []))
     n_wl  = len(portfolio.get("watchlist", []))
     send_telegram(
@@ -745,7 +791,7 @@ def main():
         f"💰 Cash: ${cash:,.0f} ARS | Posiciones: {n_pos} | Watchlist: {n_wl}"
     )
 
-    # ── Procesar posiciones (stop-loss / take-profit / RSI) ──────────────────
+    # ── 1) Procesar posiciones (stop-loss / take-profit / RSI) ─────────────
     for pos in portfolio.get("positions", []):
         if not DRY_RUN and ops_today + len(executed) >= max_ops:
             break
@@ -793,7 +839,7 @@ def main():
                     executed.append(entry)
             continue
 
-        # RSI compra (solo si estamos debajo de MA20 y RSI bajo)
+        # RSI compra
         rsi_buy = float(ov.get("rsi_buy", rules["rsi_buy"]))
         if (rsi is not None and ma20 is not None
                 and rsi < rsi_buy and price < ma20
@@ -830,7 +876,7 @@ def main():
                 if count:
                     executed.append(entry)
 
-    # ── Watchlist (abrir nuevas posiciones) ───────────────────────────────────
+    # ── 2) Watchlist ───────────────────────────────────────────────────────
     for wpos in portfolio.get("watchlist", []):
         if not DRY_RUN and ops_today + len(executed) >= max_ops:
             break
@@ -857,9 +903,35 @@ def main():
                 log.info("%s: presupuesto insuficiente (necesito $%.0f, tengo $%.0f)", sym, buy_qty * lp, buy_budget)
                 continue
             ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
-            entry = log_and_notify(
-                trade_log, sym, "buy", "RSI+MA20 (watchlist)", buy_qty, price, lp, ok, oid, msg
-            )
+            entry = log_and_notify(trade_log, sym, "buy", "RSI+MA20 (watchlist)", buy_qty, price, lp, ok, oid, msg)
+            if ok and DRY_RUN:
+                buy_budget -= buy_qty * lp
+            elif ok:
+                fill, fqty = check_order_status(oid)
+                buy_budget, count = _apply_fill(entry, fill, fqty, buy_budget, buy_qty, lp, is_buy=True)
+                if count:
+                    executed.append(entry)
+
+    # ── 3) Market scanner (nuevas oportunidades) ────────────────────────────
+    scan_budget = buy_budget * (SCAN_BUDGET_PCT / 100)
+    if scan_budget > 0 and not DRY_RUN:
+        log.info("Scanner de mercado activado con presupuesto: $%.0f", scan_budget)
+        opportunities = scan_market(rules, overrides, portfolio_syms, scan_budget)
+        for opp in opportunities:
+            if ops_today + len(executed) >= max_ops:
+                break
+            if buy_budget <= 0:
+                break
+
+            sym   = opp["symbol"]
+            price = opp["price"]
+            lp    = _round_to_tick(price * (1 + slip), "buy")
+            buy_qty = max(1, int(buy_budget // lp))
+            if buy_qty * lp > buy_budget + 1e-6:
+                continue
+
+            ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
+            entry = log_and_notify(trade_log, sym, "buy", "market_scanner", buy_qty, price, lp, ok, oid, msg)
             if ok and DRY_RUN:
                 buy_budget -= buy_qty * lp
             elif ok:
