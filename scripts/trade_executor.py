@@ -1,5 +1,6 @@
 import json
 import logging
+import math
 import os
 import re
 import threading
@@ -11,8 +12,23 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-# ── Logging ───────────────────────────────────────────────────────────────────
+# ── Dependencias opcionales ───────────────────────────────────────────────────
+try:
+    import holidays as _holidays_lib
+    _HOLIDAYS_AR = _holidays_lib.country_holidays("AR")
+    HAS_HOLIDAYS = True
+except ImportError:
+    HAS_HOLIDAYS = False
+    print("⚠️  Librería 'holidays' no instalada – usando lista estática de feriados.")
 
+try:
+    import yfinance as yf
+    HAS_YFINANCE = True
+except ImportError:
+    HAS_YFINANCE = False
+    print("⚠️  Librería 'yfinance' no instalada – los indicadores RSI/MA20 se tomarán del portfolio.json.")
+
+# ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)-8s %(message)s",
@@ -21,7 +37,6 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # ── Constants ─────────────────────────────────────────────────────────────────
-
 IOL_BASE   = "https://api.invertironline.com"
 ART        = timezone(timedelta(hours=-3))
 SCRIPT_DIR = Path(__file__).parent
@@ -39,8 +54,36 @@ _HEADERS = {
     ),
 }
 
-# ── Environment validation ────────────────────────────────────────────────────
+# ── Feriados estáticos (fallback) ─────────────────────────────────────────────
+_HOLIDAYS_FALLBACK = {
+    "2025-01-01", "2025-03-03", "2025-03-04", "2025-04-02", "2025-04-17",
+    "2025-04-18", "2025-05-01", "2025-05-25", "2025-06-16", "2025-06-20",
+    "2025-07-09", "2025-08-17", "2025-10-12", "2025-11-20", "2025-12-08",
+    "2025-12-25",
+    "2026-01-01", "2026-02-16", "2026-02-17", "2026-04-02", "2026-04-03",
+    "2026-05-01", "2026-05-25", "2026-06-15", "2026-06-20", "2026-07-09",
+    "2026-08-17", "2026-10-12", "2026-11-20", "2026-12-08", "2026-12-25",
+}
 
+# ── Mapeo de estados de órdenes IOL ───────────────────────────────────────────
+_IOL_STATE_MAP = {
+    "ejecutada":                "ejecutada",
+    "ejecutado":                "ejecutada",
+    "operada":                  "ejecutada",
+    "parcialmente ejecutada":   "parcial",
+    "parcial":                  "parcial",
+    "activa":                   "pendiente",
+    "pendiente":                "pendiente",
+    "en proceso":               "pendiente",
+    "cancelada":                "cancelada",
+    "cancelado":                "cancelada",
+    "anulada":                  "cancelada",
+    "rechazada":                "cancelada",
+    "expirada":                 "cancelada",
+    "vencida":                  "cancelada",
+}
+
+# ── Environment validation ────────────────────────────────────────────────────
 def _require_env(*names):
     missing = [n for n in names if not os.getenv(n)]
     if missing:
@@ -54,9 +97,40 @@ IOL_PASS   = os.environ["IOL_PASSWORD"]
 TG_TOKEN   = os.environ.get("TELEGRAM_TOKEN", "")
 TG_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 DRY_RUN    = os.environ.get("DRY_RUN", "true").lower() == "true"
+SCAN_BUDGET_PCT = float(os.environ.get("SCAN_BUDGET_PCT", "30"))
+SCAN_ASSET_TYPES = os.environ.get("SCAN_ASSET_TYPES", "ACCION,CEDEAR").upper().split(",")
+LOOP_MINUTES = int(os.environ.get("LOOP_MINUTES", "5"))
+
+# ── Telegram helpers (MarkdownV2) ─────────────────────────────────────────────
+_MD_V2_SPECIAL = [
+    "_", "*", "[", "]", "(", ")", "~", "`", ">",
+    "#", "+", "-", "=", "|", "{", "}", ".", "!"
+]
+
+def _escape_md(text: str) -> str:
+    for ch in ["\\"] + _MD_V2_SPECIAL:
+        text = text.replace(ch, f"\\{ch}")
+    return text
+
+def send_telegram(text: str) -> None:
+    if not TG_TOKEN or not TG_CHAT_ID:
+        return
+    try:
+        r = requests.post(
+            f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage",
+            json={
+                "chat_id": TG_CHAT_ID,
+                "text": text,
+                "parse_mode": "MarkdownV2",
+            },
+            timeout=10,
+        )
+        if not r.ok:
+            log.warning("Telegram error %d: %s", r.status_code, r.text[:200])
+    except Exception as exc:
+        log.warning("Telegram send failed: %s", exc)
 
 # ── HTTP session ──────────────────────────────────────────────────────────────
-
 def _build_session():
     s = requests.Session()
     retry = Retry(
@@ -69,10 +143,7 @@ def _build_session():
     s.mount("https://", HTTPAdapter(max_retries=retry))
     return s
 
-
 class _IOLSession:
-    """Thread-safe IOL client with persistent session and auto-refresh on 401."""
-
     def __init__(self):
         self._session = _build_session()
         self._token   = None
@@ -163,27 +234,202 @@ class _IOLSession:
             except requests.exceptions.RequestException:
                 raise
 
-
 iol = _IOLSession()
 
-# ── Telegram ──────────────────────────────────────────────────────────────────
+# ── Tick size ─────────────────────────────────────────────────────────────────
+def _round_to_tick(price: float, side: str) -> float:
+    if price < 1:          tick = 0.001
+    elif price < 10:       tick = 0.01
+    elif price < 100:      tick = 0.05
+    elif price < 1_000:    tick = 0.50
+    elif price < 10_000:   tick = 5.0
+    elif price < 100_000:  tick = 25.0
+    else:                  tick = 50.0
 
-def send_telegram(text):
-    if not TG_TOKEN or not TG_CHAT_ID:
-        return
+    if side == "buy":
+        result = round(math.ceil(price / tick) * tick, 6)
+    else:
+        result = round(math.floor(price / tick) * tick, 6)
+
+    return max(tick, result)
+
+# ── Live price ─────────────────────────────────────────────────────────────────
+def get_live_price(symbol: str, retries: int = 2) -> float | None:
+    for attempt in range(retries + 1):
+        try:
+            data = iol.get(f"/api/v2/bCBA/Titulos/{symbol}/Cotizacion")
+            price = (
+                data.get("ultimoPrecio")
+                or data.get("ultimo")
+                or data.get("ultimoCierre")
+                or data.get("last")
+            )
+            if price and float(price) > 0:
+                return float(price)
+            return None
+        except Exception as exc:
+            if attempt < retries:
+                wait = 2 * (attempt + 1)
+                log.warning("Live price %s (attempt %d/%d): %s — retry in %ds",
+                            symbol, attempt + 1, retries + 1, exc, wait)
+                time.sleep(wait)
+            else:
+                log.warning("Live price fetch failed for %s: %s", symbol, exc)
+    return None
+
+# ── Order status ───────────────────────────────────────────────────────────────
+def check_order_status(oid: str, wait_secs: int = 5) -> tuple[str, int | None]:
+    if not oid or oid in ("?", "DRY-RUN"):
+        return "unknown", None
+
+    time.sleep(wait_secs)
     try:
-        r = requests.post(
-            f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage",
-            json={"chat_id": TG_CHAT_ID, "text": text, "parse_mode": "Markdown"},
-            timeout=10,
-        )
-        if not r.ok:
-            log.warning("Telegram error %d: %s", r.status_code, r.text[:200])
+        resp = iol.get(f"/api/v2/operaciones/{oid}")
+        raw  = (resp.get("estado") or resp.get("status") or resp.get("Estado") or "").lower().strip()
+        status = _IOL_STATE_MAP.get(raw)
+        if status is None:
+            if "ejecut" in raw:
+                status = "ejecutada"
+            elif "parcial" in raw:
+                status = "parcial"
+            elif any(k in raw for k in ("cancel", "anul", "rechaz", "venc", "expir")):
+                status = "cancelada"
+            else:
+                status = "unknown"
+        log.info("Order #%s status: '%s' → %s", oid, raw, status)
+
+        filled_qty = None
+        for key in ("cantidadEjecutada", "cantidadOperada", "operado", "filledQty"):
+            val = resp.get(key)
+            if val is not None:
+                try:
+                    filled_qty = int(float(val))
+                except (ValueError, TypeError):
+                    pass
+                break
+        return status, filled_qty
     except Exception as exc:
-        log.warning("Telegram send failed: %s", exc)
+        log.warning("Order status check failed for #%s: %s — assuming pending", oid, exc)
+        return "unknown", None
+
+# ── Indicadores técnicos ──────────────────────────────────────────────────────
+def _get_historical_prices(symbol: str, period_days: int = 60) -> list[float]:
+    if not HAS_YFINANCE:
+        return []
+    try:
+        ticker = yf.Ticker(symbol + ".BA")
+        df = ticker.history(period=f"{period_days}d")
+        if df.empty:
+            return []
+        return df["Close"].tolist()
+    except Exception as e:
+        log.warning("Error descargando histórico para %s: %s", symbol, e)
+        return []
+
+def compute_rsi(closes: list[float], period: int = 14) -> float | None:
+    if len(closes) < period + 1:
+        return None
+    deltas = [closes[i] - closes[i-1] for i in range(1, len(closes))]
+    gains = [d if d > 0 else 0 for d in deltas]
+    losses = [-d if d < 0 else 0 for d in deltas]
+    avg_gain = sum(gains[:period]) / period
+    avg_loss = sum(losses[:period]) / period
+    for i in range(period, len(deltas)):
+        avg_gain = (avg_gain * (period - 1) + gains[i]) / period
+        avg_loss = (avg_loss * (period - 1) + losses[i]) / period
+    if avg_loss == 0:
+        return 100.0
+    rs = avg_gain / avg_loss
+    return 100.0 - (100.0 / (1 + rs))
+
+def compute_sma(closes: list[float], period: int = 20) -> float | None:
+    if len(closes) < period:
+        return None
+    return sum(closes[-period:]) / period
+
+# ── Market scanner ────────────────────────────────────────────────────────────
+def get_merval_tickers() -> list[tuple[str, str]]:
+    try:
+        data = iol.get("/api/v2/bCBA/Titulos")
+        tickers = []
+        for item in data.get("titulos", []):
+            simbolo = item.get("simbolo") or item.get("symbol")
+            tipo = (item.get("tipo") or item.get("type") or "").upper()
+            if simbolo:
+                tickers.append((simbolo, tipo))
+        log.info("Panel bCBA: %d instrumentos obtenidos.", len(tickers))
+        return tickers
+    except Exception as exc:
+        log.error("No se pudo obtener la lista de instrumentos: %s", exc)
+        return []
+
+def scan_market(rules: dict, overrides: dict, portfolio_syms: set, budget: float, signals_done: set) -> list[dict]:
+    if budget <= 0 or not HAS_YFINANCE:
+        return []
+
+    all_tickers = get_merval_tickers()
+    if not all_tickers:
+        return []
+
+    allowed_types = set(SCAN_ASSET_TYPES)
+    candidates = []
+    excluded = portfolio_syms.copy()
+    excluded.update(sym for sym, ov in overrides.items() if ov.get("no_buy"))
+
+    for sym, tipo in all_tickers:
+        if tipo not in allowed_types:
+            continue
+        if sym in excluded:
+            continue
+        candidates.append(sym)
+
+    log.info("Scanner: %d tickers después de filtrar tipo=%s.", len(candidates), SCAN_ASSET_TYPES)
+
+    rsi_buy = float(rules["rsi_buy"])
+    slip    = float(rules["limit_slippage_pct"]) / 100
+
+    opportunities = []
+    for i, sym in enumerate(candidates):
+        if i > 0:
+            time.sleep(0.15)
+
+        if ("buy", sym, "market_scanner") in signals_done:
+            continue
+
+        price = get_live_price(sym)
+        if not price or price <= 0:
+            continue
+
+        lp = _round_to_tick(price * (1 + slip), "buy")
+        if lp > budget:
+            continue
+
+        closes = _get_historical_prices(sym, period_days=60)
+        if len(closes) < 21:
+            continue
+
+        rsi = compute_rsi(closes, 14)
+        ma20 = compute_sma(closes, 20)
+        if rsi is None or ma20 is None:
+            continue
+
+        if rsi < rsi_buy and price < ma20:
+            discount = (ma20 - price) / ma20
+            rsi_score = (rsi_buy - rsi) / rsi_buy
+            score = discount * 0.6 + rsi_score * 0.4
+            opportunities.append({
+                "symbol": sym,
+                "price": price,
+                "rsi": round(rsi, 2),
+                "ma20": round(ma20, 2),
+                "score": round(score, 4),
+            })
+
+    opportunities.sort(key=lambda x: x["score"], reverse=True)
+    log.info("Scanner: %d oportunidades nuevas.", len(opportunities))
+    return opportunities
 
 # ── Config parsing ─────────────────────────────────────────────────────────────
-
 DEFAULTS = {
     "rsi_buy":            35.0,
     "rsi_sell":           65.0,
@@ -196,6 +442,15 @@ DEFAULTS = {
     "limit_slippage_pct":  0.5,
 }
 
+def _coerce(value: str, target):
+    if isinstance(target, bool):
+        return value.lower() in ("true", "1", "yes")
+    for cast in (type(target), int, float):
+        try:
+            return cast(value)
+        except (ValueError, TypeError):
+            continue
+    return value
 
 def parse_context():
     rules     = dict(DEFAULTS)
@@ -218,10 +473,7 @@ def parse_context():
             k, _, v = line.partition(":")
             k, v = k.strip(), v.strip()
             if k in rules:
-                try:
-                    rules[k] = type(rules[k])(v)
-                except (ValueError, TypeError):
-                    rules[k] = v
+                rules[k] = _coerce(v, rules[k])
 
     for line in text.splitlines():
         m = re.match(r"^-\s+([A-Z.]+):\s+(.*)", line.strip())
@@ -239,7 +491,6 @@ def parse_context():
     return rules, overrides
 
 # ── Trades log ─────────────────────────────────────────────────────────────────
-
 def load_log():
     if not TRADES_LOG.exists():
         return []
@@ -252,13 +503,11 @@ def load_log():
         log.error("Malformed trades_log.json: %s — starting fresh", exc)
         return []
 
-
 def save_log(trade_log):
     TRADES_LOG.parent.mkdir(exist_ok=True)
     TRADES_LOG.write_text(
         json.dumps(trade_log, ensure_ascii=False, indent=2), encoding="utf-8"
     )
-
 
 def today_op_count(trade_log):
     today = datetime.now(ART).strftime("%Y-%m-%d")
@@ -267,14 +516,13 @@ def today_op_count(trade_log):
                and t.get("status") == "executed")
 
 # ── Balance ───────────────────────────────────────────────────────────────────
-
-def get_cash(term="t1"):
+def get_cash(term="t1") -> float | None:
     liquidacion_map = {"t0": "inmediato", "t1": "hrs24", "t2": "hrs48"}
     target_liq = liquidacion_map.get(term, "hrs24")
     try:
         data = iol.get("/api/v2/estadocuenta")
         if not isinstance(data, dict):
-            return 0.0
+            raise ValueError(f"Unexpected response type: {type(data).__name__}")
         for cuenta in data.get("cuentas", []):
             moneda = (cuenta.get("moneda") or "").lower()
             if "peso" not in moneda:
@@ -286,30 +534,32 @@ def get_cash(term="t1"):
                     return val
             return float(cuenta.get("disponible") or 0)
     except Exception as exc:
-        log.warning("Balance error: %s", exc)
-    return 0.0
+        log.error("Balance fetch failed: %s", exc)
+        send_telegram(
+            "❌ *Trade Bot — ERROR de saldo*\n"
+            f"No se pudo obtener el efectivo disponible:\n"
+            f"`{_escape_md(str(exc)[:300])}`\n"
+            "_Bot abortado — operar sin conocer el saldo real es peligroso\\._"
+        )
+    return None
 
 # ── Order execution ────────────────────────────────────────────────────────────
-
 def place_order(symbol, side, qty, limit_price, term):
-    """Validate + place a limit order. Returns (ok, order_id, msg)."""
     body = {
         "mercado":   "bCBA",
         "simbolo":   symbol,
         "cantidad":  int(qty),
-        "precio":    round(float(limit_price), 2),
+        "precio":    round(float(limit_price), 6),
         "validez":   "HoyHasta",
         "tipo":      "precioLimite",
         "plazo":     term,
         "operacion": "compra" if side == "buy" else "venta",
     }
-    tag = "[DRY RUN] " if DRY_RUN else ""
-    log.info("%sOrder body: %s", tag, body)
+    log.info("%sOrder body: %s", "[DRY RUN] " if DRY_RUN else "", body)
 
     if DRY_RUN:
         return True, "DRY-RUN", f"DRY RUN — {side} {qty}x {symbol} @ {limit_price}"
 
-    # Step 1 — Validar, extraer validacionId
     validation_id = None
     try:
         val = iol.post("/api/v2/operaciones/Validar", body)
@@ -330,14 +580,12 @@ def place_order(symbol, side, qty, limit_price, term):
     if not validation_id:
         return False, None, "Validate returned no validacionId"
 
-    # Step 2 — Ejecutar con validacionId en el path
     try:
         resp = iol.post(f"/api/v2/operaciones/{validation_id}", body)
         oid  = str(resp.get("id", resp.get("numeroOperacion", resp.get("numero", "?"))))
         return True, oid, f"OK #{oid}"
     except Exception as exc:
         return False, None, str(exc)
-
 
 def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok, oid, msg):
     entry = {
@@ -354,30 +602,80 @@ def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok,
     }
     trade_log.append(entry)
 
-    icons      = {"buy": "🟢", "sell": "🔴"}
-    e          = icons.get(side, "⚪") if ok else "❌"
     side_label = "COMPRA" if side == "buy" else "VENTA"
-    send_telegram(
-        f"{e} *{side_label} {symbol}* — {reason.upper()}\n"
-        f"{'Compré' if side == 'buy' else 'Vendí'} {qty} acc a límite ${limit_price:,.2f}\n"
-        f"Precio ref: ${price:,.0f}\n"
-        f"{'✅ Orden #' + oid if ok else '❌ ' + msg}"
-    )
+    icon       = ("🟢" if side == "buy" else "🔴") if ok else "❌"
+
+    if DRY_RUN:
+        send_telegram(
+            f"🔵 *\\[SIMULACIÓN\\] {side_label} {_escape_md(symbol)}* — {reason.upper()}\n"
+            f"Señal: {qty} acc a límite ${limit_price:,.2f}\n"
+            f"Precio ref: ${price:,.0f}\n"
+            "_bot en modo DRY RUN — no se ejecutó ninguna orden real_"
+        )
+    else:
+        action = "Compré" if side == "buy" else "Vendí"
+        detail = (f"✅ Orden #{_escape_md(str(oid))}" if ok
+                  else f"❌ {_escape_md(msg[:200])}")
+        send_telegram(
+            f"{icon} *{side_label} {_escape_md(symbol)}* — {reason.upper()}\n"
+            f"{action} {qty} acc a límite ${limit_price:,.2f}\n"
+            f"Precio ref: ${price:,.0f}\n"
+            f"{detail}"
+        )
+
     log.info("%s %s %s qty=%d lp=%.2f ok=%s %s",
              side_label, symbol, reason, qty, limit_price, ok, msg)
     return entry
 
-# ── Market hours ───────────────────────────────────────────────────────────────
+def _apply_fill(entry, fill_status, filled_qty, buy_budget, qty, lp, is_buy):
+    entry["fill_status"] = fill_status
 
+    if fill_status == "cancelada":
+        entry["status"] = "cancelled"
+        log.info("Order #%s cancelled – no se descuenta ni cuenta para el límite.", entry.get("order_id"))
+        return buy_budget, False
+
+    if fill_status == "parcial":
+        if filled_qty is not None:
+            entry["quantity"] = filled_qty
+            entry["message"] += f" (parcial: {filled_qty}/{qty})"
+            if is_buy:
+                real_cost = filled_qty * lp
+                return buy_budget - real_cost, True
+            else:
+                return buy_budget, True
+        else:
+            log.warning("Orden #%s parcial sin cantidad ejecutada – no se descuenta presupuesto.",
+                        entry.get("order_id"))
+            entry["message"] += " (parcial, cantidad desconocida)"
+            return buy_budget, True
+
+    if is_buy:
+        buy_budget -= qty * lp
+    return buy_budget, True
+
+# ── Market hours ───────────────────────────────────────────────────────────────
 def byma_open():
-    now = datetime.now(ART)
+    now     = datetime.now(ART)
+    today_d = now.date()
+    today_s = today_d.strftime("%Y-%m-%d")
+
+    if HAS_HOLIDAYS:
+        if today_d in _HOLIDAYS_AR:
+            log.info("Feriado (dinámico) (%s) — BYMA cerrado.", today_s)
+            return False
+    else:
+        if today_s in _HOLIDAYS_FALLBACK:
+            log.info("Feriado (estático) (%s) — BYMA cerrado.", today_s)
+            return False
+
     return now.weekday() < 5 and 11 <= now.hour < 17
 
-# ── Main ───────────────────────────────────────────────────────────────────────
-
+# ── Main loop ─────────────────────────────────────────────────────────────────
 def main():
     now = datetime.now(ART)
-    log.info("Time ART: %s (weekday=%d)", now.strftime("%Y-%m-%d %H:%M"), now.weekday())
+    log.info("Time ART: %s (weekday=%d) | DRY_RUN=%s | holidays_lib=%s | yfinance=%s",
+             now.strftime("%Y-%m-%d %H:%M"), now.weekday(), DRY_RUN, HAS_HOLIDAYS, HAS_YFINANCE)
 
     if not byma_open():
         log.info("BYMA closed — skipping.")
@@ -389,130 +687,206 @@ def main():
     if not PORTFOLIO.exists():
         log.error("portfolio.json missing — run fetch_portfolio.py first.")
         return
-
     try:
         portfolio = json.loads(PORTFOLIO.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         log.error("Malformed portfolio.json: %s — aborting.", exc)
         return
 
-    trade_log = load_log()
-    ops_today = today_op_count(trade_log)
-    max_ops   = int(rules["max_ops_per_day"])
+    iol.authenticate()
+    term = str(rules["settlement_term"])
+    max_ops = int(rules["max_ops_per_day"])
+    slip = float(rules["limit_slippage_pct"]) / 100
 
-    if ops_today >= max_ops:
-        log.info("Daily limit reached (%d/%d).", ops_today, max_ops)
+    signals_done = set()
+
+    cash_init = get_cash(term)
+    if cash_init is None:
         return
 
-    iol.authenticate()
-    term  = str(rules["settlement_term"])
-    cash  = get_cash(term)
-    log.info("Cash available: $%,.0f ARS", cash)
+    send_telegram(
+        f"🤖 *Trade Bot \\[{'SIMULACIÓN' if DRY_RUN else 'REAL'}\\] INICIADO*\n"
+        f"⏱️ Intervalo: cada {LOOP_MINUTES} min | Límite diario: {max_ops} ops\n"
+        f"💰 Cash inicial: ${cash_init:,.0f} ARS"
+    )
 
-    usable     = max(0.0, cash - float(rules["cash_reserve_ars"]))
-    buy_budget = usable * float(rules["buy_cash_pct"]) / 100
-    slip       = float(rules["limit_slippage_pct"]) / 100
-    executed   = []
-
-    # ── Portfolio: stop-loss / take-profit / RSI signals ─────────────────────
-    for pos in portfolio.get("positions", []):
-        if ops_today + len(executed) >= max_ops:
+    while True:
+        now = datetime.now(ART)
+        if not byma_open():
+            log.info("Mercado cerrado. Saliendo del bucle.")
             break
 
-        sym   = pos["symbol"]
-        price = pos["unit_price"]
-        ppc   = pos.get("ppc", price) or price
-        rsi   = pos.get("rsi")
-        ma20  = pos.get("ma20")
-        rec   = pos.get("recommendation", "MANTENER")
-        qty   = pos.get("quantity", 0)
-        ov    = overrides.get(sym, {})
+        log.info("── Iteración %s ──", now.strftime("%H:%M"))
 
-        sl_pct = float(ov.get("stop_loss_pct", rules["stop_loss_pct"]))
-        if qty > 0 and ppc > 0 and price <= ppc * (1 - sl_pct / 100):
-            if ov.get("no_sell"):
-                log.info("%s: stop-loss triggered but no_sell override — skip", sym)
+        cash = get_cash(term)
+        if cash is None:
+            time.sleep(60 * LOOP_MINUTES)
+            continue
+
+        usable = max(0.0, cash - float(rules["cash_reserve_ars"]))
+        buy_budget = usable * float(rules["buy_cash_pct"]) / 100
+
+        trade_log = load_log()
+        ops_today = today_op_count(trade_log)
+
+        if ops_today >= max_ops and not DRY_RUN:
+            log.info("Límite diario alcanzado (%d/%d). Esperando siguiente ciclo...", ops_today, max_ops)
+            time.sleep(60 * LOOP_MINUTES)
+            continue
+
+        # Refrescar precios e indicadores para posiciones/watchlist
+        all_items = portfolio.get("positions", []) + portfolio.get("watchlist", [])
+        for item in all_items:
+            sym = item["symbol"]
+            live = get_live_price(sym)
+            if live and live > 0:
+                item["unit_price"] = live
+            if HAS_YFINANCE:
+                closes = _get_historical_prices(sym, period_days=60)
+                if len(closes) >= 21:
+                    rsi_val = compute_rsi(closes, 14)
+                    ma_val = compute_sma(closes, 20)
+                    if rsi_val is not None:
+                        item["rsi"] = rsi_val
+                    if ma_val is not None:
+                        item["ma20"] = ma_val
+
+        # 1) Stop‑loss / Take‑profit
+        for pos in portfolio.get("positions", []):
+            sym   = pos["symbol"]
+            price = pos.get("unit_price", 0)
+            ppc   = pos.get("ppc", price) or price
+            qty   = pos.get("quantity", 0)
+            ov    = overrides.get(sym, {})
+
+            sl_pct = float(ov.get("stop_loss_pct", rules["stop_loss_pct"]))
+            if qty > 0 and ppc > 0 and price <= ppc * (1 - sl_pct / 100):
+                if ("sell", sym, "stop-loss") not in signals_done and not ov.get("no_sell"):
+                    lp = _round_to_tick(price * (1 - slip), "sell")
+                    ok, oid, msg = place_order(sym, "sell", qty, lp, term)
+                    entry = log_and_notify(trade_log, sym, "sell", "stop‑loss", qty, price, lp, ok, oid, msg)
+                    if ok and not DRY_RUN:
+                        fill, fqty = check_order_status(oid)
+                        _, count = _apply_fill(entry, fill, fqty, buy_budget, qty, lp, is_buy=False)
+                        if count:
+                            signals_done.add(("sell", sym, "stop-loss"))
                 continue
-            lp  = round(price * (1 - slip), 2)
-            ok, oid, msg = place_order(sym, "sell", qty, lp, term)
-            entry = log_and_notify(trade_log, sym, "sell", "stop-loss", qty, price, lp, ok, oid, msg)
-            if ok:
-                executed.append(entry)
-            continue
 
-        tp_pct = float(ov.get("take_profit_pct", rules["take_profit_pct"]))
-        if qty > 0 and ppc > 0 and price >= ppc * (1 + tp_pct / 100):
-            if ov.get("no_sell"):
-                log.info("%s: take-profit triggered but no_sell override — skip", sym)
+            tp_pct = float(ov.get("take_profit_pct", rules["take_profit_pct"]))
+            if qty > 0 and ppc > 0 and price >= ppc * (1 + tp_pct / 100):
+                if ("sell", sym, "take-profit") not in signals_done and not ov.get("no_sell"):
+                    sell_qty = max(1, qty // 2)
+                    lp = _round_to_tick(price * (1 - slip), "sell")
+                    ok, oid, msg = place_order(sym, "sell", sell_qty, lp, term)
+                    entry = log_and_notify(trade_log, sym, "sell", "take‑profit", sell_qty, price, lp, ok, oid, msg)
+                    if ok and not DRY_RUN:
+                        fill, fqty = check_order_status(oid)
+                        _, count = _apply_fill(entry, fill, fqty, buy_budget, sell_qty, lp, is_buy=False)
+                        if count:
+                            signals_done.add(("sell", sym, "take-profit"))
                 continue
-            sell_qty = max(1, qty // 2)
-            lp  = round(price * (1 - slip), 2)
-            ok, oid, msg = place_order(sym, "sell", sell_qty, lp, term)
-            entry = log_and_notify(trade_log, sym, "sell", "take-profit", sell_qty, price, lp, ok, oid, msg)
-            if ok:
-                executed.append(entry)
-            continue
 
-        rsi_buy = float(ov.get("rsi_buy", rules["rsi_buy"]))
-        if (rec == "COMPRAR"
-                and rsi is not None and rsi < rsi_buy
-                and ma20 is not None and price < ma20
-                and buy_budget >= price
-                and not ov.get("no_buy")):
-            buy_qty = max(1, int(buy_budget // price))
-            lp      = round(price * (1 + slip), 2)
-            ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
-            entry = log_and_notify(trade_log, sym, "buy", "RSI+MA20", buy_qty, price, lp, ok, oid, msg)
-            if ok:
-                buy_budget -= buy_qty * price
-                executed.append(entry)
-            continue
+        # 2) RSI señales en posiciones
+        for pos in portfolio.get("positions", []):
+            sym   = pos["symbol"]
+            price = pos.get("unit_price", 0)
+            rsi   = pos.get("rsi")
+            ma20  = pos.get("ma20")
+            qty   = pos.get("quantity", 0)
+            ov    = overrides.get(sym, {})
 
-        rsi_sell = float(ov.get("rsi_sell", rules["rsi_sell"]))
-        if (rec == "VENDER"
-                and rsi is not None and rsi > rsi_sell
-                and ma20 is not None and price > ma20
-                and qty > 0
-                and not ov.get("no_sell")):
-            sell_qty = max(1, qty // 2)
-            lp       = round(price * (1 - slip), 2)
-            ok, oid, msg = place_order(sym, "sell", sell_qty, lp, term)
-            entry = log_and_notify(trade_log, sym, "sell", "RSI+MA20", sell_qty, price, lp, ok, oid, msg)
-            if ok:
-                executed.append(entry)
+            rsi_buy = float(ov.get("rsi_buy", rules["rsi_buy"]))
+            if (rsi is not None and ma20 is not None
+                    and rsi < rsi_buy and price < ma20
+                    and not ov.get("no_buy")
+                    and ("buy", sym, "RSI+MA20") not in signals_done):
+                lp = _round_to_tick(price * (1 + slip), "buy")
+                buy_qty = max(1, int(buy_budget // lp))
+                if buy_qty * lp <= buy_budget + 1e-6:
+                    ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
+                    entry = log_and_notify(trade_log, sym, "buy", "RSI+MA20", buy_qty, price, lp, ok, oid, msg)
+                    if ok and not DRY_RUN:
+                        fill, fqty = check_order_status(oid)
+                        buy_budget, count = _apply_fill(entry, fill, fqty, buy_budget, buy_qty, lp, is_buy=True)
+                        if count:
+                            signals_done.add(("buy", sym, "RSI+MA20"))
+                            ops_today += 1
 
-    # ── Watchlist: abrir posiciones nuevas ────────────────────────────────────
-    for wpos in portfolio.get("watchlist", []):
-        if ops_today + len(executed) >= max_ops:
-            break
+            rsi_sell = float(ov.get("rsi_sell", rules["rsi_sell"]))
+            if (rsi is not None and ma20 is not None
+                    and rsi > rsi_sell and price > ma20
+                    and qty > 0
+                    and not ov.get("no_sell")
+                    and ("sell", sym, "RSI+MA20") not in signals_done):
+                sell_qty = max(1, qty // 2)
+                lp = _round_to_tick(price * (1 - slip), "sell")
+                ok, oid, msg = place_order(sym, "sell", sell_qty, lp, term)
+                entry = log_and_notify(trade_log, sym, "sell", "RSI+MA20", sell_qty, price, lp, ok, oid, msg)
+                if ok and not DRY_RUN:
+                    fill, fqty = check_order_status(oid)
+                    _, count = _apply_fill(entry, fill, fqty, buy_budget, sell_qty, lp, is_buy=False)
+                    if count:
+                        signals_done.add(("sell", sym, "RSI+MA20"))
+                        ops_today += 1
 
-        sym   = wpos["symbol"]
-        price = wpos["unit_price"]
-        rsi   = wpos.get("rsi")
-        ma20  = wpos.get("ma20")
-        rec   = wpos.get("recommendation", "MANTENER")
-        ov    = overrides.get(sym, {})
+        # 3) Watchlist
+        portfolio_syms = {p["symbol"] for p in portfolio.get("positions", []) if p.get("quantity", 0) > 0}
+        for wpos in portfolio.get("watchlist", []):
+            sym = wpos["symbol"]
+            if sym in portfolio_syms:
+                continue
+            price = wpos.get("unit_price", 0)
+            rsi   = wpos.get("rsi")
+            ma20  = wpos.get("ma20")
+            ov    = overrides.get(sym, {})
 
-        rsi_buy = float(ov.get("rsi_buy", rules["rsi_buy"]))
-        if (rec == "COMPRAR"
-                and rsi is not None and rsi < rsi_buy
-                and ma20 is not None and price < ma20
-                and buy_budget >= price
-                and not ov.get("no_buy")):
-            buy_qty = max(1, int(buy_budget // price))
-            lp      = round(price * (1 + slip), 2)
-            ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
-            entry = log_and_notify(
-                trade_log, sym, "buy", "RSI+MA20 (watchlist)", buy_qty, price, lp, ok, oid, msg
-            )
-            if ok:
-                buy_budget -= buy_qty * price
-                executed.append(entry)
+            rsi_buy = float(ov.get("rsi_buy", rules["rsi_buy"]))
+            if (rsi is not None and ma20 is not None
+                    and rsi < rsi_buy and price < ma20
+                    and not ov.get("no_buy")
+                    and ("buy", sym, "RSI+MA20 (watchlist)") not in signals_done):
+                lp = _round_to_tick(price * (1 + slip), "buy")
+                buy_qty = max(1, int(buy_budget // lp))
+                if buy_qty * lp <= buy_budget + 1e-6:
+                    ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
+                    entry = log_and_notify(trade_log, sym, "buy", "RSI+MA20 (watchlist)", buy_qty, price, lp, ok, oid, msg)
+                    if ok and not DRY_RUN:
+                        fill, fqty = check_order_status(oid)
+                        buy_budget, count = _apply_fill(entry, fill, fqty, buy_budget, buy_qty, lp, is_buy=True)
+                        if count:
+                            signals_done.add(("buy", sym, "RSI+MA20 (watchlist)"))
+                            ops_today += 1
 
-    save_log(trade_log)
-    log.info("Done — %d trade(s) executed today (%d/%d).",
-             len(executed), ops_today + len(executed), max_ops)
+        # 4) Market scanner
+        scan_budget = buy_budget * (SCAN_BUDGET_PCT / 100)
+        if scan_budget > 0 and not DRY_RUN:
+            opportunities = scan_market(rules, overrides, portfolio_syms, scan_budget, signals_done)
+            for opp in opportunities:
+                if ops_today >= max_ops or buy_budget <= 0:
+                    break
+                sym = opp["symbol"]
+                price = opp["price"]
+                lp = _round_to_tick(price * (1 + slip), "buy")
+                buy_qty = max(1, int(buy_budget // lp))
+                if buy_qty * lp > buy_budget + 1e-6:
+                    continue
+                if ("buy", sym, "market_scanner") in signals_done:
+                    continue
 
+                ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
+                entry = log_and_notify(trade_log, sym, "buy", "market_scanner", buy_qty, price, lp, ok, oid, msg)
+                if ok and not DRY_RUN:
+                    fill, fqty = check_order_status(oid)
+                    buy_budget, count = _apply_fill(entry, fill, fqty, buy_budget, buy_qty, lp, is_buy=True)
+                    if count:
+                        signals_done.add(("buy", sym, "market_scanner"))
+                        ops_today += 1
+
+        save_log(trade_log)
+        log.info("Esperando %d min para siguiente iteración...", LOOP_MINUTES)
+        time.sleep(60 * LOOP_MINUTES)
+
+    log.info("Bot detenido.")
 
 if __name__ == "__main__":
     main()
