@@ -2,7 +2,7 @@ name: Trade Bot
 
 on:
   schedule:
-    # 11:00 ART = 14:00 UTC, cubre sesión completa BYMA hasta 17:00 ART
+    # 11:00 ART = 14:00 UTC — arranca al inicio de BYMA, el loop interno corre hasta las 17:00
     - cron: "0 14 * * 1-5"
   workflow_dispatch:
     inputs:
@@ -11,6 +11,10 @@ on:
         required: false
         default: "true"
         type: boolean
+
+concurrency:
+  group: trade-bot
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -34,6 +38,7 @@ jobs:
         run: pip install -r scripts/requirements.txt
 
       - name: Run trade bot
+        timeout-minutes: 370
         env:
           IOL_USERNAME: ${{ secrets.IOL_USERNAME }}
           IOL_PASSWORD: ${{ secrets.IOL_PASSWORD }}

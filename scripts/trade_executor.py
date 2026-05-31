@@ -372,6 +372,7 @@ def scan_market(rules: dict, overrides: dict, portfolio_syms: set, budget: float
         return []
 
     allowed_types = set(SCAN_ASSET_TYPES)
+<<<<<<< HEAD
     candidates = []
     excluded = portfolio_syms.copy()
     excluded.update(sym for sym, ov in overrides.items() if ov.get("no_buy"))
@@ -382,6 +383,15 @@ def scan_market(rules: dict, overrides: dict, portfolio_syms: set, budget: float
         if sym in excluded:
             continue
         candidates.append(sym)
+=======
+    excluded = portfolio_syms.copy()
+    excluded.update(sym for sym, ov in overrides.items() if ov.get("no_buy"))
+
+    candidates = [
+        sym for sym, tipo in all_tickers
+        if tipo in allowed_types and sym not in excluded
+    ]
+>>>>>>> cdcfe32d3bc31812ffdb7e69552b0ccbfc39ab1e
 
     log.info("Scanner: %d tickers después de filtrar tipo=%s.", len(candidates), SCAN_ASSET_TYPES)
 
@@ -414,6 +424,7 @@ def scan_market(rules: dict, overrides: dict, portfolio_syms: set, budget: float
             continue
 
         if rsi < rsi_buy and price < ma20:
+<<<<<<< HEAD
             discount = (ma20 - price) / ma20
             rsi_score = (rsi_buy - rsi) / rsi_buy
             score = discount * 0.6 + rsi_score * 0.4
@@ -423,6 +434,17 @@ def scan_market(rules: dict, overrides: dict, portfolio_syms: set, budget: float
                 "rsi": round(rsi, 2),
                 "ma20": round(ma20, 2),
                 "score": round(score, 4),
+=======
+            discount  = (ma20 - price) / ma20
+            rsi_score = (rsi_buy - rsi) / rsi_buy
+            score     = discount * 0.6 + rsi_score * 0.4
+            opportunities.append({
+                "symbol": sym,
+                "price":  price,
+                "rsi":    round(rsi, 2),
+                "ma20":   round(ma20, 2),
+                "score":  round(score, 4),
+>>>>>>> cdcfe32d3bc31812ffdb7e69552b0ccbfc39ab1e
             })
 
     opportunities.sort(key=lambda x: x["score"], reverse=True)
@@ -694,12 +716,23 @@ def main():
         return
 
     iol.authenticate()
+<<<<<<< HEAD
     term = str(rules["settlement_term"])
     max_ops = int(rules["max_ops_per_day"])
     slip = float(rules["limit_slippage_pct"]) / 100
 
     signals_done = set()
 
+=======
+    term    = str(rules["settlement_term"])
+    max_ops = int(rules["max_ops_per_day"])
+    slip    = float(rules["limit_slippage_pct"]) / 100
+
+    # Señales ejecutadas en esta sesión — evita duplicados entre iteraciones
+    signals_done: set = set()
+
+    # Notificación de inicio (una sola vez)
+>>>>>>> cdcfe32d3bc31812ffdb7e69552b0ccbfc39ab1e
     cash_init = get_cash(term)
     if cash_init is None:
         return
@@ -710,6 +743,10 @@ def main():
         f"💰 Cash inicial: ${cash_init:,.0f} ARS"
     )
 
+<<<<<<< HEAD
+=======
+    # ── Bucle principal ──────────────────────────────────────────────────────
+>>>>>>> cdcfe32d3bc31812ffdb7e69552b0ccbfc39ab1e
     while True:
         now = datetime.now(ART)
         if not byma_open():
@@ -723,13 +760,18 @@ def main():
             time.sleep(60 * LOOP_MINUTES)
             continue
 
+<<<<<<< HEAD
         usable = max(0.0, cash - float(rules["cash_reserve_ars"]))
+=======
+        usable     = max(0.0, cash - float(rules["cash_reserve_ars"]))
+>>>>>>> cdcfe32d3bc31812ffdb7e69552b0ccbfc39ab1e
         buy_budget = usable * float(rules["buy_cash_pct"]) / 100
 
         trade_log = load_log()
         ops_today = today_op_count(trade_log)
 
         if ops_today >= max_ops and not DRY_RUN:
+<<<<<<< HEAD
             log.info("Límite diario alcanzado (%d/%d). Esperando siguiente ciclo...", ops_today, max_ops)
             time.sleep(60 * LOOP_MINUTES)
             continue
@@ -738,6 +780,16 @@ def main():
         all_items = portfolio.get("positions", []) + portfolio.get("watchlist", [])
         for item in all_items:
             sym = item["symbol"]
+=======
+            log.info("Límite diario alcanzado (%d/%d). Esperando...", ops_today, max_ops)
+            time.sleep(60 * LOOP_MINUTES)
+            continue
+
+        # Refrescar precios e indicadores
+        all_items = portfolio.get("positions", []) + portfolio.get("watchlist", [])
+        for item in all_items:
+            sym  = item["symbol"]
+>>>>>>> cdcfe32d3bc31812ffdb7e69552b0ccbfc39ab1e
             live = get_live_price(sym)
             if live and live > 0:
                 item["unit_price"] = live
@@ -745,13 +797,21 @@ def main():
                 closes = _get_historical_prices(sym, period_days=60)
                 if len(closes) >= 21:
                     rsi_val = compute_rsi(closes, 14)
+<<<<<<< HEAD
                     ma_val = compute_sma(closes, 20)
+=======
+                    ma_val  = compute_sma(closes, 20)
+>>>>>>> cdcfe32d3bc31812ffdb7e69552b0ccbfc39ab1e
                     if rsi_val is not None:
                         item["rsi"] = rsi_val
                     if ma_val is not None:
                         item["ma20"] = ma_val
 
+<<<<<<< HEAD
         # 1) Stop‑loss / Take‑profit
+=======
+        # ── 1) Stop-loss / Take-profit ─────────────────────────────────────
+>>>>>>> cdcfe32d3bc31812ffdb7e69552b0ccbfc39ab1e
         for pos in portfolio.get("positions", []):
             sym   = pos["symbol"]
             price = pos.get("unit_price", 0)
@@ -764,7 +824,11 @@ def main():
                 if ("sell", sym, "stop-loss") not in signals_done and not ov.get("no_sell"):
                     lp = _round_to_tick(price * (1 - slip), "sell")
                     ok, oid, msg = place_order(sym, "sell", qty, lp, term)
+<<<<<<< HEAD
                     entry = log_and_notify(trade_log, sym, "sell", "stop‑loss", qty, price, lp, ok, oid, msg)
+=======
+                    entry = log_and_notify(trade_log, sym, "sell", "stop-loss", qty, price, lp, ok, oid, msg)
+>>>>>>> cdcfe32d3bc31812ffdb7e69552b0ccbfc39ab1e
                     if ok and not DRY_RUN:
                         fill, fqty = check_order_status(oid)
                         _, count = _apply_fill(entry, fill, fqty, buy_budget, qty, lp, is_buy=False)
@@ -778,7 +842,11 @@ def main():
                     sell_qty = max(1, qty // 2)
                     lp = _round_to_tick(price * (1 - slip), "sell")
                     ok, oid, msg = place_order(sym, "sell", sell_qty, lp, term)
+<<<<<<< HEAD
                     entry = log_and_notify(trade_log, sym, "sell", "take‑profit", sell_qty, price, lp, ok, oid, msg)
+=======
+                    entry = log_and_notify(trade_log, sym, "sell", "take-profit", sell_qty, price, lp, ok, oid, msg)
+>>>>>>> cdcfe32d3bc31812ffdb7e69552b0ccbfc39ab1e
                     if ok and not DRY_RUN:
                         fill, fqty = check_order_status(oid)
                         _, count = _apply_fill(entry, fill, fqty, buy_budget, sell_qty, lp, is_buy=False)
@@ -786,7 +854,11 @@ def main():
                             signals_done.add(("sell", sym, "take-profit"))
                 continue
 
+<<<<<<< HEAD
         # 2) RSI señales en posiciones
+=======
+        # ── 2) RSI señales en posiciones ───────────────────────────────────
+>>>>>>> cdcfe32d3bc31812ffdb7e69552b0ccbfc39ab1e
         for pos in portfolio.get("positions", []):
             sym   = pos["symbol"]
             price = pos.get("unit_price", 0)
@@ -800,7 +872,11 @@ def main():
                     and rsi < rsi_buy and price < ma20
                     and not ov.get("no_buy")
                     and ("buy", sym, "RSI+MA20") not in signals_done):
+<<<<<<< HEAD
                 lp = _round_to_tick(price * (1 + slip), "buy")
+=======
+                lp      = _round_to_tick(price * (1 + slip), "buy")
+>>>>>>> cdcfe32d3bc31812ffdb7e69552b0ccbfc39ab1e
                 buy_qty = max(1, int(buy_budget // lp))
                 if buy_qty * lp <= buy_budget + 1e-6:
                     ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
@@ -829,8 +905,16 @@ def main():
                         signals_done.add(("sell", sym, "RSI+MA20"))
                         ops_today += 1
 
+<<<<<<< HEAD
         # 3) Watchlist
         portfolio_syms = {p["symbol"] for p in portfolio.get("positions", []) if p.get("quantity", 0) > 0}
+=======
+        # ── 3) Watchlist ───────────────────────────────────────────────────
+        portfolio_syms = {
+            p["symbol"] for p in portfolio.get("positions", [])
+            if p.get("quantity", 0) > 0
+        }
+>>>>>>> cdcfe32d3bc31812ffdb7e69552b0ccbfc39ab1e
         for wpos in portfolio.get("watchlist", []):
             sym = wpos["symbol"]
             if sym in portfolio_syms:
@@ -845,7 +929,11 @@ def main():
                     and rsi < rsi_buy and price < ma20
                     and not ov.get("no_buy")
                     and ("buy", sym, "RSI+MA20 (watchlist)") not in signals_done):
+<<<<<<< HEAD
                 lp = _round_to_tick(price * (1 + slip), "buy")
+=======
+                lp      = _round_to_tick(price * (1 + slip), "buy")
+>>>>>>> cdcfe32d3bc31812ffdb7e69552b0ccbfc39ab1e
                 buy_qty = max(1, int(buy_budget // lp))
                 if buy_qty * lp <= buy_budget + 1e-6:
                     ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
@@ -857,21 +945,32 @@ def main():
                             signals_done.add(("buy", sym, "RSI+MA20 (watchlist)"))
                             ops_today += 1
 
+<<<<<<< HEAD
         # 4) Market scanner
+=======
+        # ── 4) Market scanner ──────────────────────────────────────────────
+>>>>>>> cdcfe32d3bc31812ffdb7e69552b0ccbfc39ab1e
         scan_budget = buy_budget * (SCAN_BUDGET_PCT / 100)
         if scan_budget > 0 and not DRY_RUN:
             opportunities = scan_market(rules, overrides, portfolio_syms, scan_budget, signals_done)
             for opp in opportunities:
                 if ops_today >= max_ops or buy_budget <= 0:
                     break
+<<<<<<< HEAD
                 sym = opp["symbol"]
                 price = opp["price"]
                 lp = _round_to_tick(price * (1 + slip), "buy")
+=======
+                sym     = opp["symbol"]
+                price   = opp["price"]
+                lp      = _round_to_tick(price * (1 + slip), "buy")
+>>>>>>> cdcfe32d3bc31812ffdb7e69552b0ccbfc39ab1e
                 buy_qty = max(1, int(buy_budget // lp))
                 if buy_qty * lp > buy_budget + 1e-6:
                     continue
                 if ("buy", sym, "market_scanner") in signals_done:
                     continue
+<<<<<<< HEAD
 
                 ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
                 entry = log_and_notify(trade_log, sym, "buy", "market_scanner", buy_qty, price, lp, ok, oid, msg)
@@ -882,6 +981,17 @@ def main():
                         signals_done.add(("buy", sym, "market_scanner"))
                         ops_today += 1
 
+=======
+                ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
+                entry = log_and_notify(trade_log, sym, "buy", "market_scanner", buy_qty, price, lp, ok, oid, msg)
+                if ok and not DRY_RUN:
+                    fill, fqty = check_order_status(oid)
+                    buy_budget, count = _apply_fill(entry, fill, fqty, buy_budget, buy_qty, lp, is_buy=True)
+                    if count:
+                        signals_done.add(("buy", sym, "market_scanner"))
+                        ops_today += 1
+
+>>>>>>> cdcfe32d3bc31812ffdb7e69552b0ccbfc39ab1e
         save_log(trade_log)
         log.info("Esperando %d min para siguiente iteración...", LOOP_MINUTES)
         time.sleep(60 * LOOP_MINUTES)
