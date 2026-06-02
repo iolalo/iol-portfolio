@@ -602,10 +602,11 @@ def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok,
     side_label = "COMPRA" if side == "buy" else "VENTA"
     icon       = ("🟢" if side == "buy" else "🔴") if ok else "❌"
 
+    qty_int = int(qty)
     if DRY_RUN:
         send_telegram(
             f"🔵 *\\[SIMULACIÓN\\] {side_label} {_escape_md(symbol)}* — {_escape_md(reason.upper())}\n"
-            f"Señal: {qty} acc a límite ${_escape_md(f'{limit_price:,.2f}')}\n"
+            f"Señal: {qty_int} acc a límite ${_escape_md(f'{limit_price:,.2f}')}\n"
             f"Precio ref: ${_escape_md(f'{price:,.0f}')}\n"
             "_bot en modo DRY RUN — no se ejecutó ninguna orden real_"
         )
@@ -615,7 +616,7 @@ def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok,
                   else f"❌ {_escape_md(msg[:200])}")
         send_telegram(
             f"{icon} *{side_label} {_escape_md(symbol)}* — {_escape_md(reason.upper())}\n"
-            f"{action} {qty} acc a límite ${_escape_md(f'{limit_price:,.2f}')}\n"
+            f"{action} {qty_int} acc a límite ${_escape_md(f'{limit_price:,.2f}')}\n"
             f"Precio ref: ${_escape_md(f'{price:,.0f}')}\n"
             f"{detail}"
         )
