@@ -778,11 +778,10 @@ def main():
                     lp = _round_to_tick(price * (1 - slip), "sell")
                     ok, oid, msg = place_order(sym, "sell", qty, lp, term)
                     entry = log_and_notify(trade_log, sym, "sell", "stop-loss", qty, price, lp, ok, oid, msg)
+                    signals_done.add(("sell", sym, "stop-loss"))
                     if ok and not DRY_RUN:
                         fill, fqty = check_order_status(oid)
-                        _, count = _apply_fill(entry, fill, fqty, buy_budget, qty, lp, is_buy=False)
-                        if count:
-                            signals_done.add(("sell", sym, "stop-loss"))
+                        _apply_fill(entry, fill, fqty, buy_budget, qty, lp, is_buy=False)
                 continue
 
             tp_pct = float(ov.get("take_profit_pct", rules["take_profit_pct"]))
@@ -792,11 +791,10 @@ def main():
                     lp = _round_to_tick(price * (1 - slip), "sell")
                     ok, oid, msg = place_order(sym, "sell", sell_qty, lp, term)
                     entry = log_and_notify(trade_log, sym, "sell", "take-profit", sell_qty, price, lp, ok, oid, msg)
+                    signals_done.add(("sell", sym, "take-profit"))
                     if ok and not DRY_RUN:
                         fill, fqty = check_order_status(oid)
-                        _, count = _apply_fill(entry, fill, fqty, buy_budget, sell_qty, lp, is_buy=False)
-                        if count:
-                            signals_done.add(("sell", sym, "take-profit"))
+                        _apply_fill(entry, fill, fqty, buy_budget, sell_qty, lp, is_buy=False)
                 continue
 
         # ── 2) RSI señales en posiciones ───────────────────────────────────
@@ -818,11 +816,11 @@ def main():
                 if buy_qty * lp <= buy_budget + 1e-6:
                     ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
                     entry = log_and_notify(trade_log, sym, "buy", "RSI+MA20", buy_qty, price, lp, ok, oid, msg)
+                    signals_done.add(("buy", sym, "RSI+MA20"))
                     if ok and not DRY_RUN:
                         fill, fqty = check_order_status(oid)
                         buy_budget, count = _apply_fill(entry, fill, fqty, buy_budget, buy_qty, lp, is_buy=True)
                         if count:
-                            signals_done.add(("buy", sym, "RSI+MA20"))
                             ops_today += 1
 
             rsi_sell = float(ov.get("rsi_sell", rules["rsi_sell"]))
@@ -835,11 +833,11 @@ def main():
                 lp = _round_to_tick(price * (1 - slip), "sell")
                 ok, oid, msg = place_order(sym, "sell", sell_qty, lp, term)
                 entry = log_and_notify(trade_log, sym, "sell", "RSI+MA20", sell_qty, price, lp, ok, oid, msg)
+                signals_done.add(("sell", sym, "RSI+MA20"))
                 if ok and not DRY_RUN:
                     fill, fqty = check_order_status(oid)
                     _, count = _apply_fill(entry, fill, fqty, buy_budget, sell_qty, lp, is_buy=False)
                     if count:
-                        signals_done.add(("sell", sym, "RSI+MA20"))
                         ops_today += 1
 
         # ── 3) Watchlist ───────────────────────────────────────────────────
@@ -866,11 +864,11 @@ def main():
                 if buy_qty * lp <= buy_budget + 1e-6:
                     ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
                     entry = log_and_notify(trade_log, sym, "buy", "RSI+MA20 (watchlist)", buy_qty, price, lp, ok, oid, msg)
+                    signals_done.add(("buy", sym, "RSI+MA20 (watchlist)"))
                     if ok and not DRY_RUN:
                         fill, fqty = check_order_status(oid)
                         buy_budget, count = _apply_fill(entry, fill, fqty, buy_budget, buy_qty, lp, is_buy=True)
                         if count:
-                            signals_done.add(("buy", sym, "RSI+MA20 (watchlist)"))
                             ops_today += 1
 
         # ── 4) Market scanner ──────────────────────────────────────────────
@@ -890,11 +888,11 @@ def main():
                     continue
                 ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
                 entry = log_and_notify(trade_log, sym, "buy", "market_scanner", buy_qty, price, lp, ok, oid, msg)
+                signals_done.add(("buy", sym, "market_scanner"))
                 if ok and not DRY_RUN:
                     fill, fqty = check_order_status(oid)
                     buy_budget, count = _apply_fill(entry, fill, fqty, buy_budget, buy_qty, lp, is_buy=True)
                     if count:
-                        signals_done.add(("buy", sym, "market_scanner"))
                         ops_today += 1
 
         save_log(trade_log)
