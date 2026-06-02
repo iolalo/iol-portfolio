@@ -11,6 +11,7 @@ limit_slippage_pct: 0.5
 ---
 
 ## Notas por ticker
+- YPFD: no_sell=true
 
 ## Contexto de mercado
 - Mayo 2026: posiciones activas ALUA/GBAN/YPFD/BBAR. Saldo disponible ~$8.000 ARS.
