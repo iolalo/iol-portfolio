@@ -558,6 +558,7 @@ def place_order(symbol, side, qty, limit_price, term):
         return True, "DRY-RUN", f"DRY RUN — {side} {qty}x {symbol} @ {limit_price}"
 
     validation_id = None
+    validar_failed = False
     try:
         val = iol.post("/api/v2/operaciones/Validar", body)
         log.info("Validate response: %s", val)
@@ -571,18 +572,29 @@ def place_order(symbol, side, qty, limit_price, term):
         if errors:
             return False, None, f"Validation: {errors}"
     except Exception as exc:
-        log.warning("Validate step failed: %s", exc)
-        return False, None, f"Validate error: {exc}"
+        log.warning("Validate step failed: %s — trying direct POST", exc)
+        validar_failed = True
 
-    if not validation_id:
-        return False, None, "Validate returned no validacionId"
+    if validation_id:
+        try:
+            resp = iol.post(f"/api/v2/operaciones/{validation_id}", body)
+            oid  = str(resp.get("id", resp.get("numeroOperacion", resp.get("numero", "?"))))
+            return True, oid, f"OK #{oid}"
+        except Exception as exc:
+            log.warning("Execute with validationId failed: %s — trying direct", exc)
+            validar_failed = True
 
-    try:
-        resp = iol.post(f"/api/v2/operaciones/{validation_id}", body)
-        oid  = str(resp.get("id", resp.get("numeroOperacion", resp.get("numero", "?"))))
-        return True, oid, f"OK #{oid}"
-    except Exception as exc:
-        return False, None, str(exc)
+    if validar_failed:
+        # Validar endpoint returns 405 — try direct order creation
+        try:
+            resp = iol.post("/api/v2/operaciones", body)
+            oid  = str(resp.get("id", resp.get("numeroOperacion", resp.get("numero", "?"))))
+            log.info("Direct order OK: #%s", oid)
+            return True, oid, f"OK #{oid} (direct)"
+        except Exception as exc:
+            return False, None, str(exc)
+
+    return False, None, "Validate returned no validacionId"
 
 def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok, oid, msg):
     entry = {
