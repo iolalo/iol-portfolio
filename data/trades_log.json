@@ -263,5 +263,17 @@
     "status": "dry_run",
     "order_id": "DRY-RUN",
     "message": "DRY RUN — sell 1x YPFD @ 76714.5"
+  },
+  {
+    "date": "2026-06-02T15:03:38.635308-03:00",
+    "symbol": "ALUA",
+    "side": "sell",
+    "reason": "RSI+MA20",
+    "quantity": 54.0,
+    "price": 1015.0,
+    "limit_price": 1005.0,
+    "status": "failed",
+    "order_id": null,
+    "message": "405 Client Error: Method Not Allowed for url: https://api.invertironline.com/api/v2/operaciones"
   }
 ]
