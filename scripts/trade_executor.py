@@ -527,7 +527,7 @@ def get_cash(term="t1") -> float | None:
             for s in cuenta.get("saldos", []):
                 if s.get("liquidacion") == target_liq:
                     val = float(s.get("disponibleOperar") or 0)
-                    log.info("Cash (%s): $%,.2f", target_liq, val)
+                    log.info("Cash (%s): $%s", target_liq, f"{val:,.2f}")
                     return val
             return float(cuenta.get("disponible") or 0)
     except Exception as exc:
@@ -604,9 +604,9 @@ def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok,
 
     if DRY_RUN:
         send_telegram(
-            f"🔵 *\\[SIMULACIÓN\\] {side_label} {_escape_md(symbol)}* — {reason.upper()}\n"
-            f"Señal: {qty} acc a límite ${limit_price:,.2f}\n"
-            f"Precio ref: ${price:,.0f}\n"
+            f"🔵 *\\[SIMULACIÓN\\] {side_label} {_escape_md(symbol)}* — {_escape_md(reason.upper())}\n"
+            f"Señal: {qty} acc a límite ${_escape_md(f'{limit_price:,.2f}')}\n"
+            f"Precio ref: ${_escape_md(f'{price:,.0f}')}\n"
             "_bot en modo DRY RUN — no se ejecutó ninguna orden real_"
         )
     else:
@@ -614,9 +614,9 @@ def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok,
         detail = (f"✅ Orden #{_escape_md(str(oid))}" if ok
                   else f"❌ {_escape_md(msg[:200])}")
         send_telegram(
-            f"{icon} *{side_label} {_escape_md(symbol)}* — {reason.upper()}\n"
-            f"{action} {qty} acc a límite ${limit_price:,.2f}\n"
-            f"Precio ref: ${price:,.0f}\n"
+            f"{icon} *{side_label} {_escape_md(symbol)}* — {_escape_md(reason.upper())}\n"
+            f"{action} {qty} acc a límite ${_escape_md(f'{limit_price:,.2f}')}\n"
+            f"Precio ref: ${_escape_md(f'{price:,.0f}')}\n"
             f"{detail}"
         )
 
@@ -705,8 +705,8 @@ def main():
 
     send_telegram(
         f"🤖 *Trade Bot \\[{'SIMULACIÓN' if DRY_RUN else 'REAL'}\\] INICIADO*\n"
-        f"⏱️ Intervalo: cada {LOOP_MINUTES} min | Límite diario: {max_ops} ops\n"
-        f"💰 Cash inicial: ${cash_init:,.0f} ARS"
+        f"⏱️ Intervalo: cada {LOOP_MINUTES} min \\| Límite diario: {max_ops} ops\n"
+        f"💰 Cash inicial: ${_escape_md(f'{cash_init:,.0f}')} ARS"
     )
 
     # ── Bucle principal ──────────────────────────────────────────────────────
