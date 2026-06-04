@@ -1,9 +1,9 @@
 {
-  "last_updated": "2026-06-03 18:36",
-  "total_ars": 155960.0,
+  "last_updated": "2026-06-04 14:15",
+  "total_ars": 156050.0,
   "invested_ars": 130221.39,
-  "total_gain": 25738.61,
-  "total_gain_pct": 19.77,
+  "total_gain": 25828.61,
+  "total_gain_pct": 19.83,
   "total_usd": 0,
   "invested_usd": 0,
   "alert_count": 3,
@@ -12,24 +12,20 @@
       "symbol": "ALUA",
       "description": "Aluar",
       "quantity": 55.0,
-      "unit_price": 1017.0,
-      "total_value": 55935.0,
+      "unit_price": 1010.0,
+      "total_value": 55550.0,
       "currency": "peso_Argentino",
       "ppc": 846.298,
-      "gain_pct": 20.17,
+      "gain_pct": 19.34,
       "daily_change_pct": 0.0,
       "buy_date": "2026-03-04",
-      "rsi": 64.55,
-      "ma20": 953.4,
+      "rsi": 62.61,
+      "ma20": 958.38,
       "recommendation": "VENDER",
       "signals": [
-        "Precio 3%+ sobre MA20 ($953)"
+        "Precio 3%+ sobre MA20 ($958)"
       ],
       "sparkline": [
-        {
-          "date": "2026-04-23",
-          "close": 980.5
-        },
         {
           "date": "2026-04-24",
           "close": 994.0
@@ -144,7 +140,11 @@
         },
         {
           "date": "2026-06-03",
-          "close": 1017.0
+          "close": 1015.0
+        },
+        {
+          "date": "2026-06-04",
+          "close": 1010.0
         }
       ],
       "full_history": [
@@ -398,7 +398,11 @@
         },
         {
           "date": "2026-06-03",
-          "close": 1017.0
+          "close": 1015.0
+        },
+        {
+          "date": "2026-06-04",
+          "close": 1010.0
         }
       ]
     },
@@ -406,22 +410,18 @@
       "symbol": "MIRG",
       "description": "Mirgor",
       "quantity": 1.0,
-      "unit_price": 16975.0,
-      "total_value": 16975.0,
+      "unit_price": 17000.0,
+      "total_value": 17000.0,
       "currency": "peso_Argentino",
       "ppc": 16475.0,
-      "gain_pct": 3.03,
+      "gain_pct": 3.18,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 43.43,
-      "ma20": 17167.5,
+      "rsi": 44.12,
+      "ma20": 17092.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-04-23",
-          "close": 18275.0
-        },
         {
           "date": "2026-04-24",
           "close": 18800.0
@@ -536,14 +536,14 @@
         },
         {
           "date": "2026-06-03",
-          "close": 16975.0
+          "close": 16925.0
+        },
+        {
+          "date": "2026-06-04",
+          "close": 17000.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-03-05",
-          "close": 18150.0
-        },
         {
           "date": "2026-03-06",
           "close": 18250.0
@@ -786,7 +786,11 @@
         },
         {
           "date": "2026-06-03",
-          "close": 16975.0
+          "close": 16925.0
+        },
+        {
+          "date": "2026-06-04",
+          "close": 17000.0
         }
       ]
     },
@@ -794,25 +798,21 @@
       "symbol": "YPFD",
       "description": "Ypf",
       "quantity": 1.0,
-      "unit_price": 83050.0,
-      "total_value": 83050.0,
+      "unit_price": 83500.0,
+      "total_value": 83500.0,
       "currency": "peso_Argentino",
       "ppc": 67200.0,
-      "gain_pct": 23.58,
+      "gain_pct": 24.25,
       "daily_change_pct": 0.0,
       "buy_date": "2026-04-01",
-      "rsi": 80.66,
-      "ma20": 71526.25,
+      "rsi": 81.14,
+      "ma20": 72522.5,
       "recommendation": "VENDER",
       "signals": [
-        "RSI sobrecomprado (80.66)",
-        "Precio 3%+ sobre MA20 ($71,526)"
+        "RSI sobrecomprado (81.14)",
+        "Precio 3%+ sobre MA20 ($72,522)"
       ],
       "sparkline": [
-        {
-          "date": "2026-04-23",
-          "close": 63950.0
-        },
         {
           "date": "2026-04-24",
           "close": 64250.0
@@ -928,6 +928,10 @@
         {
           "date": "2026-06-03",
           "close": 83050.0
+        },
+        {
+          "date": "2026-06-04",
+          "close": 83500.0
         }
       ],
       "full_history": [
@@ -1106,6 +1110,10 @@
         {
           "date": "2026-06-03",
           "close": 83050.0
+        },
+        {
+          "date": "2026-06-04",
+          "close": 83500.0
         }
       ]
     }
@@ -1114,20 +1122,17 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 7350.0,
-      "daily_change_pct": -3.1,
+      "unit_price": 7460.0,
+      "daily_change_pct": 1.5,
       "buy_date": null,
-      "rsi": 64.1,
-      "ma20": 6638.0,
+      "rsi": 65.92,
+      "ma20": 6694.0,
       "recommendation": "VENDER",
       "signals": [
-        "Precio 3%+ sobre MA20 ($6,638)"
+        "RSI sobrecomprado (65.92)",
+        "Precio 3%+ sobre MA20 ($6,694)"
       ],
       "sparkline": [
-        {
-          "date": "2026-04-23",
-          "close": 6316.39
-        },
         {
           "date": "2026-04-24",
           "close": 6365.62
@@ -1243,13 +1248,13 @@
         {
           "date": "2026-06-03",
           "close": 7350.0
+        },
+        {
+          "date": "2026-06-04",
+          "close": 7460.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-03-05",
-          "close": 6135.92
-        },
         {
           "date": "2026-03-06",
           "close": 6043.0
@@ -1280,7 +1285,7 @@
         },
         {
           "date": "2026-03-17",
-          "close": 5984.13
+          "close": 5984.14
         },
         {
           "date": "2026-03-18",
@@ -1332,7 +1337,7 @@
         },
         {
           "date": "2026-04-08",
-          "close": 6862.14
+          "close": 6862.13
         },
         {
           "date": "2026-04-09",
@@ -1493,24 +1498,24 @@
         {
           "date": "2026-06-03",
           "close": 7350.0
+        },
+        {
+          "date": "2026-06-04",
+          "close": 7460.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 3335.0,
-      "daily_change_pct": -4.65,
+      "unit_price": 3315.0,
+      "daily_change_pct": -0.6,
       "buy_date": null,
-      "rsi": 48.32,
-      "ma20": 3241.5,
+      "rsi": 47.81,
+      "ma20": 3237.75,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-04-23",
-          "close": 3567.5
-        },
         {
           "date": "2026-04-24",
           "close": 3560.0
@@ -1626,13 +1631,13 @@
         {
           "date": "2026-06-03",
           "close": 3335.0
+        },
+        {
+          "date": "2026-06-04",
+          "close": 3315.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-03-05",
-          "close": 4340.0
-        },
         {
           "date": "2026-03-06",
           "close": 4162.5
@@ -1876,24 +1881,24 @@
         {
           "date": "2026-06-03",
           "close": 3335.0
+        },
+        {
+          "date": "2026-06-04",
+          "close": 3315.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 20650.0,
-      "daily_change_pct": -1.53,
+      "unit_price": 20750.0,
+      "daily_change_pct": 0.48,
       "buy_date": null,
-      "rsi": 46.99,
-      "ma20": 20408.0,
+      "rsi": 47.97,
+      "ma20": 20291.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-04-23",
-          "close": 22270.0
-        },
         {
           "date": "2026-04-24",
           "close": 22850.0
@@ -2009,13 +2014,13 @@
         {
           "date": "2026-06-03",
           "close": 20650.0
+        },
+        {
+          "date": "2026-06-04",
+          "close": 20750.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-03-05",
-          "close": 21850.0
-        },
         {
           "date": "2026-03-06",
           "close": 21950.0
@@ -2259,6 +2264,10 @@
         {
           "date": "2026-06-03",
           "close": 20650.0
+        },
+        {
+          "date": "2026-06-04",
+          "close": 20750.0
         }
       ]
     }
