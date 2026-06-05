@@ -1,5 +1,5 @@
 ---
-rsi_buy: 35
+rsi_buy: 40
 rsi_sell: 65
 stop_loss_pct: 8
 take_profit_pct: 25

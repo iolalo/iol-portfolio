@@ -516,6 +516,8 @@ def today_op_count(trade_log):
 def get_cash(term="t1") -> float | None:
     liquidacion_map = {"t0": "inmediato", "t1": "hrs24", "t2": "hrs48"}
     target_liq = liquidacion_map.get(term, "hrs24")
+    # Fallback order: target term first, then any other term, then account-level disponible
+    fallback_order = ["inmediato", "hrs24", "hrs48"]
     try:
         data = iol.get("/api/v2/estadocuenta")
         if not isinstance(data, dict):
@@ -524,11 +526,18 @@ def get_cash(term="t1") -> float | None:
             moneda = (cuenta.get("moneda") or "").lower()
             if "peso" not in moneda:
                 continue
-            for s in cuenta.get("saldos", []):
-                if s.get("liquidacion") == target_liq:
-                    val = float(s.get("disponibleOperar") or 0)
-                    log.info("Cash (%s): $%s", target_liq, f"{val:,.2f}")
-                    return val
+            saldos_by_liq = {s.get("liquidacion"): s for s in cuenta.get("saldos", [])}
+            log.info("Saldos disponibles: %s", {
+                k: float(v.get("disponibleOperar") or 0)
+                for k, v in saldos_by_liq.items()
+            })
+            # Try target term first, then fall back to any positive balance
+            for liq in [target_liq] + [x for x in fallback_order if x != target_liq]:
+                if liq in saldos_by_liq:
+                    val = float(saldos_by_liq[liq].get("disponibleOperar") or 0)
+                    if val > 0 or liq == target_liq:
+                        log.info("Cash (%s): $%s", liq, f"{val:,.2f}")
+                        return val
             return float(cuenta.get("disponible") or 0)
     except Exception as exc:
         log.error("Balance fetch failed: %s", exc)
@@ -571,6 +580,9 @@ def place_order(symbol, side, qty, limit_price, term):
         errors = [m for m in msgs if isinstance(m, str) and m]
         if errors:
             return False, None, f"Validation: {errors}"
+        if not validation_id:
+            log.warning("Validar returned 200 but no validacionId — trying direct POST")
+            validar_failed = True
     except Exception as exc:
         log.warning("Validate step failed: %s — trying direct POST", exc)
         validar_failed = True
@@ -894,6 +906,24 @@ def main():
                     buy_budget, count = _apply_fill(entry, fill, fqty, buy_budget, buy_qty, lp, is_buy=True)
                     if count:
                         ops_today += 1
+
+        # Diagnostic: log current state so we know why signals may not have fired
+        for pos in portfolio.get("positions", []):
+            sym  = pos["symbol"]
+            rsi  = pos.get("rsi")
+            ma20 = pos.get("ma20")
+            px   = pos.get("unit_price", 0)
+            ppc  = pos.get("ppc", px) or px
+            qty  = pos.get("quantity", 0)
+            ov   = overrides.get(sym, {})
+            log.info(
+                "STATE %s qty=%d price=%.2f ppc=%.2f rsi=%s ma20=%s "
+                "no_sell=%s no_buy=%s cash=%.0f buy_budget=%.0f",
+                sym, qty, px, ppc, f"{rsi:.2f}" if rsi else "N/A",
+                f"{ma20:.2f}" if ma20 else "N/A",
+                ov.get("no_sell", False), ov.get("no_buy", False),
+                cash, buy_budget,
+            )
 
         save_log(trade_log)
         log.info("Esperando %d min para siguiente iteración...", LOOP_MINUTES)
