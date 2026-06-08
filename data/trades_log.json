@@ -287,5 +287,17 @@
     "status": "failed",
     "order_id": null,
     "message": "405 Client Error: Method Not Allowed for url: https://api.invertironline.com/api/v2/operaciones"
+  },
+  {
+    "date": "2026-06-08T14:20:26.723338-03:00",
+    "symbol": "MIRG",
+    "side": "buy",
+    "reason": "RSI+MA20",
+    "quantity": 1,
+    "price": 16650.0,
+    "limit_price": 16750.0,
+    "status": "failed",
+    "order_id": null,
+    "message": "405 Client Error: Method Not Allowed for url: https://api.invertironline.com/api/v2/operaciones"
   }
 ]
