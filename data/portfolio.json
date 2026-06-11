@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-06-11 17:01",
+  "last_updated": "2026-06-11 19:14",
   "total_ars": 323325.0,
   "invested_ars": 305741.39,
   "total_gain": 17583.61,
@@ -1597,15 +1597,15 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 8255.0,
-      "daily_change_pct": 10.29,
+      "unit_price": 8270.0,
+      "daily_change_pct": 10.49,
       "buy_date": null,
-      "rsi": 74.51,
-      "ma20": 7018.0,
+      "rsi": 74.65,
+      "ma20": 7018.75,
       "recommendation": "VENDER",
       "signals": [
-        "RSI sobrecomprado (74.51)",
-        "Precio 3%+ sobre MA20 ($7,018)"
+        "RSI sobrecomprado (74.65)",
+        "Precio 3%+ sobre MA20 ($7,019)"
       ],
       "sparkline": [
         {
@@ -1726,7 +1726,7 @@
         },
         {
           "date": "2026-06-11",
-          "close": 8255.0
+          "close": 8270.0
         }
       ],
       "full_history": [
@@ -1740,7 +1740,7 @@
         },
         {
           "date": "2026-03-17",
-          "close": 5984.13
+          "close": 5984.14
         },
         {
           "date": "2026-03-18",
@@ -1792,7 +1792,7 @@
         },
         {
           "date": "2026-04-08",
-          "close": 6862.14
+          "close": 6862.13
         },
         {
           "date": "2026-04-09",
@@ -1976,18 +1976,18 @@
         },
         {
           "date": "2026-06-11",
-          "close": 8255.0
+          "close": 8270.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 20080.0,
-      "daily_change_pct": 0.6,
+      "unit_price": 20110.0,
+      "daily_change_pct": 0.75,
       "buy_date": null,
-      "rsi": 43.31,
-      "ma20": 20457.0,
+      "rsi": 43.65,
+      "ma20": 20458.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2109,7 +2109,7 @@
         },
         {
           "date": "2026-06-11",
-          "close": 20080.0
+          "close": 20110.0
         }
       ],
       "full_history": [
@@ -2359,7 +2359,7 @@
         },
         {
           "date": "2026-06-11",
-          "close": 20080.0
+          "close": 20110.0
         }
       ]
     }
