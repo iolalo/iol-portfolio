@@ -1,9 +1,9 @@
 {
-  "last_updated": "2026-06-12 16:12",
-  "total_ars": 324835.0,
+  "last_updated": "2026-06-12 18:08",
+  "total_ars": 326815.0,
   "invested_ars": 305741.39,
-  "total_gain": 19093.61,
-  "total_gain_pct": 6.25,
+  "total_gain": 21073.61,
+  "total_gain_pct": 6.89,
   "total_usd": 0,
   "invested_usd": 0,
   "alert_count": 4,
@@ -12,15 +12,15 @@
       "symbol": "ALUA",
       "description": "Aluar",
       "quantity": 55.0,
-      "unit_price": 1030.0,
-      "total_value": 56650.0,
+      "unit_price": 1029.0,
+      "total_value": 56595.0,
       "currency": "peso_Argentino",
       "ppc": 846.298,
-      "gain_pct": 21.7,
+      "gain_pct": 21.58,
       "daily_change_pct": 0.0,
       "buy_date": "2026-03-04",
-      "rsi": 63.62,
-      "ma20": 981.7,
+      "rsi": 63.43,
+      "ma20": 981.65,
       "recommendation": "VENDER",
       "signals": [
         "Precio 3%+ sobre MA20 ($982)"
@@ -144,7 +144,7 @@
         },
         {
           "date": "2026-06-12",
-          "close": 1030.0
+          "close": 1029.0
         }
       ],
       "full_history": [
@@ -426,7 +426,7 @@
         },
         {
           "date": "2026-06-12",
-          "close": 1030.0
+          "close": 1029.0
         }
       ]
     },
@@ -434,15 +434,15 @@
       "symbol": "GLOB",
       "description": "Cedear Globant S.A.",
       "quantity": 20.0,
-      "unit_price": 3112.5,
-      "total_value": 62250.0,
+      "unit_price": 3102.5,
+      "total_value": 62050.0,
       "currency": "peso_Argentino",
       "ppc": 2920.0,
-      "gain_pct": 6.59,
+      "gain_pct": 6.25,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 43.51,
-      "ma20": 3277.12,
+      "rsi": 43.08,
+      "ma20": 3276.62,
       "recommendation": "COMPRAR",
       "signals": [
         "Precio 3%+ bajo MA20 ($3,277)"
@@ -566,7 +566,7 @@
         },
         {
           "date": "2026-06-12",
-          "close": 3112.5
+          "close": 3102.5
         }
       ],
       "full_history": [
@@ -816,7 +816,7 @@
         },
         {
           "date": "2026-06-12",
-          "close": 3112.5
+          "close": 3102.5
         }
       ]
     },
@@ -824,15 +824,15 @@
       "symbol": "MCD",
       "description": "Cedear Mcdonald's Corporation",
       "quantity": 3.0,
-      "unit_price": 17870.0,
-      "total_value": 53610.0,
+      "unit_price": 17790.0,
+      "total_value": 53370.0,
       "currency": "peso_Argentino",
       "ppc": 17840.0,
-      "gain_pct": 0.16,
+      "gain_pct": -0.28,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 56.76,
-      "ma20": 17486.46,
+      "rsi": 54.7,
+      "ma20": 17482.46,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -954,7 +954,7 @@
         },
         {
           "date": "2026-06-12",
-          "close": 17870.0
+          "close": 17790.0
         }
       ],
       "full_history": [
@@ -1204,7 +1204,7 @@
         },
         {
           "date": "2026-06-12",
-          "close": 17870.0
+          "close": 17790.0
         }
       ]
     },
@@ -1212,15 +1212,15 @@
       "symbol": "MIRG",
       "description": "Mirgor",
       "quantity": 9.0,
-      "unit_price": 16925.0,
-      "total_value": 152325.0,
+      "unit_price": 17200.0,
+      "total_value": 154800.0,
       "currency": "peso_Argentino",
       "ppc": 16363.889,
-      "gain_pct": 3.42,
+      "gain_pct": 5.1,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 46.48,
-      "ma20": 16751.25,
+      "rsi": 50.27,
+      "ma20": 16765.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1342,7 +1342,7 @@
         },
         {
           "date": "2026-06-12",
-          "close": 16925.0
+          "close": 17200.0
         }
       ],
       "full_history": [
@@ -1592,7 +1592,7 @@
         },
         {
           "date": "2026-06-12",
-          "close": 16925.0
+          "close": 17200.0
         }
       ]
     }
@@ -1601,15 +1601,15 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 8245.0,
-      "daily_change_pct": -0.3,
+      "unit_price": 8210.0,
+      "daily_change_pct": -0.73,
       "buy_date": null,
-      "rsi": 73.93,
-      "ma20": 7128.0,
+      "rsi": 72.93,
+      "ma20": 7126.25,
       "recommendation": "VENDER",
       "signals": [
-        "RSI sobrecomprado (73.93)",
-        "Precio 3%+ sobre MA20 ($7,128)"
+        "RSI sobrecomprado (72.93)",
+        "Precio 3%+ sobre MA20 ($7,126)"
       ],
       "sparkline": [
         {
@@ -1730,7 +1730,7 @@
         },
         {
           "date": "2026-06-12",
-          "close": 8245.0
+          "close": 8210.0
         }
       ],
       "full_history": [
@@ -1740,7 +1740,7 @@
         },
         {
           "date": "2026-03-17",
-          "close": 5984.13
+          "close": 5984.14
         },
         {
           "date": "2026-03-18",
@@ -1792,7 +1792,7 @@
         },
         {
           "date": "2026-04-08",
-          "close": 6862.14
+          "close": 6862.13
         },
         {
           "date": "2026-04-09",
@@ -1980,21 +1980,21 @@
         },
         {
           "date": "2026-06-12",
-          "close": 8245.0
+          "close": 8210.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 19820.0,
-      "daily_change_pct": -1.44,
+      "unit_price": 19860.0,
+      "daily_change_pct": -1.24,
       "buy_date": null,
-      "rsi": 40.78,
-      "ma20": 20490.5,
+      "rsi": 41.12,
+      "ma20": 20492.5,
       "recommendation": "COMPRAR",
       "signals": [
-        "Precio 3%+ bajo MA20 ($20,490)"
+        "Precio 3%+ bajo MA20 ($20,492)"
       ],
       "sparkline": [
         {
@@ -2115,7 +2115,7 @@
         },
         {
           "date": "2026-06-12",
-          "close": 19820.0
+          "close": 19860.0
         }
       ],
       "full_history": [
@@ -2365,7 +2365,7 @@
         },
         {
           "date": "2026-06-12",
-          "close": 19820.0
+          "close": 19860.0
         }
       ]
     }
