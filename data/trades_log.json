@@ -407,5 +407,29 @@
     "status": "failed",
     "order_id": null,
     "message": "405 Client Error: Method Not Allowed for url: https://api.invertironline.com/api/v2/operaciones"
+  },
+  {
+    "date": "2026-06-22T15:11:03.332233-03:00",
+    "symbol": "GLOB",
+    "side": "sell",
+    "reason": "stop-loss",
+    "quantity": 20.0,
+    "price": 2465.0,
+    "limit_price": 2450.0,
+    "status": "failed",
+    "order_id": null,
+    "message": "405 Client Error: Method Not Allowed for url: https://api.invertironline.com/api/v2/operaciones"
+  },
+  {
+    "date": "2026-06-22T15:11:03.908659-03:00",
+    "symbol": "GLOB",
+    "side": "buy",
+    "reason": "RSI+MA20",
+    "quantity": 4,
+    "price": 2465.0,
+    "limit_price": 2480.0,
+    "status": "failed",
+    "order_id": null,
+    "message": "405 Client Error: Method Not Allowed for url: https://api.invertironline.com/api/v2/operaciones"
   }
 ]
