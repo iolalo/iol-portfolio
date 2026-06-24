@@ -1,33 +1,29 @@
 {
-  "last_updated": "2026-06-23 19:04",
-  "total_ars": 324975.0,
-  "invested_ars": 322116.39,
-  "total_gain": 2858.61,
-  "total_gain_pct": 0.89,
+  "last_updated": "2026-06-24 13:27",
+  "total_ars": 334655.6,
+  "invested_ars": 336669.29,
+  "total_gain": -2013.69,
+  "total_gain_pct": -0.6,
   "total_usd": 0,
   "invested_usd": 0,
-  "alert_count": 1,
+  "alert_count": 4,
   "positions": [
     {
       "symbol": "ALUA",
       "description": "Aluar",
       "quantity": 55.0,
-      "unit_price": 1037.0,
-      "total_value": 57035.0,
+      "unit_price": 1025.0,
+      "total_value": 56375.0,
       "currency": "peso_Argentino",
       "ppc": 846.298,
-      "gain_pct": 22.53,
+      "gain_pct": 21.11,
       "daily_change_pct": 0.0,
       "buy_date": "2026-03-04",
-      "rsi": 61.35,
-      "ma20": 1009.7,
+      "rsi": 58.18,
+      "ma20": 1011.02,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-05-13",
-          "close": 945.0
-        },
         {
           "date": "2026-05-14",
           "close": 944.5
@@ -142,7 +138,11 @@
         },
         {
           "date": "2026-06-23",
-          "close": 1037.0
+          "close": 1033.0
+        },
+        {
+          "date": "2026-06-24",
+          "close": 1025.0
         }
       ],
       "full_history": [
@@ -452,7 +452,11 @@
         },
         {
           "date": "2026-06-23",
-          "close": 1037.0
+          "close": 1033.0
+        },
+        {
+          "date": "2026-06-24",
+          "close": 1025.0
         }
       ]
     },
@@ -460,25 +464,21 @@
       "symbol": "GLOB",
       "description": "Cedear Globant S.A.",
       "quantity": 20.0,
-      "unit_price": 2535.0,
-      "total_value": 50700.0,
+      "unit_price": 2517.5,
+      "total_value": 50350.0,
       "currency": "peso_Argentino",
       "ppc": 2920.0,
-      "gain_pct": -13.18,
+      "gain_pct": -13.78,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 30.21,
-      "ma20": 3090.62,
+      "rsi": 29.7,
+      "ma20": 3055.38,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI sobrevendido (30.21)",
-        "Precio 3%+ bajo MA20 ($3,091)"
+        "RSI sobrevendido (29.7)",
+        "Precio 3%+ bajo MA20 ($3,055)"
       ],
       "sparkline": [
-        {
-          "date": "2026-05-13",
-          "close": 2707.5
-        },
         {
           "date": "2026-05-14",
           "close": 2800.0
@@ -593,14 +593,14 @@
         },
         {
           "date": "2026-06-23",
-          "close": 2535.0
+          "close": 2530.0
+        },
+        {
+          "date": "2026-06-24",
+          "close": 2517.5
         }
       ],
       "full_history": [
-        {
-          "date": "2026-03-25",
-          "close": 3522.5
-        },
         {
           "date": "2026-03-26",
           "close": 3647.5
@@ -847,7 +847,11 @@
         },
         {
           "date": "2026-06-23",
-          "close": 2535.0
+          "close": 2530.0
+        },
+        {
+          "date": "2026-06-24",
+          "close": 2517.5
         }
       ]
     },
@@ -855,22 +859,18 @@
       "symbol": "MCD",
       "description": "Cedear Mcdonald's Corporation",
       "quantity": 3.0,
-      "unit_price": 17580.0,
-      "total_value": 52740.0,
+      "unit_price": 17680.0,
+      "total_value": 53040.0,
       "currency": "peso_Argentino",
       "ppc": 17840.0,
-      "gain_pct": -1.45,
+      "gain_pct": -0.89,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 48.79,
-      "ma20": 17566.48,
+      "rsi": 50.86,
+      "ma20": 17582.99,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-05-13",
-          "close": 17029.92
-        },
         {
           "date": "2026-05-14",
           "close": 16969.92
@@ -985,14 +985,14 @@
         },
         {
           "date": "2026-06-23",
-          "close": 17580.0
+          "close": 17600.0
+        },
+        {
+          "date": "2026-06-24",
+          "close": 17680.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-03-25",
-          "close": 18869.91
-        },
         {
           "date": "2026-03-26",
           "close": 18629.92
@@ -1239,7 +1239,11 @@
         },
         {
           "date": "2026-06-23",
-          "close": 17580.0
+          "close": 17600.0
+        },
+        {
+          "date": "2026-06-24",
+          "close": 17680.0
         }
       ]
     },
@@ -1247,22 +1251,21 @@
       "symbol": "MIRG",
       "description": "Mirgor",
       "quantity": 10.0,
-      "unit_price": 16450.0,
-      "total_value": 164500.0,
+      "unit_price": 16050.0,
+      "total_value": 160500.0,
       "currency": "peso_Argentino",
       "ppc": 16365.0,
-      "gain_pct": 0.51,
+      "gain_pct": -1.92,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 39.16,
-      "ma20": 16882.5,
-      "recommendation": "MANTENER",
-      "signals": [],
+      "rsi": 33.7,
+      "ma20": 16830.0,
+      "recommendation": "COMPRAR",
+      "signals": [
+        "RSI sobrevendido (33.7)",
+        "Precio 3%+ bajo MA20 ($16,830)"
+      ],
       "sparkline": [
-        {
-          "date": "2026-05-13",
-          "close": 17850.0
-        },
         {
           "date": "2026-05-14",
           "close": 17800.0
@@ -1377,14 +1380,14 @@
         },
         {
           "date": "2026-06-23",
-          "close": 16450.0
+          "close": 16425.0
+        },
+        {
+          "date": "2026-06-24",
+          "close": 16050.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-03-25",
-          "close": 18450.0
-        },
         {
           "date": "2026-03-26",
           "close": 18275.0
@@ -1631,7 +1634,405 @@
         },
         {
           "date": "2026-06-23",
-          "close": 16450.0
+          "close": 16425.0
+        },
+        {
+          "date": "2026-06-24",
+          "close": 16050.0
+        }
+      ]
+    },
+    {
+      "symbol": "MORI",
+      "description": "Morixe Hermanos",
+      "quantity": 541.0,
+      "unit_price": 26.6,
+      "total_value": 14390.6,
+      "currency": "peso_Argentino",
+      "ppc": 26.9,
+      "gain_pct": -1.11,
+      "daily_change_pct": 0.0,
+      "buy_date": null,
+      "rsi": 37.1,
+      "ma20": 28.32,
+      "recommendation": "COMPRAR",
+      "signals": [
+        "Precio 3%+ bajo MA20 ($28)"
+      ],
+      "sparkline": [
+        {
+          "date": "2026-05-14",
+          "close": 27.0
+        },
+        {
+          "date": "2026-05-15",
+          "close": 25.7
+        },
+        {
+          "date": "2026-05-18",
+          "close": 26.6
+        },
+        {
+          "date": "2026-05-19",
+          "close": 26.4
+        },
+        {
+          "date": "2026-05-20",
+          "close": 26.9
+        },
+        {
+          "date": "2026-05-21",
+          "close": 27.7
+        },
+        {
+          "date": "2026-05-22",
+          "close": 28.0
+        },
+        {
+          "date": "2026-05-25",
+          "close": 28.0
+        },
+        {
+          "date": "2026-05-26",
+          "close": 29.4
+        },
+        {
+          "date": "2026-05-27",
+          "close": 31.5
+        },
+        {
+          "date": "2026-05-28",
+          "close": 30.5
+        },
+        {
+          "date": "2026-05-29",
+          "close": 30.6
+        },
+        {
+          "date": "2026-06-01",
+          "close": 30.1
+        },
+        {
+          "date": "2026-06-02",
+          "close": 29.5
+        },
+        {
+          "date": "2026-06-03",
+          "close": 29.2
+        },
+        {
+          "date": "2026-06-04",
+          "close": 29.0
+        },
+        {
+          "date": "2026-06-05",
+          "close": 28.4
+        },
+        {
+          "date": "2026-06-08",
+          "close": 28.0
+        },
+        {
+          "date": "2026-06-09",
+          "close": 28.0
+        },
+        {
+          "date": "2026-06-10",
+          "close": 27.9
+        },
+        {
+          "date": "2026-06-11",
+          "close": 28.5
+        },
+        {
+          "date": "2026-06-12",
+          "close": 27.8
+        },
+        {
+          "date": "2026-06-15",
+          "close": 27.8
+        },
+        {
+          "date": "2026-06-16",
+          "close": 27.5
+        },
+        {
+          "date": "2026-06-17",
+          "close": 27.5
+        },
+        {
+          "date": "2026-06-18",
+          "close": 27.8
+        },
+        {
+          "date": "2026-06-19",
+          "close": 27.5
+        },
+        {
+          "date": "2026-06-22",
+          "close": 27.1
+        },
+        {
+          "date": "2026-06-23",
+          "close": 27.0
+        },
+        {
+          "date": "2026-06-24",
+          "close": 26.6
+        }
+      ],
+      "full_history": [
+        {
+          "date": "2026-03-26",
+          "close": 28.0
+        },
+        {
+          "date": "2026-03-27",
+          "close": 28.5
+        },
+        {
+          "date": "2026-03-30",
+          "close": 29.6
+        },
+        {
+          "date": "2026-03-31",
+          "close": 31.1
+        },
+        {
+          "date": "2026-04-01",
+          "close": 32.5
+        },
+        {
+          "date": "2026-04-06",
+          "close": 32.2
+        },
+        {
+          "date": "2026-04-07",
+          "close": 31.0
+        },
+        {
+          "date": "2026-04-08",
+          "close": 30.4
+        },
+        {
+          "date": "2026-04-09",
+          "close": 29.9
+        },
+        {
+          "date": "2026-04-10",
+          "close": 29.9
+        },
+        {
+          "date": "2026-04-13",
+          "close": 30.1
+        },
+        {
+          "date": "2026-04-14",
+          "close": 29.5
+        },
+        {
+          "date": "2026-04-15",
+          "close": 29.3
+        },
+        {
+          "date": "2026-04-16",
+          "close": 29.3
+        },
+        {
+          "date": "2026-04-17",
+          "close": 29.1
+        },
+        {
+          "date": "2026-04-20",
+          "close": 29.0
+        },
+        {
+          "date": "2026-04-21",
+          "close": 29.1
+        },
+        {
+          "date": "2026-04-22",
+          "close": 30.0
+        },
+        {
+          "date": "2026-04-23",
+          "close": 29.7
+        },
+        {
+          "date": "2026-04-24",
+          "close": 29.7
+        },
+        {
+          "date": "2026-04-27",
+          "close": 29.2
+        },
+        {
+          "date": "2026-04-28",
+          "close": 28.8
+        },
+        {
+          "date": "2026-04-29",
+          "close": 28.6
+        },
+        {
+          "date": "2026-04-30",
+          "close": 28.3
+        },
+        {
+          "date": "2026-05-01",
+          "close": 28.3
+        },
+        {
+          "date": "2026-05-04",
+          "close": 27.3
+        },
+        {
+          "date": "2026-05-05",
+          "close": 27.1
+        },
+        {
+          "date": "2026-05-06",
+          "close": 28.1
+        },
+        {
+          "date": "2026-05-07",
+          "close": 27.8
+        },
+        {
+          "date": "2026-05-08",
+          "close": 26.8
+        },
+        {
+          "date": "2026-05-11",
+          "close": 26.6
+        },
+        {
+          "date": "2026-05-12",
+          "close": 27.0
+        },
+        {
+          "date": "2026-05-13",
+          "close": 26.7
+        },
+        {
+          "date": "2026-05-14",
+          "close": 27.0
+        },
+        {
+          "date": "2026-05-15",
+          "close": 25.7
+        },
+        {
+          "date": "2026-05-18",
+          "close": 26.6
+        },
+        {
+          "date": "2026-05-19",
+          "close": 26.4
+        },
+        {
+          "date": "2026-05-20",
+          "close": 26.9
+        },
+        {
+          "date": "2026-05-21",
+          "close": 27.7
+        },
+        {
+          "date": "2026-05-22",
+          "close": 28.0
+        },
+        {
+          "date": "2026-05-25",
+          "close": 28.0
+        },
+        {
+          "date": "2026-05-26",
+          "close": 29.4
+        },
+        {
+          "date": "2026-05-27",
+          "close": 31.5
+        },
+        {
+          "date": "2026-05-28",
+          "close": 30.5
+        },
+        {
+          "date": "2026-05-29",
+          "close": 30.6
+        },
+        {
+          "date": "2026-06-01",
+          "close": 30.1
+        },
+        {
+          "date": "2026-06-02",
+          "close": 29.5
+        },
+        {
+          "date": "2026-06-03",
+          "close": 29.2
+        },
+        {
+          "date": "2026-06-04",
+          "close": 29.0
+        },
+        {
+          "date": "2026-06-05",
+          "close": 28.4
+        },
+        {
+          "date": "2026-06-08",
+          "close": 28.0
+        },
+        {
+          "date": "2026-06-09",
+          "close": 28.0
+        },
+        {
+          "date": "2026-06-10",
+          "close": 27.9
+        },
+        {
+          "date": "2026-06-11",
+          "close": 28.5
+        },
+        {
+          "date": "2026-06-12",
+          "close": 27.8
+        },
+        {
+          "date": "2026-06-15",
+          "close": 27.8
+        },
+        {
+          "date": "2026-06-16",
+          "close": 27.5
+        },
+        {
+          "date": "2026-06-17",
+          "close": 27.5
+        },
+        {
+          "date": "2026-06-18",
+          "close": 27.8
+        },
+        {
+          "date": "2026-06-19",
+          "close": 27.5
+        },
+        {
+          "date": "2026-06-22",
+          "close": 27.1
+        },
+        {
+          "date": "2026-06-23",
+          "close": 27.0
+        },
+        {
+          "date": "2026-06-24",
+          "close": 26.6
         }
       ]
     }
@@ -1640,18 +2041,14 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 7960.0,
-      "daily_change_pct": -2.51,
+      "unit_price": 7640.0,
+      "daily_change_pct": -4.02,
       "buy_date": null,
-      "rsi": 59.1,
-      "ma20": 7773.25,
+      "rsi": 51.57,
+      "ma20": 7798.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-05-13",
-          "close": 6195.0
-        },
         {
           "date": "2026-05-14",
           "close": 6185.0
@@ -1767,13 +2164,13 @@
         {
           "date": "2026-06-23",
           "close": 7960.0
+        },
+        {
+          "date": "2026-06-24",
+          "close": 7640.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-03-25",
-          "close": 6464.83
-        },
         {
           "date": "2026-03-26",
           "close": 6327.49
@@ -2021,24 +2418,26 @@
         {
           "date": "2026-06-23",
           "close": 7960.0
+        },
+        {
+          "date": "2026-06-24",
+          "close": 7640.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 20530.0,
-      "daily_change_pct": 1.28,
+      "unit_price": 21510.0,
+      "daily_change_pct": 4.77,
       "buy_date": null,
-      "rsi": 49.84,
-      "ma20": 20561.0,
-      "recommendation": "MANTENER",
-      "signals": [],
+      "rsi": 58.66,
+      "ma20": 20589.0,
+      "recommendation": "VENDER",
+      "signals": [
+        "Precio 3%+ sobre MA20 ($20,589)"
+      ],
       "sparkline": [
-        {
-          "date": "2026-05-13",
-          "close": 19230.0
-        },
         {
           "date": "2026-05-14",
           "close": 19800.0
@@ -2154,13 +2553,13 @@
         {
           "date": "2026-06-23",
           "close": 20530.0
+        },
+        {
+          "date": "2026-06-24",
+          "close": 21510.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-03-25",
-          "close": 19850.0
-        },
         {
           "date": "2026-03-26",
           "close": 19670.0
@@ -2408,6 +2807,10 @@
         {
           "date": "2026-06-23",
           "close": 20530.0
+        },
+        {
+          "date": "2026-06-24",
+          "close": 21510.0
         }
       ]
     }
