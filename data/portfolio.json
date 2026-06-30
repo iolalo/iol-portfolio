@@ -1,9 +1,9 @@
 {
-  "last_updated": "2026-06-30 13:25",
-  "total_ars": 332421.0,
+  "last_updated": "2026-06-30 15:20",
+  "total_ars": 331920.3,
   "invested_ars": 336669.29,
-  "total_gain": -4248.29,
-  "total_gain_pct": -1.26,
+  "total_gain": -4748.99,
+  "total_gain_pct": -1.41,
   "total_usd": 0,
   "invested_usd": 0,
   "alert_count": 3,
@@ -12,15 +12,15 @@
       "symbol": "ALUA",
       "description": "Aluar",
       "quantity": 55.0,
-      "unit_price": 987.0,
-      "total_value": 54285.0,
+      "unit_price": 981.5,
+      "total_value": 53982.5,
       "currency": "peso_Argentino",
       "ppc": 846.298,
-      "gain_pct": 16.62,
+      "gain_pct": 15.97,
       "daily_change_pct": 0.0,
       "buy_date": "2026-03-04",
-      "rsi": 48.32,
-      "ma20": 1005.95,
+      "rsi": 46.82,
+      "ma20": 1005.67,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -142,7 +142,7 @@
         },
         {
           "date": "2026-06-30",
-          "close": 987.0
+          "close": 981.5
         }
       ],
       "full_history": [
@@ -472,7 +472,7 @@
         },
         {
           "date": "2026-06-30",
-          "close": 987.0
+          "close": 981.5
         }
       ]
     },
@@ -480,19 +480,19 @@
       "symbol": "GLOB",
       "description": "Cedear Globant S.A.",
       "quantity": 20.0,
-      "unit_price": 2491.0,
-      "total_value": 49820.0,
+      "unit_price": 2481.0,
+      "total_value": 49620.0,
       "currency": "peso_Argentino",
       "ppc": 2920.0,
-      "gain_pct": -14.69,
+      "gain_pct": -15.03,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 34.6,
-      "ma20": 2867.65,
+      "rsi": 34.35,
+      "ma20": 2867.15,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI sobrevendido (34.6)",
-        "Precio 3%+ bajo MA20 ($2,868)"
+        "RSI sobrevendido (34.35)",
+        "Precio 3%+ bajo MA20 ($2,867)"
       ],
       "sparkline": [
         {
@@ -613,7 +613,7 @@
         },
         {
           "date": "2026-06-30",
-          "close": 2491.0
+          "close": 2481.0
         }
       ],
       "full_history": [
@@ -867,7 +867,7 @@
         },
         {
           "date": "2026-06-30",
-          "close": 2491.0
+          "close": 2481.0
         }
       ]
     },
@@ -875,15 +875,15 @@
       "symbol": "MCD",
       "description": "Cedear Mcdonald's Corporation",
       "quantity": 3.0,
-      "unit_price": 17500.0,
-      "total_value": 52500.0,
+      "unit_price": 17620.0,
+      "total_value": 52860.0,
       "currency": "peso_Argentino",
       "ppc": 17840.0,
-      "gain_pct": -1.9,
+      "gain_pct": -1.23,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 48.81,
-      "ma20": 17589.5,
+      "rsi": 50.7,
+      "ma20": 17595.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1005,7 +1005,7 @@
         },
         {
           "date": "2026-06-30",
-          "close": 17500.0
+          "close": 17620.0
         }
       ],
       "full_history": [
@@ -1259,7 +1259,7 @@
         },
         {
           "date": "2026-06-30",
-          "close": 17500.0
+          "close": 17620.0
         }
       ]
     },
@@ -1267,15 +1267,15 @@
       "symbol": "MIRG",
       "description": "Mirgor",
       "quantity": 10.0,
-      "unit_price": 16175.0,
-      "total_value": 161750.0,
+      "unit_price": 16150.0,
+      "total_value": 161500.0,
       "currency": "peso_Argentino",
       "ppc": 16365.0,
-      "gain_pct": -1.16,
+      "gain_pct": -1.31,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 36.96,
-      "ma20": 16650.0,
+      "rsi": 36.26,
+      "ma20": 16648.75,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1397,7 +1397,7 @@
         },
         {
           "date": "2026-06-30",
-          "close": 16175.0
+          "close": 16150.0
         }
       ],
       "full_history": [
@@ -1651,7 +1651,7 @@
         },
         {
           "date": "2026-06-30",
-          "close": 16175.0
+          "close": 16150.0
         }
       ]
     },
@@ -1659,18 +1659,18 @@
       "symbol": "MORI",
       "description": "Morixe Hermanos",
       "quantity": 541.0,
-      "unit_price": 26.0,
-      "total_value": 14066.0,
+      "unit_price": 25.8,
+      "total_value": 13957.8,
       "currency": "peso_Argentino",
       "ppc": 26.9,
-      "gain_pct": -3.34,
+      "gain_pct": -4.08,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 33.97,
-      "ma20": 27.44,
+      "rsi": 32.66,
+      "ma20": 27.43,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI sobrevendido (33.97)",
+        "RSI sobrevendido (32.66)",
         "Precio 3%+ bajo MA20 ($27)"
       ],
       "sparkline": [
@@ -1792,7 +1792,7 @@
         },
         {
           "date": "2026-06-30",
-          "close": 26.0
+          "close": 25.8
         }
       ],
       "full_history": [
@@ -2046,7 +2046,7 @@
         },
         {
           "date": "2026-06-30",
-          "close": 26.0
+          "close": 25.8
         }
       ]
     }
@@ -2055,11 +2055,11 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 8050.0,
-      "daily_change_pct": 2.09,
+      "unit_price": 7860.0,
+      "daily_change_pct": -0.32,
       "buy_date": null,
-      "rsi": 59.66,
-      "ma20": 7862.25,
+      "rsi": 55.85,
+      "ma20": 7852.75,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2181,7 +2181,7 @@
         },
         {
           "date": "2026-06-30",
-          "close": 8050.0
+          "close": 7860.0
         }
       ],
       "full_history": [
@@ -2435,21 +2435,21 @@
         },
         {
           "date": "2026-06-30",
-          "close": 8050.0
+          "close": 7860.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 21860.0,
-      "daily_change_pct": 0.37,
+      "unit_price": 21890.0,
+      "daily_change_pct": 0.51,
       "buy_date": null,
-      "rsi": 59.53,
-      "ma20": 20668.0,
+      "rsi": 59.75,
+      "ma20": 20669.5,
       "recommendation": "VENDER",
       "signals": [
-        "Precio 3%+ sobre MA20 ($20,668)"
+        "Precio 3%+ sobre MA20 ($20,670)"
       ],
       "sparkline": [
         {
@@ -2570,7 +2570,7 @@
         },
         {
           "date": "2026-06-30",
-          "close": 21860.0
+          "close": 21890.0
         }
       ],
       "full_history": [
@@ -2824,7 +2824,7 @@
         },
         {
           "date": "2026-06-30",
-          "close": 21860.0
+          "close": 21890.0
         }
       ]
     }
