@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-07-03 17:18",
+  "last_updated": "2026-07-03 18:37",
   "total_ars": 356365.8,
   "invested_ars": 336669.29,
   "total_gain": 19696.51,
@@ -2097,11 +2097,11 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 7975.0,
-      "daily_change_pct": 0.82,
+      "unit_price": 7970.0,
+      "daily_change_pct": 0.76,
       "buy_date": null,
-      "rsi": 57.68,
-      "ma20": 7933.0,
+      "rsi": 57.58,
+      "ma20": 7932.75,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2223,7 +2223,7 @@
         },
         {
           "date": "2026-07-03",
-          "close": 7975.0
+          "close": 7970.0
         }
       ],
       "full_history": [
@@ -2237,7 +2237,7 @@
         },
         {
           "date": "2026-04-08",
-          "close": 6862.14
+          "close": 6862.13
         },
         {
           "date": "2026-04-09",
@@ -2485,22 +2485,22 @@
         },
         {
           "date": "2026-07-03",
-          "close": 7975.0
+          "close": 7970.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 23150.0,
-      "daily_change_pct": -0.17,
+      "unit_price": 23130.0,
+      "daily_change_pct": -0.26,
       "buy_date": null,
-      "rsi": 67.41,
-      "ma20": 21068.0,
+      "rsi": 67.18,
+      "ma20": 21067.0,
       "recommendation": "VENDER",
       "signals": [
-        "RSI sobrecomprado (67.41)",
-        "Precio 3%+ sobre MA20 ($21,068)"
+        "RSI sobrecomprado (67.18)",
+        "Precio 3%+ sobre MA20 ($21,067)"
       ],
       "sparkline": [
         {
@@ -2621,7 +2621,7 @@
         },
         {
           "date": "2026-07-03",
-          "close": 23150.0
+          "close": 23130.0
         }
       ],
       "full_history": [
@@ -2883,7 +2883,7 @@
         },
         {
           "date": "2026-07-03",
-          "close": 23150.0
+          "close": 23130.0
         }
       ]
     }
