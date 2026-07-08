@@ -527,5 +527,17 @@
     "status": "failed",
     "order_id": null,
     "message": "405 Client Error: Method Not Allowed for url: https://api.invertironline.com/api/v2/operaciones"
+  },
+  {
+    "date": "2026-07-08T12:59:50.599711-03:00",
+    "symbol": "GLOB",
+    "side": "sell",
+    "reason": "stop-loss",
+    "quantity": 20.0,
+    "price": 2650.0,
+    "limit_price": 2635.0,
+    "status": "failed",
+    "order_id": null,
+    "message": "405 Client Error: Method Not Allowed for url: https://api.invertironline.com/api/v2/operaciones"
   }
 ]
