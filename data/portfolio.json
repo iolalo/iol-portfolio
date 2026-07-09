@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-07-08 19:00",
+  "last_updated": "2026-07-09 13:30",
   "total_ars": 348430.6,
   "invested_ars": 336669.29,
   "total_gain": 11761.31,
@@ -19,17 +19,13 @@
       "gain_pct": 13.43,
       "daily_change_pct": 0.0,
       "buy_date": "2026-03-04",
-      "rsi": 40.16,
-      "ma20": 1000.08,
+      "rsi": 40.0,
+      "ma20": 997.15,
       "recommendation": "COMPRAR",
       "signals": [
-        "Precio 3%+ bajo MA20 ($1,000)"
+        "Precio 3%+ bajo MA20 ($997)"
       ],
       "sparkline": [
-        {
-          "date": "2026-05-28",
-          "close": 1005.0
-        },
         {
           "date": "2026-05-29",
           "close": 1019.0
@@ -144,6 +140,10 @@
         },
         {
           "date": "2026-07-08",
+          "close": 968.5
+        },
+        {
+          "date": "2026-07-09",
           "close": 960.0
         }
       ],
@@ -498,6 +498,10 @@
         },
         {
           "date": "2026-07-08",
+          "close": 968.5
+        },
+        {
+          "date": "2026-07-09",
           "close": 960.0
         }
       ]
@@ -513,17 +517,13 @@
       "gain_pct": -10.27,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 41.82,
-      "ma20": 2734.97,
+      "rsi": 42.03,
+      "ma20": 2714.85,
       "recommendation": "COMPRAR",
       "signals": [
-        "Precio 3%+ bajo MA20 ($2,735)"
+        "Precio 3%+ bajo MA20 ($2,715)"
       ],
       "sparkline": [
-        {
-          "date": "2026-05-28",
-          "close": 3295.0
-        },
         {
           "date": "2026-05-29",
           "close": 3327.5
@@ -638,14 +638,14 @@
         },
         {
           "date": "2026-07-08",
+          "close": 2612.5
+        },
+        {
+          "date": "2026-07-09",
           "close": 2620.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-04-09",
-          "close": 3702.5
-        },
         {
           "date": "2026-04-10",
           "close": 3555.0
@@ -900,6 +900,10 @@
         },
         {
           "date": "2026-07-08",
+          "close": 2612.5
+        },
+        {
+          "date": "2026-07-09",
           "close": 2620.0
         }
       ]
@@ -915,15 +919,11 @@
       "gain_pct": 2.46,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 57.28,
-      "ma20": 17830.0,
+      "rsi": 57.38,
+      "ma20": 17855.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-05-28",
-          "close": 17179.92
-        },
         {
           "date": "2026-05-29",
           "close": 17319.92
@@ -1038,14 +1038,14 @@
         },
         {
           "date": "2026-07-08",
+          "close": 18300.0
+        },
+        {
+          "date": "2026-07-09",
           "close": 18280.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-04-09",
-          "close": 19089.91
-        },
         {
           "date": "2026-04-10",
           "close": 18749.92
@@ -1300,6 +1300,10 @@
         },
         {
           "date": "2026-07-08",
+          "close": 18300.0
+        },
+        {
+          "date": "2026-07-09",
           "close": 18280.0
         }
       ]
@@ -1315,17 +1319,13 @@
       "gain_pct": 6.32,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 61.05,
-      "ma20": 16746.25,
+      "rsi": 60.51,
+      "ma20": 16742.5,
       "recommendation": "VENDER",
       "signals": [
-        "Precio 3%+ sobre MA20 ($16,746)"
+        "Precio 3%+ sobre MA20 ($16,742)"
       ],
       "sparkline": [
-        {
-          "date": "2026-05-28",
-          "close": 16775.0
-        },
         {
           "date": "2026-05-29",
           "close": 16950.0
@@ -1440,14 +1440,14 @@
         },
         {
           "date": "2026-07-08",
+          "close": 17200.0
+        },
+        {
+          "date": "2026-07-09",
           "close": 17400.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-04-09",
-          "close": 18675.0
-        },
         {
           "date": "2026-04-10",
           "close": 18600.0
@@ -1702,6 +1702,10 @@
         },
         {
           "date": "2026-07-08",
+          "close": 17200.0
+        },
+        {
+          "date": "2026-07-09",
           "close": 17400.0
         }
       ]
@@ -1717,15 +1721,11 @@
       "gain_pct": -1.11,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 43.93,
-      "ma20": 26.86,
+      "rsi": 44.26,
+      "ma20": 26.76,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-05-28",
-          "close": 30.5
-        },
         {
           "date": "2026-05-29",
           "close": 30.6
@@ -1840,14 +1840,14 @@
         },
         {
           "date": "2026-07-08",
+          "close": 26.5
+        },
+        {
+          "date": "2026-07-09",
           "close": 26.6
         }
       ],
       "full_history": [
-        {
-          "date": "2026-04-09",
-          "close": 29.9
-        },
         {
           "date": "2026-04-10",
           "close": 29.9
@@ -2102,6 +2102,10 @@
         },
         {
           "date": "2026-07-08",
+          "close": 26.5
+        },
+        {
+          "date": "2026-07-09",
           "close": 26.6
         }
       ]
@@ -2114,15 +2118,11 @@
       "unit_price": 7880.0,
       "daily_change_pct": -2.05,
       "buy_date": null,
-      "rsi": 52.88,
-      "ma20": 8019.4,
+      "rsi": 52.84,
+      "ma20": 8000.33,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-05-28",
-          "close": 7227.46
-        },
         {
           "date": "2026-05-29",
           "close": 7487.19
@@ -2238,13 +2238,13 @@
         {
           "date": "2026-07-08",
           "close": 7880.0
+        },
+        {
+          "date": "2026-07-09",
+          "close": 7880.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-04-09",
-          "close": 6928.49
-        },
         {
           "date": "2026-04-10",
           "close": 6958.99
@@ -2500,6 +2500,10 @@
         {
           "date": "2026-07-08",
           "close": 7880.0
+        },
+        {
+          "date": "2026-07-09",
+          "close": 7880.0
         }
       ]
     },
@@ -2509,18 +2513,14 @@
       "unit_price": 23730.0,
       "daily_change_pct": -0.25,
       "buy_date": null,
-      "rsi": 69.89,
-      "ma20": 21566.5,
+      "rsi": 69.95,
+      "ma20": 21747.5,
       "recommendation": "VENDER",
       "signals": [
-        "RSI sobrecomprado (69.89)",
-        "Precio 3%+ sobre MA20 ($21,566)"
+        "RSI sobrecomprado (69.95)",
+        "Precio 3%+ sobre MA20 ($21,748)"
       ],
       "sparkline": [
-        {
-          "date": "2026-05-28",
-          "close": 20940.0
-        },
         {
           "date": "2026-05-29",
           "close": 20930.0
@@ -2636,13 +2636,13 @@
         {
           "date": "2026-07-08",
           "close": 23730.0
+        },
+        {
+          "date": "2026-07-09",
+          "close": 23730.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-04-09",
-          "close": 22090.0
-        },
         {
           "date": "2026-04-10",
           "close": 21800.0
@@ -2897,6 +2897,10 @@
         },
         {
           "date": "2026-07-08",
+          "close": 23730.0
+        },
+        {
+          "date": "2026-07-09",
           "close": 23730.0
         }
       ]
