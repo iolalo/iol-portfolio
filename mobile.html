@@ -288,6 +288,15 @@ function pct(v) {
 function recIcon(r) {
   return { COMPRAR: "🟢", VENDER: "🔴", ALERTA: "⚠️", MANTENER: "⚪" }[r] ?? "⚪";
 }
+function liquidationLabel(liq) {
+  return {
+    inmediato: "Contado inmediato",
+    hrs24: "Disponible T+1",
+    hrs48: "Disponible T+2",
+    hrs72: "Disponible T+3",
+    masHrs72: "Disponible > T+3",
+  }[liq] ?? liq ?? "";
+}
 
 function renderBalance(data) {
   const gain    = data.total_gain ?? 0;
@@ -304,6 +313,10 @@ function renderBalance(data) {
       <div class="balance-item">
         <span class="lbl">Resultado</span>
         <span class="val ${gCls}">${gSign}$${fmt(Math.abs(gain))} (${gSign}${fmt(gainPct, 2)}%)</span>
+      </div>
+      <div class="balance-item">
+        <span class="lbl">Cash operable</span>
+        <span class="val">$${fmt(data.cash_available ?? 0)} · ${liquidationLabel(data.cash_liquidation)}</span>
       </div>
     </div>`;
   document.getElementById("last-updated").textContent = `Actualizado: ${data.last_updated}`;

@@ -26,6 +26,16 @@ function rsiClass(v) {
   return "";
 }
 
+function liquidationLabel(liq) {
+  return {
+    inmediato: "Contado inmediato",
+    hrs24: "Disponible T+1",
+    hrs48: "Disponible T+2",
+    hrs72: "Disponible T+3",
+    masHrs72: "Disponible > T+3",
+  }[liq] ?? liq ?? "";
+}
+
 /** Convert sparkline/full_history array to {labels, closes} for the active period. */
 function sliceHistory(pos) {
   const src = (activePeriod === "all" && pos.full_history?.length)
@@ -54,6 +64,9 @@ function renderSummary(data) {
   document.getElementById("total-positions").textContent = data.total_positions ?? data.positions.length;
   document.getElementById("alert-count").textContent    = data.alert_count;
   document.getElementById("pending-orders").textContent = data.pending_orders_count ?? 0;
+  document.getElementById("cash-available").textContent = `$${fmt(data.cash_available ?? 0)}`;
+  document.getElementById("cash-liquidation").textContent =
+    liquidationLabel(data.cash_liquidation);
 
   const gain    = data.total_gain ?? 0;
   const gainPct = data.total_gain_pct ?? 0;

@@ -10,6 +10,7 @@ from pathlib import Path
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+from iol_account import extract_cash_snapshot
 from signal_logic import get_position_recommendation, get_watchlist_recommendation, parse_trading_context
 
 try:
@@ -483,6 +484,15 @@ def main():
     raw     = iol.get("/api/v2/portafolio/argentina")
     activos = raw.get("activos", raw.get("positions", []))
 
+    balance_raw   = iol.get("/api/v2/estadocuenta")
+    cash_snapshot = extract_cash_snapshot(balance_raw, "t1")
+    log.info(
+        "Cash snapshot: liq=%s available=$%s breakdown=%s",
+        cash_snapshot["selected_liquidation"],
+        f"{cash_snapshot['available_to_trade']:,.2f}",
+        cash_snapshot["available_by_liquidation"],
+    )
+
     last_signals    = load_last_signals()
     current_signals = {}
 
@@ -551,6 +561,10 @@ def main():
         "invested_ars":   round(invested_ars, 2),
         "total_gain":     total_gain,
         "total_gain_pct": gain_pct_total,
+        "cash_available": cash_snapshot["available_to_trade"],
+        "cash_liquidation": cash_snapshot["selected_liquidation"],
+        "cash_by_liquidation": cash_snapshot["available_by_liquidation"],
+        "account_total_ars": cash_snapshot["account_total"],
         "total_usd":      round(total_usd, 2),
         "invested_usd":   round(invested_usd, 2),
         "alert_count":    len(alerts),

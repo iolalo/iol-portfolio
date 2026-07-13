@@ -12,6 +12,7 @@ from pathlib import Path
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+from iol_account import extract_cash_snapshot
 from signal_logic import (
     DEFAULT_RULES,
     get_position_recommendation,
@@ -544,29 +545,18 @@ def today_op_count(trade_log):
 
 # ── Balance ───────────────────────────────────────────────────────────────────
 def get_cash(term="t1") -> float | None:
-    liquidacion_map = {"t0": "inmediato", "t1": "hrs24", "t2": "hrs48"}
-    target_liq = liquidacion_map.get(term, "hrs24")
-    fallback_order = ["inmediato", "hrs24", "hrs48"]
     try:
         data = iol.get("/api/v2/estadocuenta")
         if not isinstance(data, dict):
             raise ValueError(f"Unexpected response type: {type(data).__name__}")
-        for cuenta in data.get("cuentas", []):
-            moneda = (cuenta.get("moneda") or "").lower()
-            if "peso" not in moneda:
-                continue
-            saldos_by_liq = {s.get("liquidacion"): s for s in cuenta.get("saldos", [])}
-            log.info("Saldos disponibles: %s", {
-                k: float(v.get("disponibleOperar") or 0)
-                for k, v in saldos_by_liq.items()
-            })
-            for liq in [target_liq] + [x for x in fallback_order if x != target_liq]:
-                if liq in saldos_by_liq:
-                    val = float(saldos_by_liq[liq].get("disponibleOperar") or 0)
-                    if val > 0 or liq == target_liq:
-                        log.info("Cash (%s): $%s", liq, f"{val:,.2f}")
-                        return val
-            return float(cuenta.get("disponible") or 0)
+        snapshot = extract_cash_snapshot(data, term)
+        log.info("Saldos disponibles: %s", snapshot["available_by_liquidation"])
+        log.info(
+            "Cash seleccionado (%s): $%s",
+            snapshot["selected_liquidation"],
+            f"{snapshot['available_to_trade']:,.2f}",
+        )
+        return snapshot["available_to_trade"]
     except Exception as exc:
         log.error("Balance fetch failed: %s", exc)
         send_telegram(
