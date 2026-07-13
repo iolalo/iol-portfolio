@@ -10,6 +10,7 @@ from pathlib import Path
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+from signal_logic import get_position_recommendation, get_watchlist_recommendation, parse_trading_context
 
 try:
     import yfinance as yf
@@ -316,12 +317,10 @@ def analyze_ticker(symbol, current_price, daily_pct, buy_date, today):
 
     rsi  = calculate_rsi(closes)
     ma20 = calculate_ma(closes)
-    recommendation, signals = get_recommendation(rsi, current_price, ma20, daily_pct)
-
     sparkline    = [{"date": d, "close": c} for d, c in zip(dates[-30:], closes[-30:])]
     full_history = [{"date": d, "close": c} for d, c in zip(dates, closes)]
 
-    return rsi, ma20, recommendation, signals, sparkline, full_history
+    return rsi, ma20, sparkline, full_history
 
 # ── Telegram ──────────────────────────────────────────────────────────────────
 
@@ -372,7 +371,7 @@ def save_last_signals(signals):
 
 # ── Parallel workers ──────────────────────────────────────────────────────────
 
-def _analyze_position(pos, buy_dates, today):
+def _analyze_position(pos, buy_dates, today, rules, overrides):
     try:
         titulo      = pos.get("titulo", pos.get("asset", {}))
         symbol      = titulo.get("simbolo", titulo.get("symbol", ""))
@@ -393,8 +392,11 @@ def _analyze_position(pos, buy_dates, today):
         buy_date     = datetime.strptime(buy_date_str, "%Y-%m-%d") if buy_date_str else None
 
         log.info("  Analyzing %s (price=%.2f, ppc=%.2f)...", symbol, price, ppc)
-        rsi, ma20, rec, signals, sparkline, full_history = analyze_ticker(
+        rsi, ma20, sparkline, full_history = analyze_ticker(
             symbol, price, daily_pct, buy_date, today
+        )
+        rec, signals, _ = get_position_recommendation(
+            symbol, price, ppc, quantity, rsi, ma20, rules, overrides
         )
 
         return {
@@ -420,7 +422,7 @@ def _analyze_position(pos, buy_dates, today):
         return None
 
 
-def _analyze_watchlist_item(symbol, buy_dates, today):
+def _analyze_watchlist_item(symbol, buy_dates, today, rules, overrides):
     try:
         buy_date_str = buy_dates.get(symbol)
         buy_date     = datetime.strptime(buy_date_str, "%Y-%m-%d") if buy_date_str else None
@@ -436,8 +438,11 @@ def _analyze_watchlist_item(symbol, buy_dates, today):
         daily_pct = round((price - prev) / prev * 100, 2) if prev else 0.0
 
         log.info("  Analyzing watchlist %s (price=%.2f)...", symbol, price)
-        rsi, ma20, rec, signals, sparkline, full_history = analyze_ticker(
+        rsi, ma20, sparkline, full_history = analyze_ticker(
             symbol, price, daily_pct, buy_date, today
+        )
+        rec, signals, _ = get_watchlist_recommendation(
+            symbol, price, rsi, ma20, rules, overrides
         )
 
         return {
@@ -465,6 +470,7 @@ def main():
 
     buy_dates = load_json_config("buy_dates.json")
     watchlist = load_json_config("watchlist.json")
+    rules, overrides = parse_trading_context(SCRIPT_DIR / "trading_context.md")
     if isinstance(watchlist, dict):
         watchlist = list(watchlist.keys())
     if not isinstance(watchlist, list):
@@ -486,7 +492,7 @@ def main():
 
     with ThreadPoolExecutor(max_workers=5) as ex:
         futures = {
-            ex.submit(_analyze_position, pos, buy_dates, today): pos
+            ex.submit(_analyze_position, pos, buy_dates, today, rules, overrides): pos
             for pos in activos
         }
         for fut in as_completed(futures):
@@ -515,7 +521,7 @@ def main():
 
     with ThreadPoolExecutor(max_workers=5) as ex:
         futures = {
-            ex.submit(_analyze_watchlist_item, sym, buy_dates, today): sym
+            ex.submit(_analyze_watchlist_item, sym, buy_dates, today, rules, overrides): sym
             for sym in watchlist_syms
         }
         for fut in as_completed(futures):
@@ -531,9 +537,9 @@ def main():
         sym = item["symbol"]
         rec = item["recommendation"]
         current_signals[sym] = rec
-        if rec in ("COMPRAR", "VENDER", "ALERTA") and last_signals.get(sym) != rec:
+        if rec in ("COMPRAR", "VENDER") and last_signals.get(sym) != rec:
             alerts.append(item)
-        elif rec in ("COMPRAR", "VENDER", "ALERTA"):
+        elif rec in ("COMPRAR", "VENDER"):
             log.info("  [SKIP] %s: signal %s unchanged", sym, rec)
 
     save_last_signals(current_signals)
@@ -559,7 +565,7 @@ def main():
     log.info("Saved data/portfolio.json")
 
     # ── Telegram ──────────────────────────────────────────────────────────────
-    emoji      = {"COMPRAR": "🟢", "VENDER": "🔴", "ALERTA": "⚠️", "MANTENER": "⚪"}
+    emoji      = {"COMPRAR": "🟢", "VENDER": "🔴", "MANTENER": "⚪"}
     gain_emoji = "📈" if total_gain >= 0 else "📉"
 
     summary = (

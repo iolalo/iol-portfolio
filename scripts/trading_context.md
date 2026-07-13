@@ -11,7 +11,8 @@ limit_slippage_pct: 0.5
 ---
 
 ## Notas por ticker
-- YPFD: no_sell=true
+
+- GLOB: posicion ya reconciliada en portfolio local; mantener seguimiento por stop-loss y take-profit normales
 
 ## Contexto de mercado
-- Mayo 2026: posiciones activas ALUA/GBAN/YPFD/BBAR. Saldo disponible ~$8.000 ARS.
+- Julio 2026: posiciones ALUA/MIRG/MCD/GLOB/MORI. Cash operativo muy bajo; priorizar observacion en simulacion antes de cualquier reactivacion real.

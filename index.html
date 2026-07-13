@@ -42,6 +42,10 @@
         <span class="label">Alertas activas</span>
         <span class="value" id="alert-count">—</span>
       </div>
+      <div class="card">
+        <span class="label">Pendientes</span>
+        <span class="value" id="pending-orders">—</span>
+      </div>
       <div class="card card--bot">
         <span class="label">Bot hoy</span>
         <span class="value" id="bot-ops">—</span>
@@ -113,6 +117,26 @@
             </tr>
           </thead>
           <tbody id="trades-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="pending-section" class="hidden">
+      <h2>Órdenes pendientes</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Ticker</th>
+              <th>Acción</th>
+              <th>Cantidad</th>
+              <th>Límite</th>
+              <th>Estado</th>
+              <th>Id cola</th>
+            </tr>
+          </thead>
+          <tbody id="pending-body"></tbody>
         </table>
       </div>
     </section>

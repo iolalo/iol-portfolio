@@ -50,9 +50,10 @@ function renderSummary(data) {
     `Última actualización: ${data.last_updated}`;
 
   document.getElementById("total-ars").textContent      = `$${fmt(data.total_ars)}`;
-  document.getElementById("total-invested").textContent = `$${fmt(data.invested ?? 0)}`;
-  document.getElementById("total-positions").textContent = data.positions.length;
+  document.getElementById("total-invested").textContent = `$${fmt(data.invested_ars ?? data.invested ?? 0)}`;
+  document.getElementById("total-positions").textContent = data.total_positions ?? data.positions.length;
   document.getElementById("alert-count").textContent    = data.alert_count;
+  document.getElementById("pending-orders").textContent = data.pending_orders_count ?? 0;
 
   const gain    = data.total_gain ?? 0;
   const gainPct = data.total_gain_pct ?? 0;
@@ -65,6 +66,31 @@ function renderSummary(data) {
   gainEl.className      = `value ${gain >= 0 ? "pos" : "neg"}`;
   gainCard.classList.toggle("card--gain-pos", gain >= 0);
   gainCard.classList.toggle("card--gain-neg", gain < 0);
+}
+
+function renderPendingOrders(pendingOrders) {
+  const section = document.getElementById("pending-section");
+  const body = document.getElementById("pending-body");
+  const active = (pendingOrders || []).filter(o => ["pending", "executing"].includes(o.status));
+
+  if (active.length === 0) {
+    section.classList.add("hidden");
+    body.innerHTML = "";
+    return;
+  }
+
+  section.classList.remove("hidden");
+  body.innerHTML = active.map(order => `
+    <tr>
+      <td>${(order.timestamp || "").slice(0, 16).replace("T", " ")}</td>
+      <td><strong>${order.symbol}</strong></td>
+      <td>${order.side === "buy" ? "COMPRA" : "VENTA"}</td>
+      <td>${order.qty ?? "—"}</td>
+      <td>$${fmt(order.limit_price ?? 0, 2)}</td>
+      <td><span class="badge ALERTA">${order.status}</span></td>
+      <td>${order.id ?? "—"}</td>
+    </tr>
+  `).join("");
 }
 
 // ── Render: alerts ────────────────────────────────────────────────────────────
@@ -403,9 +429,10 @@ async function loadAndRender() {
     globalData = await resp.json();
 
     renderSummary(globalData);
-    renderAlerts([...globalData.positions, ...(globalData.watchlist ?? [])]);
+    renderAlerts(globalData.positions);
     renderTable(globalData.positions);
     drawSparklines(globalData.positions);
+    renderPendingOrders(globalData.pending_orders ?? []);
 
     // Clear existing charts before re-render
     document.getElementById("charts-grid").innerHTML = "";

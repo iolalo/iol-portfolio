@@ -247,6 +247,7 @@
   <!-- KPIs -->
   <div class="kpi-row">
     <div class="kpi-card alert"><div class="lbl">Alertas</div><div class="val" id="alert-count">—</div></div>
+    <div class="kpi-card"><div class="lbl">Pendientes</div><div class="val" id="pending-count">—</div></div>
     <div class="kpi-card bot">  <div class="lbl">Bot hoy</div><div class="val" id="bot-ops">—</div></div>
   </div>
 
@@ -298,7 +299,7 @@ function renderBalance(data) {
     <div class="balance-meta">
       <div class="balance-item">
         <span class="lbl">Invertido</span>
-        <span class="val">$${fmt(data.invested ?? 0)}</span>
+        <span class="val">$${fmt(data.invested_ars ?? data.invested ?? 0)}</span>
       </div>
       <div class="balance-item">
         <span class="lbl">Resultado</span>
@@ -307,11 +308,11 @@ function renderBalance(data) {
     </div>`;
   document.getElementById("last-updated").textContent = `Actualizado: ${data.last_updated}`;
   document.getElementById("alert-count").textContent = data.alert_count ?? 0;
+  document.getElementById("pending-count").textContent = data.pending_orders_count ?? 0;
 }
 
-function renderAlerts(positions, watchlist) {
-  const all    = [...positions, ...(watchlist ?? [])];
-  const alerts = all.filter(p => ["COMPRAR", "VENDER", "ALERTA"].includes(p.recommendation));
+function renderAlerts(positions) {
+  const alerts = positions.filter(p => ["COMPRAR", "VENDER", "ALERTA"].includes(p.recommendation));
   const cont   = document.getElementById("alerts-container");
 
   if (alerts.length === 0) {
@@ -416,7 +417,7 @@ async function loadData() {
     const data = await r.json();
 
     renderBalance(data);
-    renderAlerts(data.positions, data.watchlist);
+    renderAlerts(data.positions);
     renderPositions(data.positions);
     await renderTrades();
   } catch (e) {

@@ -3,6 +3,7 @@ import logging
 import math
 import os
 import re
+import subprocess
 import threading
 import time
 from datetime import datetime, timedelta, timezone
@@ -11,6 +12,12 @@ from pathlib import Path
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+from signal_logic import (
+    DEFAULT_RULES,
+    get_position_recommendation,
+    get_watchlist_recommendation,
+    parse_trading_context,
+)
 
 # ── Dependencias opcionales ───────────────────────────────────────────────────
 try:
@@ -29,21 +36,37 @@ except ImportError:
     print("⚠️  Librería 'yfinance' no instalada – los indicadores RSI/MA20 se tomarán del portfolio.json.")
 
 # ── Logging ───────────────────────────────────────────────────────────────────
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)-8s %(message)s",
-    datefmt="%H:%M:%S",
-)
+_LOG_FMT  = "%(asctime)s %(levelname)-8s %(message)s"
+_LOG_DATE = "%H:%M:%S"
+logging.basicConfig(level=logging.INFO, format=_LOG_FMT, datefmt=_LOG_DATE)
 log = logging.getLogger(__name__)
+
+def _setup_file_log(root: "Path") -> None:
+    log_dir = root / "logs"
+    log_dir.mkdir(exist_ok=True)
+    existing = sorted(log_dir.glob("bot_*.log"))
+    for old in existing[:-6]:
+        old.unlink(missing_ok=True)
+    ts       = datetime.now().strftime("%Y%m%d_%H%M%S")
+    fh       = logging.FileHandler(log_dir / f"bot_{ts}.log", encoding="utf-8")
+    fh.setFormatter(logging.Formatter(_LOG_FMT, datefmt=_LOG_DATE))
+    logging.getLogger().addHandler(fh)
+    log.info("Log file: %s", fh.baseFilename)
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 IOL_BASE   = "https://api.invertironline.com"
+IOL_GW     = "https://gateway-api-internal.invertironline.com"
+CLAUDE_EXE = r"C:\Users\Usuario\.local\bin\claude.exe"
 ART        = timezone(timedelta(hours=-3))
 SCRIPT_DIR = Path(__file__).parent
 ROOT       = SCRIPT_DIR.parent
-TRADES_LOG = ROOT / "data" / "trades_log.json"
-PORTFOLIO  = ROOT / "data" / "portfolio.json"
-CONTEXT_MD = SCRIPT_DIR / "trading_context.md"
+TRADES_LOG     = ROOT / "data" / "trades_log.json"
+PORTFOLIO      = ROOT / "data" / "portfolio.json"
+PENDING_ORDERS = ROOT / "data" / "pending_orders.json"
+CONTEXT_MD     = SCRIPT_DIR / "trading_context.md"
+
+# FIX P9: Comisiones (~0.6% + IVA) -> reducir presupuesto de compra en 0.7%
+COMMISSION_FACTOR = 0.993
 
 _HEADERS = {
     "Content-Type": "application/json",
@@ -100,6 +123,7 @@ DRY_RUN    = os.environ.get("DRY_RUN", "true").lower() == "true"
 SCAN_BUDGET_PCT  = float(os.environ.get("SCAN_BUDGET_PCT", "30"))
 SCAN_ASSET_TYPES = os.environ.get("SCAN_ASSET_TYPES", "ACCION,CEDEAR").upper().split(",")
 LOOP_MINUTES     = int(os.environ.get("LOOP_MINUTES", "5"))
+MAX_ITERATIONS   = int(os.environ.get("MAX_ITERATIONS", "0"))
 
 # ── Telegram helpers (MarkdownV2) ─────────────────────────────────────────────
 _MD_V2_SPECIAL = [
@@ -221,8 +245,11 @@ class _IOLSession:
                         f"{IOL_BASE}{path}", headers=headers, json=body, timeout=45
                     )
                 if not r.ok:
-                    log.error("HTTP %d on POST %s: %s", r.status_code, path, r.text[:800])
-                    r.raise_for_status()
+                    body_snippet = r.text[:500] if r.text else ""
+                    log.error("HTTP %d on POST %s: %s", r.status_code, path, body_snippet)
+                    raise requests.exceptions.HTTPError(
+                        f"{r.status_code} {r.reason} | {body_snippet}", response=r
+                    )
                 return r.json()
             except requests.exceptions.Timeout:
                 if attempt < 2:
@@ -313,15 +340,22 @@ def check_order_status(oid: str, wait_secs: int = 5) -> tuple[str, int | None]:
         return "unknown", None
 
 # ── Indicadores técnicos ──────────────────────────────────────────────────────
+# FIX P4: Cache de históricos para no consultar Yahoo a cada iteración
+_price_cache = {}
+
 def _get_historical_prices(symbol: str, period_days: int = 60) -> list[float]:
     if not HAS_YFINANCE:
         return []
+    if symbol in _price_cache:
+        return _price_cache[symbol]
     try:
         ticker = yf.Ticker(symbol + ".BA")
         df = ticker.history(period=f"{period_days}d")
         if df.empty:
             return []
-        return df["Close"].tolist()
+        closes = df["Close"].tolist()
+        _price_cache[symbol] = closes
+        return closes
     except Exception as e:
         log.warning("Error descargando histórico para %s: %s", symbol, e)
         return []
@@ -348,20 +382,21 @@ def compute_sma(closes: list[float], period: int = 20) -> float | None:
     return sum(closes[-period:]) / period
 
 # ── Market scanner ────────────────────────────────────────────────────────────
+_SCAN_UNIVERSE: list[tuple[str, str]] = [
+    ("GGAL",  "ACCION"), ("BBAR",  "ACCION"), ("BMA",   "ACCION"),
+    ("SUPV",  "ACCION"), ("BPAT",  "ACCION"), ("PAMP",  "ACCION"),
+    ("CEPU",  "ACCION"), ("TGNO4", "ACCION"), ("TRAN",  "ACCION"),
+    ("YPFD",  "ACCION"), ("TXAR",  "ACCION"), ("ALUA",  "ACCION"),
+    ("CRES",  "ACCION"), ("COME",  "ACCION"), ("LOMA",  "ACCION"),
+    ("TECO2", "ACCION"), ("MIRG",  "ACCION"), ("MORI",  "ACCION"),
+    ("AAPL",  "CEDEAR"), ("GOOGL", "CEDEAR"), ("AMZN",  "CEDEAR"),
+    ("MSFT",  "CEDEAR"), ("NVDA",  "CEDEAR"), ("KO",    "CEDEAR"),
+    ("XOM",   "CEDEAR"), ("META",  "CEDEAR"),
+]
+
 def get_merval_tickers() -> list[tuple[str, str]]:
-    try:
-        data = iol.get("/api/v2/bCBA/Titulos")
-        tickers = []
-        for item in data.get("titulos", []):
-            simbolo = item.get("simbolo") or item.get("symbol")
-            tipo = (item.get("tipo") or item.get("type") or "").upper()
-            if simbolo:
-                tickers.append((simbolo, tipo))
-        log.info("Panel bCBA: %d instrumentos obtenidos.", len(tickers))
-        return tickers
-    except Exception as exc:
-        log.error("No se pudo obtener la lista de instrumentos: %s", exc)
-        return []
+    log.info("Scanner: hardcoded universe (%d instruments).", len(_SCAN_UNIVERSE))
+    return _SCAN_UNIVERSE
 
 def scan_market(rules: dict, overrides: dict, portfolio_syms: set, budget: float, signals_done: set) -> list[dict]:
     if budget <= 0 or not HAS_YFINANCE:
@@ -401,6 +436,7 @@ def scan_market(rules: dict, overrides: dict, portfolio_syms: set, budget: float
         if lp > budget:
             continue
 
+        # FIX P4: Usa caché (ya precargado si se llamó antes)
         closes = _get_historical_prices(sym, period_days=60)
         if len(closes) < 21:
             continue
@@ -427,17 +463,7 @@ def scan_market(rules: dict, overrides: dict, portfolio_syms: set, budget: float
     return opportunities
 
 # ── Config parsing ─────────────────────────────────────────────────────────────
-DEFAULTS = {
-    "rsi_buy":            35.0,
-    "rsi_sell":           65.0,
-    "stop_loss_pct":       8.0,
-    "take_profit_pct":    25.0,
-    "buy_cash_pct":       70.0,
-    "max_ops_per_day":     2,
-    "cash_reserve_ars":  500.0,
-    "settlement_term":   "t1",
-    "limit_slippage_pct":  0.5,
-}
+DEFAULTS = dict(DEFAULT_RULES)
 
 def _coerce(value: str, target):
     if isinstance(target, bool):
@@ -450,42 +476,7 @@ def _coerce(value: str, target):
     return value
 
 def parse_context():
-    rules     = dict(DEFAULTS)
-    overrides = {}
-
-    if not CONTEXT_MD.exists():
-        return rules, overrides
-
-    try:
-        text = CONTEXT_MD.read_text(encoding="utf-8")
-    except Exception as exc:
-        log.warning("Could not read trading_context.md: %s", exc)
-        return rules, overrides
-
-    fm = re.match(r"^---\s*\n(.*?)\n---", text, re.DOTALL)
-    if fm:
-        for line in fm.group(1).splitlines():
-            if ":" not in line or line.strip().startswith("#"):
-                continue
-            k, _, v = line.partition(":")
-            k, v = k.strip(), v.strip()
-            if k in rules:
-                rules[k] = _coerce(v, rules[k])
-
-    for line in text.splitlines():
-        m = re.match(r"^-\s+([A-Z.]+):\s+(.*)", line.strip())
-        if not m:
-            continue
-        sym, note = m.group(1), m.group(2).lower()
-        ov = overrides.setdefault(sym, {})
-        if "no_sell=true" in note or "no vender" in note:
-            ov["no_sell"] = True
-        if "no_buy=true" in note or "no comprar" in note:
-            ov["no_buy"] = True
-        for key, val in re.findall(r"(\w+)=([\d.]+)", note):
-            ov[key] = float(val)
-
-    return rules, overrides
+    return parse_trading_context(CONTEXT_MD)
 
 # ── Trades log ─────────────────────────────────────────────────────────────────
 def load_log():
@@ -506,6 +497,45 @@ def save_log(trade_log):
         json.dumps(trade_log, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 
+def load_pending_orders() -> list[dict]:
+    if not PENDING_ORDERS.exists():
+        return []
+    try:
+        data = json.loads(PENDING_ORDERS.read_text(encoding="utf-8"))
+        return data if isinstance(data, list) else []
+    except json.JSONDecodeError as exc:
+        log.error("Malformed pending_orders.json: %s", exc)
+        return []
+
+def save_pending_orders(orders: list[dict]) -> None:
+    PENDING_ORDERS.parent.mkdir(exist_ok=True)
+    PENDING_ORDERS.write_text(
+        json.dumps(orders, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+def sanitize_pending_orders(orders: list[dict], *, persist: bool = True) -> list[dict]:
+    cutoff = datetime.now(ART) - timedelta(days=2)
+    changed = False
+    sanitized = []
+    for order in orders:
+        normalized = dict(order)
+        if normalized.get("status") in ("pending", "executing"):
+            try:
+                ts = datetime.fromisoformat(normalized["timestamp"])
+                if ts < cutoff:
+                    normalized["status"] = "stale"
+                    normalized["result"] = "Marked stale automatically after 2 days without resolution."
+                    changed = True
+            except Exception:
+                normalized["status"] = "stale"
+                normalized["result"] = "Marked stale automatically because timestamp is invalid."
+                changed = True
+        sanitized.append(normalized)
+
+    if changed and persist:
+        save_pending_orders(sanitized)
+    return sanitized
+
 def today_op_count(trade_log):
     today = datetime.now(ART).strftime("%Y-%m-%d")
     return sum(1 for t in trade_log
@@ -516,7 +546,6 @@ def today_op_count(trade_log):
 def get_cash(term="t1") -> float | None:
     liquidacion_map = {"t0": "inmediato", "t1": "hrs24", "t2": "hrs48"}
     target_liq = liquidacion_map.get(term, "hrs24")
-    # Fallback order: target term first, then any other term, then account-level disponible
     fallback_order = ["inmediato", "hrs24", "hrs48"]
     try:
         data = iol.get("/api/v2/estadocuenta")
@@ -531,7 +560,6 @@ def get_cash(term="t1") -> float | None:
                 k: float(v.get("disponibleOperar") or 0)
                 for k, v in saldos_by_liq.items()
             })
-            # Try target term first, then fall back to any positive balance
             for liq in [target_liq] + [x for x in fallback_order if x != target_liq]:
                 if liq in saldos_by_liq:
                     val = float(saldos_by_liq[liq].get("disponibleOperar") or 0)
@@ -549,7 +577,278 @@ def get_cash(term="t1") -> float | None:
         )
     return None
 
+# ── Portfolio helpers ─────────────────────────────────────────────────────────
+def _safe_float(value, default=0.0) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+def _normalize_position_fields(pos: dict) -> None:
+    qty = _safe_float(pos.get("quantity"))
+    unit_price = _safe_float(pos.get("unit_price"))
+    ppc = _safe_float(pos.get("ppc"), unit_price)
+    total_value = qty * unit_price
+    invested = qty * ppc
+    gain = total_value - invested
+    gain_pct = (gain / invested * 100) if invested > 0 else 0.0
+
+    pos["quantity"] = qty
+    pos["unit_price"] = unit_price
+    pos["ppc"] = ppc
+    pos["total_value"] = round(total_value, 2)
+    pos["invested_ars"] = round(invested, 2)
+    pos["gain_ars"] = round(gain, 2)
+    pos["gain_pct"] = round(gain_pct, 2)
+
+def refresh_portfolio_state(portfolio: dict, *, mark_updated: bool = True) -> dict:
+    positions = portfolio.setdefault("positions", [])
+    for pos in positions:
+        _normalize_position_fields(pos)
+
+    portfolio_syms = {
+        pos.get("symbol") for pos in positions
+        if pos.get("symbol") and _safe_float(pos.get("quantity")) > 0
+    }
+    watchlist = portfolio.get("watchlist", [])
+    portfolio["watchlist"] = [
+        item for item in watchlist
+        if item.get("symbol") not in portfolio_syms
+    ]
+
+    total_ars = round(sum(_safe_float(pos.get("total_value")) for pos in positions), 2)
+    invested_ars = round(sum(_safe_float(pos.get("invested_ars")) for pos in positions), 2)
+    total_gain = round(total_ars - invested_ars, 2)
+    total_gain_pct = round((total_gain / invested_ars * 100), 2) if invested_ars > 0 else 0.0
+    pending_orders = sanitize_pending_orders(load_pending_orders())
+    pending_count = sum(1 for order in pending_orders if order.get("status") in ("pending", "executing"))
+
+    portfolio["total_ars"] = total_ars
+    portfolio["invested_ars"] = invested_ars
+    portfolio["total_gain"] = total_gain
+    portfolio["total_gain_pct"] = total_gain_pct
+    portfolio["total_positions"] = sum(1 for pos in positions if _safe_float(pos.get("quantity")) > 0)
+    portfolio["pending_orders_count"] = pending_count
+    portfolio["pending_orders"] = pending_orders
+    if mark_updated:
+        portfolio["last_updated"] = datetime.now(ART).strftime("%Y-%m-%d %H:%M")
+    return portfolio
+
+def save_portfolio(portfolio: dict) -> None:
+    """Guarda el estado actual del portfolio al disco."""
+    try:
+        refresh_portfolio_state(portfolio)
+        PORTFOLIO.parent.mkdir(exist_ok=True)
+        PORTFOLIO.write_text(json.dumps(portfolio, ensure_ascii=False, indent=2), encoding="utf-8")
+        log.info("Portfolio guardado en %s", PORTFOLIO)
+    except Exception as exc:
+        log.error("Error guardando portfolio.json: %s", exc)
+
+def update_portfolio_position(portfolio: dict, symbol: str, side: str, qty: int, price: float) -> None:
+    """Actualiza la posición en el portfolio (compra/venta). Crea, modifica o elimina según corresponda."""
+    positions = portfolio.setdefault("positions", [])
+    if side == "buy":
+        for pos in positions:
+            if pos["symbol"] == symbol:
+                old_qty = pos.get("quantity", 0)
+                old_ppc = pos.get("ppc", price)
+                new_qty = old_qty + qty
+                new_ppc = ((old_ppc * old_qty) + (price * qty)) / new_qty if new_qty else price
+                pos["quantity"] = new_qty
+                pos["ppc"] = round(new_ppc, 6)
+                log.info("Portfolio: actualizada posición %s: qty=%d, ppc=%.2f", symbol, new_qty, new_ppc)
+                return
+        positions.append({
+            "symbol": symbol,
+            "quantity": qty,
+            "ppc": price,
+            "unit_price": price,
+            "rsi": None,
+            "ma20": None
+        })
+        log.info("Portfolio: nueva posición %s: qty=%d, ppc=%.2f", symbol, qty, price)
+    else:  # sell
+        for pos in positions:
+            if pos["symbol"] == symbol:
+                old_qty = pos.get("quantity", 0)
+                new_qty = max(0, old_qty - qty)
+                if new_qty == 0:
+                    positions.remove(pos)
+                    log.info("Portfolio: posición %s eliminada (vendida toda).", symbol)
+                else:
+                    pos["quantity"] = new_qty
+                    log.info("Portfolio: reducida posición %s: qty=%d", symbol, new_qty)
+                return
+        log.warning("Intento de venta de %s sin posición en portfolio.", symbol)
+
+def sync_portfolio_from_api(portfolio: dict) -> bool:
+    """Sincroniza posiciones contra IOL API al arrancar.
+
+    Detecta compras manuales, corrige cantidades/PPC, elimina posiciones cerradas.
+    Preserva RSI/MA20 locales. Guarda si hubo cambios.
+    """
+    try:
+        raw = iol.get("/api/v2/portafolio/argentina")
+        activos = raw.get("activos", raw.get("positions", []))
+    except Exception as exc:
+        log.warning("Portfolio sync falló: %s — usando datos locales", exc)
+        return False
+
+    api_positions: dict[str, dict] = {}
+    for pos in activos:
+        titulo  = pos.get("titulo", pos.get("asset", {}))
+        symbol  = titulo.get("simbolo", titulo.get("symbol", ""))
+        if not symbol:
+            continue
+        qty   = int(pos.get("cantidad", pos.get("quantity", 0)) or 0)
+        ppc   = float(pos.get("ppc", 0) or 0)
+        price = float(pos.get("ultimoPrecio", pos.get("unit_price", 0)) or 0)
+        if qty > 0:
+            api_positions[symbol] = {"quantity": qty, "ppc": ppc, "unit_price": price}
+
+    local_by_sym: dict[str, dict] = {p["symbol"]: p for p in portfolio.get("positions", [])}
+    changed = False
+
+    # Agregar o actualizar desde API
+    for symbol, api in api_positions.items():
+        if symbol not in local_by_sym:
+            log.info("Sync: posición nueva detectada %s qty=%d ppc=%.2f", symbol, api["quantity"], api["ppc"])
+            portfolio.setdefault("positions", []).append({
+                "symbol":     symbol,
+                "quantity":   api["quantity"],
+                "ppc":        api["ppc"],
+                "unit_price": api["unit_price"],
+                "rsi":        None,
+                "ma20":       None,
+            })
+            changed = True
+        else:
+            local = local_by_sym[symbol]
+            qty_diff = local.get("quantity", 0) != api["quantity"]
+            ppc_diff = abs(local.get("ppc", 0) - api["ppc"]) > 0.01
+            if qty_diff or ppc_diff:
+                log.info("Sync: actualizada %s qty=%d→%d ppc=%.2f→%.2f",
+                         symbol, local.get("quantity", 0), api["quantity"],
+                         local.get("ppc", 0), api["ppc"])
+                local["quantity"]   = api["quantity"]
+                local["ppc"]        = api["ppc"]
+                local["unit_price"] = api["unit_price"]
+                changed = True
+
+    # Eliminar posiciones cerradas (no aparecen en API)
+    before = len(portfolio.get("positions", []))
+    portfolio["positions"] = [
+        p for p in portfolio.get("positions", [])
+        if p["symbol"] in api_positions
+    ]
+    if len(portfolio["positions"]) < before:
+        log.info("Sync: %d posición(es) eliminada(s) — no aparecen en IOL",
+                 before - len(portfolio["positions"]))
+        changed = True
+
+    if changed:
+        save_portfolio(portfolio)
+        log.info("Portfolio sincronizado con IOL API (%d posiciones).", len(portfolio.get("positions", [])))
+    else:
+        log.info("Portfolio sin cambios vs IOL API.")
+    return changed
+
 # ── Order execution ────────────────────────────────────────────────────────────
+def _queue_pending_order(symbol: str, side: str, qty: int, limit_price: float, term: str) -> tuple:
+    import uuid
+    try:
+        existing = load_pending_orders()
+    except Exception:
+        existing = []
+
+    # FIX P3: Limpiar órdenes zombie (>2 días de antigüedad)
+    existing = sanitize_pending_orders(existing)
+
+    # Check if previously queued order was filled by the interactive session
+    for i, e in enumerate(existing):
+        if e["symbol"] == symbol and e["side"] == side and e.get("status") == "done":
+            order_id = e.get("order_id", "?")
+            existing.pop(i)
+            save_pending_orders(existing)
+            log.info("Pending order CONSUMED: %s %s order_id=%s", side, symbol, order_id)
+            return True, str(order_id), f"MCP ejecutó #{order_id}"
+
+    # Already in queue — don't duplicate
+    for e in existing:
+        if e["symbol"] == symbol and e["side"] == side and e.get("status") in ("pending", "executing"):
+            log.info("Order already queued [%s]: %s %s", e["status"], side, symbol)
+            return False, None, f"awaiting MCP: {symbol} {side} ({e['status']})"
+
+    # Enqueue new order
+    order = {
+        "id":          str(uuid.uuid4())[:8],
+        "timestamp":   datetime.now(ART).isoformat(),
+        "symbol":      symbol,
+        "side":        side,
+        "qty":         qty,
+        "limit_price": limit_price,
+        "term":        term,
+        "status":      "pending",
+        "order_id":    None,
+        "result":      None,
+    }
+    existing.append(order)
+    save_pending_orders(existing)
+    log.info("Order QUEUED for MCP session: %s %s %d @ %.2f [#%s]",
+             side, symbol, qty, limit_price, order["id"])
+    return False, None, f"queued #{order['id']}"
+
+
+def _place_order_gw(body: dict) -> tuple:
+    """Try gateway-api-internal with short timeout (fast fail, 2 paths)."""
+    with iol._lock:
+        if not iol._token:
+            iol._fetch_token()
+        headers = {**_HEADERS, "Authorization": f"Bearer {iol._token}"}
+
+    for path in ("/api/v2/operaciones/Validar", "/api/v2/operaciones"):
+        try:
+            r = requests.post(
+                f"{IOL_GW}{path}", headers=headers, json=body, timeout=8
+            )
+            if r.status_code == 405:
+                log.warning("GW %s → 405, trying next", path)
+                continue
+            if not r.ok:
+                log.warning("GW %s → HTTP %d: %s", path, r.status_code, r.text[:200])
+                if path == "/api/v2/operaciones/Validar":
+                    continue
+                return False, None, f"GW HTTP {r.status_code}"
+            data = r.json()
+            if path == "/api/v2/operaciones/Validar":
+                vid = data.get("validacionId") or data.get("id")
+                log.info("GW Validate OK: validacionId=%s", vid)
+                # FIX P6: Incluir validacionId en el body de confirmación
+                confirm_body = {**body, "validacionId": vid}
+                r2 = requests.post(
+                    f"{IOL_GW}/api/v2/operaciones/{vid}",
+                    headers=headers, json=confirm_body, timeout=8
+                )
+                if r2.ok:
+                    oid = str(r2.json().get("id", r2.json().get("numeroOperacion", "?")))
+                    log.info("Order placed OK via GW: #%s", oid)
+                    return True, oid, f"OK GW #{oid}"
+                log.warning("GW place failed: HTTP %d", r2.status_code)
+                return False, None, f"GW place HTTP {r2.status_code}"
+            else:
+                oid = str(data.get("id", data.get("numeroOperacion", "?")))
+                log.info("Order placed OK via GW direct: #%s", oid)
+                return True, oid, f"OK GW #{oid}"
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as exc:
+            log.warning("GW %s unreachable: %s", path, type(exc).__name__)
+            # FIX P2: continuar con el siguiente path en lugar de salir
+            continue
+        except Exception as exc:
+            log.warning("GW %s error: %s", path, exc)
+            continue  # try next path
+    return False, None, "GW: all paths failed"
+
+
 def place_order(symbol, side, qty, limit_price, term):
     body = {
         "mercado":   "bCBA",
@@ -566,47 +865,49 @@ def place_order(symbol, side, qty, limit_price, term):
     if DRY_RUN:
         return True, "DRY-RUN", f"DRY RUN — {side} {qty}x {symbol} @ {limit_price}"
 
+    # Step 1: validate (v2) — 405 expected from external IPs, skip immediately
     validation_id = None
-    validar_failed = False
     try:
         val = iol.post("/api/v2/operaciones/Validar", body)
-        log.info("Validate response: %s", val)
-        validation_id = (
-            val.get("validacionId")
-            or val.get("validation_id")
-            or val.get("id")
-        )
-        msgs   = val.get("mensajes", val.get("warnings", []))
-        errors = [m for m in msgs if isinstance(m, str) and m]
-        if errors:
-            return False, None, f"Validation: {errors}"
-        if not validation_id:
-            log.warning("Validar returned 200 but no validacionId — trying direct POST")
-            validar_failed = True
+        validation_id = val.get("validacionId") or val.get("validation_id") or val.get("id")
+        log.info("Validate OK: validacionId=%s", validation_id)
+    except requests.exceptions.HTTPError as exc:
+        status = exc.response.status_code if exc.response is not None else 0
+        if status == 405:
+            log.info("Validate 405 — trying GW then MCP")
+            ok, oid, msg = _place_order_gw(body)
+            if ok:
+                return ok, oid, msg
+            log.warning("GW failed (%s) — trying Claude MCP", msg)
+            return _queue_pending_order(symbol, side, qty, limit_price, term)
+        log.warning("Validate failed (%s) — proceeding with direct POST", exc)
     except Exception as exc:
-        log.warning("Validate step failed: %s — trying direct POST", exc)
-        validar_failed = True
+        log.warning("Validate skipped (%s) — proceeding with direct POST", exc)
 
-    if validation_id:
-        try:
-            resp = iol.post(f"/api/v2/operaciones/{validation_id}", body)
-            oid  = str(resp.get("id", resp.get("numeroOperacion", resp.get("numero", "?"))))
-            return True, oid, f"OK #{oid}"
-        except Exception as exc:
-            log.warning("Execute with validationId failed: %s — trying direct", exc)
-            validar_failed = True
-
-    if validar_failed:
-        # Validar endpoint returns 405 — try direct order creation
-        try:
-            resp = iol.post("/api/v2/operaciones", body)
-            oid  = str(resp.get("id", resp.get("numeroOperacion", resp.get("numero", "?"))))
-            log.info("Direct order OK: #%s", oid)
-            return True, oid, f"OK #{oid} (direct)"
-        except Exception as exc:
-            return False, None, str(exc)
-
-    return False, None, "Validate returned no validacionId"
+    # Step 2: place order via v2
+    try:
+        endpoint = f"/api/v2/operaciones/{validation_id}" if validation_id else "/api/v2/operaciones"
+        resp = iol.post(endpoint, body)
+        oid  = str(resp.get("id", resp.get("numeroOperacion", "?")))
+        log.info("Order placed OK: #%s via %s", oid, endpoint)
+        return True, oid, f"OK #{oid}"
+    except requests.exceptions.HTTPError as exc:
+        status = exc.response.status_code if exc.response is not None else 0
+        if status == 405:
+            log.warning("HTTP 405 on v2 POST — trying GW then MCP")
+            ok, oid, msg = _place_order_gw(body)
+            if ok:
+                return ok, oid, msg
+            log.warning("GW failed (%s) — trying Claude MCP", msg)
+            return _queue_pending_order(symbol, side, qty, limit_price, term)
+        err_str = str(exc).lower()
+        if any(k in err_str for k in ("ddjj", "declaraci", "sworn", "jurada")):
+            msg = f"DDJJ requerida para {symbol} — aceptar en app IOL"
+            log.warning(msg)
+            return False, None, msg
+        return False, None, str(exc)
+    except Exception as exc:
+        return False, None, str(exc)
 
 def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok, oid, msg):
     entry = {
@@ -617,14 +918,15 @@ def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok,
         "quantity":    qty,
         "price":       price,
         "limit_price": limit_price,
-        "status":      "dry_run" if DRY_RUN else ("executed" if ok else "failed"),
+        "status":      "dry_run" if DRY_RUN else ("executed" if ok else ("queued" if msg.startswith(("queued #", "awaiting MCP")) else "failed")),
         "order_id":    oid,
         "message":     msg,
     }
     trade_log.append(entry)
 
     side_label = "COMPRA" if side == "buy" else "VENTA"
-    icon       = ("🟢" if side == "buy" else "🔴") if ok else "❌"
+    is_queued  = not ok and msg.startswith(("queued #", "awaiting MCP", "MCP ejecutó"))
+    icon       = ("🟢" if side == "buy" else "🔴") if ok else ("📋" if is_queued else "❌")
 
     qty_int = int(qty)
     if DRY_RUN:
@@ -633,6 +935,13 @@ def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok,
             f"Señal: {qty_int} acc a límite ${_escape_md(f'{limit_price:,.2f}')}\n"
             f"Precio ref: ${_escape_md(f'{price:,.0f}')}\n"
             "_bot en modo DRY RUN — no se ejecutó ninguna orden real_"
+        )
+    elif is_queued and not msg.startswith("awaiting"):
+        send_telegram(
+            f"📋 *ORDEN EN COLA: {side_label} {_escape_md(symbol)}* — {_escape_md(reason.upper())}\n"
+            f"{qty_int} acc a límite ${_escape_md(f'{limit_price:,.2f}')}\n"
+            f"Precio ref: ${_escape_md(f'{price:,.0f}')}\n"
+            f"_Esperando ejecución en sesión Claude Code_ \\({_escape_md(msg)}\\)"
         )
     else:
         action = "Compré" if side == "buy" else "Vendí"
@@ -695,6 +1004,7 @@ def byma_open():
 
 # ── Main loop ─────────────────────────────────────────────────────────────────
 def main():
+    _setup_file_log(ROOT)
     now = datetime.now(ART)
     log.info("Time ART: %s (weekday=%d) | DRY_RUN=%s | holidays_lib=%s | yfinance=%s",
              now.strftime("%Y-%m-%d %H:%M"), now.weekday(), DRY_RUN, HAS_HOLIDAYS, HAS_YFINANCE)
@@ -716,30 +1026,61 @@ def main():
         return
 
     iol.authenticate()
+    sync_portfolio_from_api(portfolio)
     term    = str(rules["settlement_term"])
     max_ops = int(rules["max_ops_per_day"])
     slip    = float(rules["limit_slippage_pct"]) / 100
 
-    # Señales ejecutadas en esta sesión — evita duplicados entre iteraciones
+    # FIX P7: Cargar señales ya ejecutadas hoy para evitar recompras tras reinicio
     signals_done: set = set()
+    trade_log_initial = load_log()
+    today_str = now.strftime("%Y-%m-%d")
+    for t in trade_log_initial:
+        if t.get("date", "").startswith(today_str) and t.get("status") == "executed":
+            side = t.get("side")
+            sym  = t.get("symbol")
+            reason = t.get("reason", "")
+            if side in ("buy", "sell") and sym:
+                signals_done.add((side, sym, reason))
 
-    # Notificación de inicio (una sola vez)
     cash_init = get_cash(term)
     if cash_init is None:
         return
 
     send_telegram(
         f"🤖 *Trade Bot \\[{'SIMULACIÓN' if DRY_RUN else 'REAL'}\\] INICIADO*\n"
-        f"⏱️ Intervalo: cada {LOOP_MINUTES} min \\| Límite diario: {max_ops} ops\n"
+        f"⏱️ Intervalo: cada {LOOP_MINUTES} min \\| Límite diario: {max_ops} ops"
+        + (f" \\| Iteraciones máx: {MAX_ITERATIONS}" if MAX_ITERATIONS > 0 else "")
+        + "\n"
         f"💰 Cash inicial: ${_escape_md(f'{cash_init:,.0f}')} ARS"
     )
 
+    # FIX P4: Precarga de históricos e indicadores para posiciones y watchlist
+    all_items = portfolio.get("positions", []) + portfolio.get("watchlist", [])
+    for item in all_items:
+        sym = item["symbol"]
+        live = get_live_price(sym)
+        if live and live > 0:
+            item["unit_price"] = live
+        if HAS_YFINANCE:
+            closes = _get_historical_prices(sym, period_days=60)
+            if len(closes) >= 21:
+                item["rsi"] = compute_rsi(closes, 14)
+                item["ma20"] = compute_sma(closes, 20)
+
     # ── Bucle principal ──────────────────────────────────────────────────────
+    iteration_count = 0
     while True:
         now = datetime.now(ART)
         if not byma_open():
             log.info("Mercado cerrado. Saliendo del bucle.")
             break
+
+        if MAX_ITERATIONS > 0 and iteration_count >= MAX_ITERATIONS:
+            log.info("Max iterations reached (%d). Saliendo del bucle.", MAX_ITERATIONS)
+            break
+
+        iteration_count += 1
 
         log.info("── Iteración %s ──", now.strftime("%H:%M"))
 
@@ -749,7 +1090,8 @@ def main():
             continue
 
         usable     = max(0.0, cash - float(rules["cash_reserve_ars"]))
-        buy_budget = usable * float(rules["buy_cash_pct"]) / 100
+        # FIX P9: Descontar comisiones estimadas
+        buy_budget = usable * float(rules["buy_cash_pct"]) / 100 * COMMISSION_FACTOR
 
         trade_log = load_log()
         ops_today = today_op_count(trade_log)
@@ -759,22 +1101,12 @@ def main():
             time.sleep(60 * LOOP_MINUTES)
             continue
 
-        # Refrescar precios e indicadores
-        all_items = portfolio.get("positions", []) + portfolio.get("watchlist", [])
+        # Refrescar solo precios en vivo (RSI/MA20 ya están precargados y no cambian intradía)
         for item in all_items:
             sym  = item["symbol"]
             live = get_live_price(sym)
             if live and live > 0:
                 item["unit_price"] = live
-            if HAS_YFINANCE:
-                closes = _get_historical_prices(sym, period_days=60)
-                if len(closes) >= 21:
-                    rsi_val = compute_rsi(closes, 14)
-                    ma_val  = compute_sma(closes, 20)
-                    if rsi_val is not None:
-                        item["rsi"] = rsi_val
-                    if ma_val is not None:
-                        item["ma20"] = ma_val
 
         # ── 1) Stop-loss / Take-profit ─────────────────────────────────────
         for pos in portfolio.get("positions", []):
@@ -782,31 +1114,40 @@ def main():
             price = pos.get("unit_price", 0)
             ppc   = pos.get("ppc", price) or price
             qty   = pos.get("quantity", 0)
-            ov    = overrides.get(sym, {})
+            decision, _, reason = get_position_recommendation(
+                sym, price, ppc, qty, pos.get("rsi"), pos.get("ma20"), rules, overrides
+            )
 
-            sl_pct = float(ov.get("stop_loss_pct", rules["stop_loss_pct"]))
-            if qty > 0 and ppc > 0 and price <= ppc * (1 - sl_pct / 100):
-                if ("sell", sym, "stop-loss") not in signals_done and not ov.get("no_sell"):
+            if decision == "VENDER" and reason == "stop-loss":
+                if ("sell", sym, "stop-loss") not in signals_done:
                     lp = _round_to_tick(price * (1 - slip), "sell")
                     ok, oid, msg = place_order(sym, "sell", qty, lp, term)
                     entry = log_and_notify(trade_log, sym, "sell", "stop-loss", qty, price, lp, ok, oid, msg)
-                    signals_done.add(("sell", sym, "stop-loss"))
+                    if ok:
+                        signals_done.add(("sell", sym, "stop-loss"))
                     if ok and not DRY_RUN:
                         fill, fqty = check_order_status(oid)
-                        _apply_fill(entry, fill, fqty, buy_budget, qty, lp, is_buy=False)
+                        _, count = _apply_fill(entry, fill, fqty, buy_budget, qty, lp, is_buy=False)
+                        # FIX P1: Actualizar portfolio (venta)
+                        if fill in ("ejecutada", "parcial") and count:
+                            sold_qty = entry.get("quantity", qty)
+                            update_portfolio_position(portfolio, sym, "sell", sold_qty, lp)
                 continue
 
-            tp_pct = float(ov.get("take_profit_pct", rules["take_profit_pct"]))
-            if qty > 0 and ppc > 0 and price >= ppc * (1 + tp_pct / 100):
-                if ("sell", sym, "take-profit") not in signals_done and not ov.get("no_sell"):
+            if decision == "VENDER" and reason == "take-profit":
+                if ("sell", sym, "take-profit") not in signals_done:
                     sell_qty = max(1, qty // 2)
                     lp = _round_to_tick(price * (1 - slip), "sell")
                     ok, oid, msg = place_order(sym, "sell", sell_qty, lp, term)
                     entry = log_and_notify(trade_log, sym, "sell", "take-profit", sell_qty, price, lp, ok, oid, msg)
-                    signals_done.add(("sell", sym, "take-profit"))
+                    if ok:
+                        signals_done.add(("sell", sym, "take-profit"))
                     if ok and not DRY_RUN:
                         fill, fqty = check_order_status(oid)
-                        _apply_fill(entry, fill, fqty, buy_budget, sell_qty, lp, is_buy=False)
+                        _, count = _apply_fill(entry, fill, fqty, buy_budget, sell_qty, lp, is_buy=False)
+                        if fill in ("ejecutada", "parcial") and count:
+                            sold_qty = entry.get("quantity", sell_qty)
+                            update_portfolio_position(portfolio, sym, "sell", sold_qty, lp)
                 continue
 
         # ── 2) RSI señales en posiciones ───────────────────────────────────
@@ -816,40 +1157,40 @@ def main():
             rsi   = pos.get("rsi")
             ma20  = pos.get("ma20")
             qty   = pos.get("quantity", 0)
-            ov    = overrides.get(sym, {})
+            ppc   = pos.get("ppc", price) or price
+            decision, _, reason = get_position_recommendation(
+                sym, price, ppc, qty, rsi, ma20, rules, overrides
+            )
 
-            rsi_buy = float(ov.get("rsi_buy", rules["rsi_buy"]))
-            if (rsi is not None and ma20 is not None
-                    and rsi < rsi_buy and price < ma20
-                    and not ov.get("no_buy")
-                    and ("buy", sym, "RSI+MA20") not in signals_done):
+            if decision == "COMPRAR" and reason == "RSI+MA20" and ("buy", sym, "RSI+MA20") not in signals_done:
                 lp      = _round_to_tick(price * (1 + slip), "buy")
                 buy_qty = max(1, int(buy_budget // lp))
                 if buy_qty * lp <= buy_budget + 1e-6:
                     ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
                     entry = log_and_notify(trade_log, sym, "buy", "RSI+MA20", buy_qty, price, lp, ok, oid, msg)
-                    signals_done.add(("buy", sym, "RSI+MA20"))
+                    if ok:
+                        signals_done.add(("buy", sym, "RSI+MA20"))
                     if ok and not DRY_RUN:
                         fill, fqty = check_order_status(oid)
                         buy_budget, count = _apply_fill(entry, fill, fqty, buy_budget, buy_qty, lp, is_buy=True)
-                        if count:
+                        if fill in ("ejecutada", "parcial") and count:
+                            bought_qty = entry.get("quantity", buy_qty)
+                            update_portfolio_position(portfolio, sym, "buy", bought_qty, lp)
                             ops_today += 1
 
-            rsi_sell = float(ov.get("rsi_sell", rules["rsi_sell"]))
-            if (rsi is not None and ma20 is not None
-                    and rsi > rsi_sell and price > ma20
-                    and qty > 0
-                    and not ov.get("no_sell")
-                    and ("sell", sym, "RSI+MA20") not in signals_done):
+            if decision == "VENDER" and reason == "RSI+MA20" and ("sell", sym, "RSI+MA20") not in signals_done:
                 sell_qty = max(1, qty // 2)
                 lp = _round_to_tick(price * (1 - slip), "sell")
                 ok, oid, msg = place_order(sym, "sell", sell_qty, lp, term)
                 entry = log_and_notify(trade_log, sym, "sell", "RSI+MA20", sell_qty, price, lp, ok, oid, msg)
-                signals_done.add(("sell", sym, "RSI+MA20"))
+                if ok:
+                    signals_done.add(("sell", sym, "RSI+MA20"))
                 if ok and not DRY_RUN:
                     fill, fqty = check_order_status(oid)
                     _, count = _apply_fill(entry, fill, fqty, buy_budget, sell_qty, lp, is_buy=False)
-                    if count:
+                    if fill in ("ejecutada", "parcial") and count:
+                        sold_qty = entry.get("quantity", sell_qty)
+                        update_portfolio_position(portfolio, sym, "sell", sold_qty, lp)
                         ops_today += 1
 
         # ── 3) Watchlist ───────────────────────────────────────────────────
@@ -864,23 +1205,24 @@ def main():
             price = wpos.get("unit_price", 0)
             rsi   = wpos.get("rsi")
             ma20  = wpos.get("ma20")
-            ov    = overrides.get(sym, {})
+            decision, _, reason = get_watchlist_recommendation(
+                sym, price, rsi, ma20, rules, overrides
+            )
 
-            rsi_buy = float(ov.get("rsi_buy", rules["rsi_buy"]))
-            if (rsi is not None and ma20 is not None
-                    and rsi < rsi_buy and price < ma20
-                    and not ov.get("no_buy")
-                    and ("buy", sym, "RSI+MA20 (watchlist)") not in signals_done):
+            if decision == "COMPRAR" and reason == "RSI+MA20 (watchlist)" and ("buy", sym, "RSI+MA20 (watchlist)") not in signals_done:
                 lp      = _round_to_tick(price * (1 + slip), "buy")
                 buy_qty = max(1, int(buy_budget // lp))
                 if buy_qty * lp <= buy_budget + 1e-6:
                     ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
                     entry = log_and_notify(trade_log, sym, "buy", "RSI+MA20 (watchlist)", buy_qty, price, lp, ok, oid, msg)
-                    signals_done.add(("buy", sym, "RSI+MA20 (watchlist)"))
+                    if ok:
+                        signals_done.add(("buy", sym, "RSI+MA20 (watchlist)"))
                     if ok and not DRY_RUN:
                         fill, fqty = check_order_status(oid)
                         buy_budget, count = _apply_fill(entry, fill, fqty, buy_budget, buy_qty, lp, is_buy=True)
-                        if count:
+                        if fill in ("ejecutada", "parcial") and count:
+                            bought_qty = entry.get("quantity", buy_qty)
+                            update_portfolio_position(portfolio, sym, "buy", bought_qty, lp)
                             ops_today += 1
 
         # ── 4) Market scanner ──────────────────────────────────────────────
@@ -900,14 +1242,18 @@ def main():
                     continue
                 ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
                 entry = log_and_notify(trade_log, sym, "buy", "market_scanner", buy_qty, price, lp, ok, oid, msg)
-                signals_done.add(("buy", sym, "market_scanner"))
+                # FIX P3: Solo marcar señal si fue exitosa o quedó encolada; si falló, permitir reintento
+                if ok or (not ok and msg and (msg.startswith("queued #") or msg.startswith("awaiting MCP"))):
+                    signals_done.add(("buy", sym, "market_scanner"))
                 if ok and not DRY_RUN:
                     fill, fqty = check_order_status(oid)
                     buy_budget, count = _apply_fill(entry, fill, fqty, buy_budget, buy_qty, lp, is_buy=True)
-                    if count:
+                    if fill in ("ejecutada", "parcial") and count:
+                        bought_qty = entry.get("quantity", buy_qty)
+                        update_portfolio_position(portfolio, sym, "buy", bought_qty, lp)
                         ops_today += 1
 
-        # Diagnostic: log current state so we know why signals may not have fired
+        # Diagnostic state log
         for pos in portfolio.get("positions", []):
             sym  = pos["symbol"]
             rsi  = pos.get("rsi")
@@ -925,11 +1271,18 @@ def main():
                 cash, buy_budget,
             )
 
+        # FIX P1: Guardar portfolio actualizado (con posiciones, precios e indicadores)
+        save_portfolio(portfolio)
         save_log(trade_log)
+
+        if MAX_ITERATIONS > 0 and iteration_count >= MAX_ITERATIONS:
+            log.info("Max iterations reached (%d). Finalizando sin espera adicional.", MAX_ITERATIONS)
+            break
+
         log.info("Esperando %d min para siguiente iteración...", LOOP_MINUTES)
         time.sleep(60 * LOOP_MINUTES)
 
-    log.info("Bot detenido.")
+    log.info("Bot detenido. Iteraciones ejecutadas: %d", iteration_count)
 
 if __name__ == "__main__":
     main()
