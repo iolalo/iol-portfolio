@@ -52,6 +52,16 @@ IOL_PASS   = os.environ["IOL_PASSWORD"]
 TG_TOKEN   = os.environ["TELEGRAM_TOKEN"]
 TG_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
+
+def _env_flag(name, default=False):
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in ("1", "true", "yes", "on")
+
+
+TELEGRAM_NOTIFY_NO_ALERTS = _env_flag("TELEGRAM_NOTIFY_NO_ALERTS", False)
+
 # ── HTTP session ──────────────────────────────────────────────────────────────
 
 def _build_session():
@@ -606,7 +616,7 @@ def main():
                 lines.append(f"  • {s}")
             lines.append("")
         send_telegram("\n".join(lines))
-    else:
+    elif TELEGRAM_NOTIFY_NO_ALERTS:
         send_telegram(summary + "✅ Sin alertas nuevas")
 
     log.info(

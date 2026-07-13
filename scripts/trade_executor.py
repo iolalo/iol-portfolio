@@ -126,6 +126,17 @@ SCAN_ASSET_TYPES = os.environ.get("SCAN_ASSET_TYPES", "ACCION,CEDEAR").upper().s
 LOOP_MINUTES     = int(os.environ.get("LOOP_MINUTES", "5"))
 MAX_ITERATIONS   = int(os.environ.get("MAX_ITERATIONS", "0"))
 
+
+def _env_flag(name: str, default: bool = False) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in ("1", "true", "yes", "on")
+
+
+TELEGRAM_NOTIFY_STARTUP = _env_flag("TELEGRAM_NOTIFY_STARTUP", False)
+TELEGRAM_NOTIFY_DRY_RUN = _env_flag("TELEGRAM_NOTIFY_DRY_RUN", False)
+
 # ── Telegram helpers (MarkdownV2) ─────────────────────────────────────────────
 _MD_V2_SPECIAL = [
     "_", "*", "[", "]", "(", ")", "~", "`", ">",
@@ -919,7 +930,7 @@ def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok,
     icon       = ("🟢" if side == "buy" else "🔴") if ok else ("📋" if is_queued else "❌")
 
     qty_int = int(qty)
-    if DRY_RUN:
+    if DRY_RUN and TELEGRAM_NOTIFY_DRY_RUN:
         send_telegram(
             f"🔵 *\\[SIMULACIÓN\\] {side_label} {_escape_md(symbol)}* — {_escape_md(reason.upper())}\n"
             f"Señal: {qty_int} acc a límite ${_escape_md(f'{limit_price:,.2f}')}\n"
@@ -1037,13 +1048,14 @@ def main():
     if cash_init is None:
         return
 
-    send_telegram(
-        f"🤖 *Trade Bot \\[{'SIMULACIÓN' if DRY_RUN else 'REAL'}\\] INICIADO*\n"
-        f"⏱️ Intervalo: cada {LOOP_MINUTES} min \\| Límite diario: {max_ops} ops"
-        + (f" \\| Iteraciones máx: {MAX_ITERATIONS}" if MAX_ITERATIONS > 0 else "")
-        + "\n"
-        f"💰 Cash inicial: ${_escape_md(f'{cash_init:,.0f}')} ARS"
-    )
+    if TELEGRAM_NOTIFY_STARTUP:
+        send_telegram(
+            f"🤖 *Trade Bot \\[{'SIMULACIÓN' if DRY_RUN else 'REAL'}\\] INICIADO*\n"
+            f"⏱️ Intervalo: cada {LOOP_MINUTES} min \\| Límite diario: {max_ops} ops"
+            + (f" \\| Iteraciones máx: {MAX_ITERATIONS}" if MAX_ITERATIONS > 0 else "")
+            + "\n"
+            f"💰 Cash inicial: ${_escape_md(f'{cash_init:,.0f}')} ARS"
+        )
 
     # FIX P4: Precarga de históricos e indicadores para posiciones y watchlist
     all_items = portfolio.get("positions", []) + portfolio.get("watchlist", [])
