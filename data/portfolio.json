@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-07-13 17:00",
+  "last_updated": "2026-07-13 18:09",
   "total_ars": 347037.4,
   "invested_ars": 336669.29,
   "total_gain": 10368.11,
@@ -2127,11 +2127,11 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 8075.0,
-      "daily_change_pct": -3.12,
+      "unit_price": 8080.0,
+      "daily_change_pct": -3.06,
       "buy_date": null,
-      "rsi": 55.09,
-      "ma20": 8000.69,
+      "rsi": 55.19,
+      "ma20": 8000.94,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2253,7 +2253,7 @@
         },
         {
           "date": "2026-07-13",
-          "close": 8075.0
+          "close": 8080.0
         }
       ],
       "full_history": [
@@ -2275,7 +2275,7 @@
         },
         {
           "date": "2026-04-20",
-          "close": 6939.32
+          "close": 6939.31
         },
         {
           "date": "2026-04-21",
@@ -2515,18 +2515,18 @@
         },
         {
           "date": "2026-07-13",
-          "close": 8075.0
+          "close": 8080.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 24350.0,
-      "daily_change_pct": 0.5,
+      "unit_price": 24330.0,
+      "daily_change_pct": 0.41,
       "buy_date": null,
-      "rsi": 73.45,
-      "ma20": 22190.5,
+      "rsi": 73.34,
+      "ma20": 22189.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2648,7 +2648,7 @@
         },
         {
           "date": "2026-07-13",
-          "close": 24350.0
+          "close": 24330.0
         }
       ],
       "full_history": [
@@ -2910,7 +2910,7 @@
         },
         {
           "date": "2026-07-13",
-          "close": 24350.0
+          "close": 24330.0
         }
       ]
     }
