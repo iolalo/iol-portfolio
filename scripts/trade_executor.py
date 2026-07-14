@@ -1138,7 +1138,7 @@ def main():
 
             if decision == "VENDER" and reason == "take-profit":
                 if ("sell", sym, "take-profit") not in signals_done:
-                    sell_qty = max(1, qty // 2)
+                    sell_qty = qty
                     lp = _round_to_tick(price * (1 - slip), "sell")
                     ok, oid, msg = place_order(sym, "sell", sell_qty, lp, term)
                     entry = log_and_notify(trade_log, sym, "sell", "take-profit", sell_qty, price, lp, ok, oid, msg)
@@ -1181,7 +1181,7 @@ def main():
                             ops_today += 1
 
             if decision == "VENDER" and reason == "RSI+MA20" and ("sell", sym, "RSI+MA20") not in signals_done:
-                sell_qty = max(1, qty // 2)
+                sell_qty = qty
                 lp = _round_to_tick(price * (1 - slip), "sell")
                 ok, oid, msg = place_order(sym, "sell", sell_qty, lp, term)
                 entry = log_and_notify(trade_log, sym, "sell", "RSI+MA20", sell_qty, price, lp, ok, oid, msg)
