@@ -198,6 +198,12 @@ def save_mobile_approvals(items: list[dict]) -> None:
     )
 
 
+def _append_trade_log_entry(entry: dict) -> None:
+    trade_log = load_log()
+    trade_log.append(entry)
+    save_log(trade_log)
+
+
 def _store_mobile_decision(payload: dict) -> None:
     items = load_mobile_approvals()
     payload = dict(payload)
@@ -307,10 +313,18 @@ def apply_mobile_decisions() -> None:
         if not matched or decision not in ("approve", "reject"):
             remaining.append(item)
             continue
+        current_status = str(matched.get("status", "")).strip().lower()
+        if current_status not in ("pending", "approved_pending"):
+            log.info(
+                "Ignoring mobile decision %s for order %s with status=%s",
+                decision, order_id, current_status or "?",
+            )
+            continue
 
         if decision == "reject":
             matched["status"] = "rejected_mobile"
             matched["result"] = "Rechazada desde Telegram"
+            matched["resolved_at"] = datetime.now(ART).isoformat()
             changed = True
             log.info("Pending order %s rechazada desde mobile.", order_id)
             send_telegram(
@@ -321,13 +335,59 @@ def apply_mobile_decisions() -> None:
             continue
 
         matched["mobile_approved_at"] = item.get("received_at")
-        matched["result"] = "Aprobada desde Telegram"
+        matched["status"] = "executing"
+        matched["result"] = "Aprobada desde Telegram. Reintentando ejecución local..."
+        matched["attempts"] = int(matched.get("attempts", 0) or 0) + 1
+        matched["last_attempt_at"] = datetime.now(ART).isoformat()
         changed = True
         log.info("Pending order %s aprobada desde mobile.", order_id)
         send_telegram(
             f"✅ *ORDEN APROBADA* \\#{_escape_md(order_id)}\n"
             f"{_escape_md(matched.get('symbol','?'))} · {_escape_md(matched.get('side','?').upper())}\n"
-            "_Aprobada desde Telegram\\. Queda registrada en la cola local_"
+            "_Aprobada desde Telegram\\. Reintentando ejecución local_"
+        )
+
+        ok, oid, msg = place_order(
+            matched.get("symbol"),
+            matched.get("side"),
+            matched.get("qty"),
+            matched.get("limit_price"),
+            matched.get("term"),
+            queue_on_fail=False,
+        )
+        matched["last_error"] = None if ok else msg
+        if ok:
+            matched["status"] = "done"
+            matched["order_id"] = oid
+            matched["result"] = msg
+            matched["resolved_at"] = datetime.now(ART).isoformat()
+            log.info("Pending order %s ejecutada tras aprobación mobile: #%s", order_id, oid)
+            _append_trade_log_entry({
+                "date": datetime.now(ART).isoformat(),
+                "symbol": matched.get("symbol"),
+                "side": matched.get("side"),
+                "reason": "mobile_approval_retry",
+                "quantity": matched.get("qty"),
+                "price": matched.get("limit_price"),
+                "limit_price": matched.get("limit_price"),
+                "status": "executed",
+                "order_id": oid,
+                "message": msg,
+            })
+            send_telegram(
+                f"✅ *ORDEN EJECUTADA* \\#{_escape_md(order_id)}\n"
+                f"{_escape_md(matched.get('symbol','?'))} · {_escape_md(matched.get('side','?').upper())}\n"
+                f"Orden IOL: \\#{_escape_md(str(oid))}"
+            )
+            continue
+
+        matched["status"] = "approved_pending"
+        matched["result"] = f"Aprobada desde Telegram, pero sigue pendiente: {msg}"
+        log.warning("Pending order %s sigue pendiente tras aprobación mobile: %s", order_id, msg)
+        send_telegram(
+            f"⚠️ *ORDEN APROBADA PERO PENDIENTE* \\#{_escape_md(order_id)}\n"
+            f"{_escape_md(matched.get('symbol','?'))} · {_escape_md(matched.get('side','?').upper())}\n"
+            f"{_escape_md(str(msg)[:180])}"
         )
 
     if changed:
@@ -699,7 +759,7 @@ def sanitize_pending_orders(orders: list[dict], *, persist: bool = True) -> list
     sanitized = []
     for order in orders:
         normalized = dict(order)
-        if normalized.get("status") in ("pending", "executing"):
+        if normalized.get("status") in ("pending", "executing", "approved_pending"):
             try:
                 ts = datetime.fromisoformat(normalized["timestamp"])
                 if ts < cutoff:
@@ -790,7 +850,10 @@ def refresh_portfolio_state(portfolio: dict, *, mark_updated: bool = True) -> di
     total_gain = round(total_ars - invested_ars, 2)
     total_gain_pct = round((total_gain / invested_ars * 100), 2) if invested_ars > 0 else 0.0
     pending_orders = sanitize_pending_orders(load_pending_orders())
-    pending_count = sum(1 for order in pending_orders if order.get("status") in ("pending", "executing"))
+    pending_count = sum(
+        1 for order in pending_orders
+        if order.get("status") in ("pending", "executing", "approved_pending")
+    )
 
     portfolio["total_ars"] = total_ars
     portfolio["invested_ars"] = invested_ars
@@ -944,7 +1007,7 @@ def _queue_pending_order(symbol: str, side: str, qty: int, limit_price: float, t
 
     # Already in queue — don't duplicate
     for e in existing:
-        if e["symbol"] == symbol and e["side"] == side and e.get("status") in ("pending", "executing"):
+        if e["symbol"] == symbol and e["side"] == side and e.get("status") in ("pending", "executing", "approved_pending"):
             log.info("Order already queued [%s]: %s %s", e["status"], side, symbol)
             return False, None, f"awaiting MCP: {symbol} {side} ({e['status']})"
 
@@ -1019,7 +1082,7 @@ def _place_order_gw(body: dict) -> tuple:
     return False, None, "GW: all paths failed"
 
 
-def place_order(symbol, side, qty, limit_price, term):
+def place_order(symbol, side, qty, limit_price, term, *, queue_on_fail: bool = True):
     body = {
         "mercado":   "bCBA",
         "simbolo":   symbol,
@@ -1049,7 +1112,9 @@ def place_order(symbol, side, qty, limit_price, term):
             if ok:
                 return ok, oid, msg
             log.warning("GW failed (%s) — trying Claude MCP", msg)
-            return _queue_pending_order(symbol, side, qty, limit_price, term)
+            if queue_on_fail:
+                return _queue_pending_order(symbol, side, qty, limit_price, term)
+            return False, None, f"Pendiente tras reintento local: {msg}"
         log.warning("Validate failed (%s) — proceeding with direct POST", exc)
     except Exception as exc:
         log.warning("Validate skipped (%s) — proceeding with direct POST", exc)
@@ -1069,7 +1134,9 @@ def place_order(symbol, side, qty, limit_price, term):
             if ok:
                 return ok, oid, msg
             log.warning("GW failed (%s) — trying Claude MCP", msg)
-            return _queue_pending_order(symbol, side, qty, limit_price, term)
+            if queue_on_fail:
+                return _queue_pending_order(symbol, side, qty, limit_price, term)
+            return False, None, f"Pendiente tras reintento local: {msg}"
         err_str = str(exc).lower()
         if any(k in err_str for k in ("ddjj", "declaraci", "sworn", "jurada")):
             msg = f"DDJJ requerida para {symbol} — aceptar en app IOL"
