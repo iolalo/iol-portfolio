@@ -6,6 +6,7 @@ import re
 import subprocess
 import threading
 import time
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -64,6 +65,7 @@ ROOT       = SCRIPT_DIR.parent
 TRADES_LOG     = ROOT / "data" / "trades_log.json"
 PORTFOLIO      = ROOT / "data" / "portfolio.json"
 PENDING_ORDERS = ROOT / "data" / "pending_orders.json"
+MOBILE_APPROVALS = ROOT / "data" / "mobile_approvals.json"
 CONTEXT_MD     = SCRIPT_DIR / "trading_context.md"
 
 # FIX P9: Comisiones (~0.6% + IVA) -> reducir presupuesto de compra en 0.7%
@@ -136,6 +138,9 @@ def _env_flag(name: str, default: bool = False) -> bool:
 
 TELEGRAM_NOTIFY_STARTUP = _env_flag("TELEGRAM_NOTIFY_STARTUP", False)
 TELEGRAM_NOTIFY_DRY_RUN = _env_flag("TELEGRAM_NOTIFY_DRY_RUN", False)
+N8N_QUEUE_WEBHOOK_URL   = os.environ.get("N8N_QUEUE_WEBHOOK_URL", "").strip()
+APPROVAL_BRIDGE_SECRET  = os.environ.get("APPROVAL_BRIDGE_SECRET", "").strip()
+APPROVAL_BRIDGE_PORT    = int(os.environ.get("APPROVAL_BRIDGE_PORT", "8765"))
 
 # ── Telegram helpers (MarkdownV2) ─────────────────────────────────────────────
 _MD_V2_SPECIAL = [
@@ -173,6 +178,161 @@ def _is_pending_mcp_message(msg: str | None) -> bool:
 
 def _should_mark_signal_done(ok: bool, msg: str | None) -> bool:
     return ok or _is_pending_mcp_message(msg)
+
+
+def load_mobile_approvals() -> list[dict]:
+    if not MOBILE_APPROVALS.exists():
+        return []
+    try:
+        data = json.loads(MOBILE_APPROVALS.read_text(encoding="utf-8"))
+        return data if isinstance(data, list) else []
+    except Exception as exc:
+        log.warning("Malformed mobile approvals file: %s", exc)
+        return []
+
+
+def save_mobile_approvals(items: list[dict]) -> None:
+    MOBILE_APPROVALS.parent.mkdir(exist_ok=True)
+    MOBILE_APPROVALS.write_text(
+        json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+
+def _store_mobile_decision(payload: dict) -> None:
+    items = load_mobile_approvals()
+    payload = dict(payload)
+    payload["received_at"] = datetime.now(ART).isoformat()
+    items.append(payload)
+    save_mobile_approvals(items)
+
+
+def start_approval_bridge() -> None:
+    if not APPROVAL_BRIDGE_SECRET:
+        log.info("Approval bridge disabled: APPROVAL_BRIDGE_SECRET not set.")
+        return
+
+    class ApprovalHandler(BaseHTTPRequestHandler):
+        def log_message(self, fmt, *args):
+            log.info("Approval bridge: " + fmt, *args)
+
+        def _respond(self, code: int, body: dict):
+            data = json.dumps(body, ensure_ascii=False).encode("utf-8")
+            self.send_response(code)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+
+        def do_GET(self):
+            if self.path == "/health":
+                self._respond(200, {"ok": True, "service": "approval-bridge"})
+                return
+            self._respond(404, {"ok": False, "error": "not_found"})
+
+        def do_POST(self):
+            if self.path != "/decision":
+                self._respond(404, {"ok": False, "error": "not_found"})
+                return
+
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                raw = self.rfile.read(length) if length > 0 else b"{}"
+                payload = json.loads(raw.decode("utf-8"))
+            except Exception:
+                self._respond(400, {"ok": False, "error": "invalid_json"})
+                return
+
+            if payload.get("secret") != APPROVAL_BRIDGE_SECRET:
+                self._respond(403, {"ok": False, "error": "forbidden"})
+                return
+
+            order_id = str(payload.get("id", "")).strip()
+            decision = str(payload.get("decision", "")).strip().lower()
+            if not order_id or decision not in ("approve", "reject"):
+                self._respond(400, {"ok": False, "error": "invalid_payload"})
+                return
+
+            _store_mobile_decision({
+                "id": order_id,
+                "decision": decision,
+                "source": payload.get("source", "n8n"),
+                "message": payload.get("message", ""),
+            })
+            self._respond(200, {"ok": True, "id": order_id, "decision": decision})
+
+    def _serve():
+        server = ThreadingHTTPServer(("0.0.0.0", APPROVAL_BRIDGE_PORT), ApprovalHandler)
+        log.info("Approval bridge listening on 0.0.0.0:%d", APPROVAL_BRIDGE_PORT)
+        server.serve_forever()
+
+    thread = threading.Thread(target=_serve, name="approval-bridge", daemon=True)
+    thread.start()
+
+
+def notify_n8n_pending_order(order: dict, reason: str) -> None:
+    if not N8N_QUEUE_WEBHOOK_URL:
+        return
+    try:
+        payload = {
+            "id": order.get("id"),
+            "timestamp": order.get("timestamp"),
+            "symbol": order.get("symbol"),
+            "side": order.get("side"),
+            "qty": order.get("qty"),
+            "limit_price": order.get("limit_price"),
+            "term": order.get("term"),
+            "reason": reason,
+            "chat_id": TG_CHAT_ID,
+        }
+        r = requests.post(N8N_QUEUE_WEBHOOK_URL, json=payload, timeout=10)
+        if not r.ok:
+            log.warning("n8n webhook error %d: %s", r.status_code, r.text[:200])
+    except Exception as exc:
+        log.warning("n8n webhook failed: %s", exc)
+
+
+def apply_mobile_decisions() -> None:
+    items = load_mobile_approvals()
+    if not items:
+        return
+
+    remaining = []
+    orders = sanitize_pending_orders(load_pending_orders(), persist=False)
+    changed = False
+
+    for item in items:
+        order_id = str(item.get("id", "")).strip()
+        decision = str(item.get("decision", "")).strip().lower()
+        matched = next((o for o in orders if o.get("id") == order_id), None)
+        if not matched or decision not in ("approve", "reject"):
+            remaining.append(item)
+            continue
+
+        if decision == "reject":
+            matched["status"] = "rejected_mobile"
+            matched["result"] = "Rechazada desde Telegram"
+            changed = True
+            log.info("Pending order %s rechazada desde mobile.", order_id)
+            send_telegram(
+                f"🚫 *ORDEN RECHAZADA* \\#{_escape_md(order_id)}\n"
+                f"{_escape_md(matched.get('symbol','?'))} · {_escape_md(matched.get('side','?').upper())}\n"
+                "_Rechazada desde Telegram_"
+            )
+            continue
+
+        matched["mobile_approved_at"] = item.get("received_at")
+        matched["result"] = "Aprobada desde Telegram"
+        changed = True
+        log.info("Pending order %s aprobada desde mobile.", order_id)
+        send_telegram(
+            f"✅ *ORDEN APROBADA* \\#{_escape_md(order_id)}\n"
+            f"{_escape_md(matched.get('symbol','?'))} · {_escape_md(matched.get('side','?').upper())}\n"
+            "_Aprobada desde Telegram\\. Queda registrada en la cola local_"
+        )
+
+    if changed:
+        save_pending_orders(orders)
+    save_mobile_approvals(remaining)
 
 # ── HTTP session ──────────────────────────────────────────────────────────────
 def _build_session():
@@ -803,6 +963,7 @@ def _queue_pending_order(symbol: str, side: str, qty: int, limit_price: float, t
     }
     existing.append(order)
     save_pending_orders(existing)
+    notify_n8n_pending_order(order, "queued_for_manual_review")
     log.info("Order QUEUED for MCP session: %s %s %d @ %.2f [#%s]",
              side, symbol, qty, limit_price, order["id"])
     return False, None, f"queued #{order['id']}"
@@ -1016,6 +1177,7 @@ def byma_open():
 # ── Main loop ─────────────────────────────────────────────────────────────────
 def main():
     _setup_file_log(ROOT)
+    start_approval_bridge()
     now = datetime.now(ART)
     log.info("Time ART: %s (weekday=%d) | DRY_RUN=%s | holidays_lib=%s | yfinance=%s",
              now.strftime("%Y-%m-%d %H:%M"), now.weekday(), DRY_RUN, HAS_HOLIDAYS, HAS_YFINANCE)
@@ -1095,6 +1257,7 @@ def main():
         iteration_count += 1
 
         log.info("── Iteración %s ──", now.strftime("%H:%M"))
+        apply_mobile_decisions()
 
         cash = get_cash(term)
         if cash is None:
