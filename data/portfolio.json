@@ -1,9 +1,9 @@
 {
-  "last_updated": "2026-07-15 15:14",
-  "total_ars": 325626.8,
+  "last_updated": "2026-07-15 16:41",
+  "total_ars": 325220.3,
   "invested_ars": 314369.3,
-  "total_gain": 11257.5,
-  "total_gain_pct": 3.58,
+  "total_gain": 10851.0,
+  "total_gain_pct": 3.45,
   "cash_available": 16769.37,
   "cash_liquidation": "hrs24",
   "cash_by_liquidation": {
@@ -13,7 +13,7 @@
     "hrs72": 16769.37,
     "masHrs72": 0.0
   },
-  "account_total_ars": 342396.17,
+  "account_total_ars": 341989.67,
   "total_usd": 0,
   "invested_usd": 0,
   "alert_count": 1,
@@ -22,15 +22,15 @@
       "symbol": "ALUA",
       "description": "Aluar",
       "quantity": 93.0,
-      "unit_price": 963.0,
-      "total_value": 89559.0,
+      "unit_price": 962.5,
+      "total_value": 89512.5,
       "currency": "peso_Argentino",
       "ppc": 888.671,
-      "gain_pct": 8.36,
+      "gain_pct": 8.3,
       "daily_change_pct": 0.0,
       "buy_date": "2026-03-04",
-      "rsi": 43.18,
-      "ma20": 987.98,
+      "rsi": 42.99,
+      "ma20": 987.95,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -152,7 +152,7 @@
         },
         {
           "date": "2026-07-15",
-          "close": 963.0
+          "close": 962.5
         }
       ],
       "full_history": [
@@ -526,7 +526,7 @@
         },
         {
           "date": "2026-07-15",
-          "close": 963.0
+          "close": 962.5
         }
       ]
     },
@@ -534,15 +534,15 @@
       "symbol": "MCD",
       "description": "Cedear Mcdonald's Corporation",
       "quantity": 3.0,
-      "unit_price": 17370.0,
-      "total_value": 52110.0,
+      "unit_price": 17250.0,
+      "total_value": 51750.0,
       "currency": "peso_Argentino",
       "ppc": 17840.0,
-      "gain_pct": -2.63,
+      "gain_pct": -3.3,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 41.76,
-      "ma20": 17813.5,
+      "rsi": 40.12,
+      "ma20": 17807.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -664,7 +664,7 @@
         },
         {
           "date": "2026-07-15",
-          "close": 17370.0
+          "close": 17250.0
         }
       ],
       "full_history": [
@@ -926,7 +926,7 @@
         },
         {
           "date": "2026-07-15",
-          "close": 17370.0
+          "close": 17250.0
         }
       ]
     },
@@ -1737,11 +1737,11 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 8160.0,
-      "daily_change_pct": 3.16,
+      "unit_price": 8205.0,
+      "daily_change_pct": 3.73,
       "buy_date": null,
-      "rsi": 56.07,
-      "ma20": 7979.05,
+      "rsi": 56.8,
+      "ma20": 7981.3,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1863,7 +1863,7 @@
         },
         {
           "date": "2026-07-15",
-          "close": 8160.0
+          "close": 8205.0
         }
       ],
       "full_history": [
@@ -2125,18 +2125,18 @@
         },
         {
           "date": "2026-07-15",
-          "close": 8160.0
+          "close": 8205.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 2767.5,
-      "daily_change_pct": 3.94,
+      "unit_price": 2765.0,
+      "daily_change_pct": 3.85,
       "buy_date": null,
-      "rsi": 48.58,
-      "ma20": 2647.97,
+      "rsi": 48.49,
+      "ma20": 2647.85,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2258,7 +2258,7 @@
         },
         {
           "date": "2026-07-15",
-          "close": 2767.5
+          "close": 2765.0
         }
       ],
       "full_history": [
@@ -2520,18 +2520,18 @@
         },
         {
           "date": "2026-07-15",
-          "close": 2767.5
+          "close": 2765.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 23980.0,
-      "daily_change_pct": -1.32,
+      "unit_price": 23950.0,
+      "daily_change_pct": -1.44,
       "buy_date": null,
-      "rsi": 67.75,
-      "ma20": 22536.0,
+      "rsi": 67.3,
+      "ma20": 22534.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2653,7 +2653,7 @@
         },
         {
           "date": "2026-07-15",
-          "close": 23980.0
+          "close": 23950.0
         }
       ],
       "full_history": [
@@ -2915,7 +2915,7 @@
         },
         {
           "date": "2026-07-15",
-          "close": 23980.0
+          "close": 23950.0
         }
       ]
     }
