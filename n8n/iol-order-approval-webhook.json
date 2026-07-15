@@ -36,8 +36,19 @@
         "method": "POST",
         "url": "https://api.telegram.org/bot8371990176:AAGaCRV07QU7jqQNRos90_mMsOE1mkMMPI0/sendMessage",
         "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={ \"chat_id\": $json.chat_id, \"text\": $json.text }",
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $json.chat_id }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            }
+          ]
+        },
         "options": {}
       },
       "id": "http-telegram",
