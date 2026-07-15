@@ -1,0 +1,26 @@
+[
+  {
+    "id": "e0e37f30",
+    "timestamp": "2026-07-15T12:24:50.749281-03:00",
+    "symbol": "ALUA",
+    "side": "buy",
+    "qty": 11,
+    "limit_price": 957.5,
+    "term": "t1",
+    "status": "pending",
+    "order_id": null,
+    "result": null
+  },
+  {
+    "id": "889d4f32",
+    "timestamp": "2026-07-15T12:25:23.485892-03:00",
+    "symbol": "MORI",
+    "side": "buy",
+    "qty": 432,
+    "limit_price": 26.15,
+    "term": "t1",
+    "status": "pending",
+    "order_id": null,
+    "result": null
+  }
+]
