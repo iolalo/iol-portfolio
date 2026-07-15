@@ -166,6 +166,14 @@ def send_telegram(text: str) -> None:
     except Exception as exc:
         log.warning("Telegram send failed: %s", exc)
 
+
+def _is_pending_mcp_message(msg: str | None) -> bool:
+    return bool(msg) and msg.startswith(("queued #", "awaiting MCP", "MCP ejecut"))
+
+
+def _should_mark_signal_done(ok: bool, msg: str | None) -> bool:
+    return ok or _is_pending_mcp_message(msg)
+
 # ── HTTP session ──────────────────────────────────────────────────────────────
 def _build_session():
     s = requests.Session()
@@ -919,14 +927,14 @@ def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok,
         "quantity":    qty,
         "price":       price,
         "limit_price": limit_price,
-        "status":      "dry_run" if DRY_RUN else ("executed" if ok else ("queued" if msg.startswith(("queued #", "awaiting MCP")) else "failed")),
+        "status":      "dry_run" if DRY_RUN else ("executed" if ok else ("queued" if _is_pending_mcp_message(msg) else "failed")),
         "order_id":    oid,
         "message":     msg,
     }
     trade_log.append(entry)
 
     side_label = "COMPRA" if side == "buy" else "VENTA"
-    is_queued  = not ok and msg.startswith(("queued #", "awaiting MCP", "MCP ejecutó"))
+    is_queued  = not ok and _is_pending_mcp_message(msg)
     icon       = ("🟢" if side == "buy" else "🔴") if ok else ("📋" if is_queued else "❌")
 
     qty_int = int(qty)
@@ -944,6 +952,8 @@ def log_and_notify(trade_log, symbol, side, reason, qty, price, limit_price, ok,
             f"Precio ref: ${_escape_md(f'{price:,.0f}')}\n"
             f"_Esperando ejecución en sesión Claude Code_ \\({_escape_md(msg)}\\)"
         )
+    elif is_queued:
+        pass
     else:
         action = "Compré" if side == "buy" else "Vendí"
         detail = (f"✅ Orden #{_escape_md(str(oid))}" if ok
@@ -1037,7 +1047,7 @@ def main():
     trade_log_initial = load_log()
     today_str = now.strftime("%Y-%m-%d")
     for t in trade_log_initial:
-        if t.get("date", "").startswith(today_str) and t.get("status") == "executed":
+        if t.get("date", "").startswith(today_str) and t.get("status") in ("executed", "queued"):
             side = t.get("side")
             sym  = t.get("symbol")
             reason = t.get("reason", "")
@@ -1125,7 +1135,7 @@ def main():
                     lp = _round_to_tick(price * (1 - slip), "sell")
                     ok, oid, msg = place_order(sym, "sell", qty, lp, term)
                     entry = log_and_notify(trade_log, sym, "sell", "stop-loss", qty, price, lp, ok, oid, msg)
-                    if ok:
+                    if _should_mark_signal_done(ok, msg):
                         signals_done.add(("sell", sym, "stop-loss"))
                     if ok and not DRY_RUN:
                         fill, fqty = check_order_status(oid)
@@ -1142,7 +1152,7 @@ def main():
                     lp = _round_to_tick(price * (1 - slip), "sell")
                     ok, oid, msg = place_order(sym, "sell", sell_qty, lp, term)
                     entry = log_and_notify(trade_log, sym, "sell", "take-profit", sell_qty, price, lp, ok, oid, msg)
-                    if ok:
+                    if _should_mark_signal_done(ok, msg):
                         signals_done.add(("sell", sym, "take-profit"))
                     if ok and not DRY_RUN:
                         fill, fqty = check_order_status(oid)
@@ -1170,7 +1180,7 @@ def main():
                 if buy_qty * lp <= buy_budget + 1e-6:
                     ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
                     entry = log_and_notify(trade_log, sym, "buy", "RSI+MA20", buy_qty, price, lp, ok, oid, msg)
-                    if ok:
+                    if _should_mark_signal_done(ok, msg):
                         signals_done.add(("buy", sym, "RSI+MA20"))
                     if ok and not DRY_RUN:
                         fill, fqty = check_order_status(oid)
@@ -1185,7 +1195,7 @@ def main():
                 lp = _round_to_tick(price * (1 - slip), "sell")
                 ok, oid, msg = place_order(sym, "sell", sell_qty, lp, term)
                 entry = log_and_notify(trade_log, sym, "sell", "RSI+MA20", sell_qty, price, lp, ok, oid, msg)
-                if ok:
+                if _should_mark_signal_done(ok, msg):
                     signals_done.add(("sell", sym, "RSI+MA20"))
                 if ok and not DRY_RUN:
                     fill, fqty = check_order_status(oid)
@@ -1217,7 +1227,7 @@ def main():
                 if buy_qty * lp <= buy_budget + 1e-6:
                     ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
                     entry = log_and_notify(trade_log, sym, "buy", "RSI+MA20 (watchlist)", buy_qty, price, lp, ok, oid, msg)
-                    if ok:
+                    if _should_mark_signal_done(ok, msg):
                         signals_done.add(("buy", sym, "RSI+MA20 (watchlist)"))
                     if ok and not DRY_RUN:
                         fill, fqty = check_order_status(oid)
@@ -1245,7 +1255,7 @@ def main():
                 ok, oid, msg = place_order(sym, "buy", buy_qty, lp, term)
                 entry = log_and_notify(trade_log, sym, "buy", "market_scanner", buy_qty, price, lp, ok, oid, msg)
                 # FIX P3: Solo marcar señal si fue exitosa o quedó encolada; si falló, permitir reintento
-                if ok or (not ok and msg and (msg.startswith("queued #") or msg.startswith("awaiting MCP"))):
+                if _should_mark_signal_done(ok, msg):
                     signals_done.add(("buy", sym, "market_scanner"))
                 if ok and not DRY_RUN:
                     fill, fqty = check_order_status(oid)
