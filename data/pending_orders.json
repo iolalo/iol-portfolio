@@ -7,9 +7,9 @@
     "qty": 11,
     "limit_price": 957.5,
     "term": "t1",
-    "status": "pending",
+    "status": "stale",
     "order_id": null,
-    "result": null
+    "result": "Marked stale automatically after 2 days without resolution."
   },
   {
     "id": "889d4f32",
@@ -19,8 +19,8 @@
     "qty": 432,
     "limit_price": 26.15,
     "term": "t1",
-    "status": "pending",
+    "status": "stale",
     "order_id": null,
-    "result": null
+    "result": "Marked stale automatically after 2 days without resolution."
   }
 ]

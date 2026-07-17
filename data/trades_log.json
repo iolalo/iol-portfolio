@@ -587,5 +587,29 @@
     "status": "queued",
     "order_id": null,
     "message": "awaiting MCP: MORI buy (pending)"
+  },
+  {
+    "date": "2026-07-17T12:10:42.475914-03:00",
+    "symbol": "ALUA",
+    "side": "buy",
+    "reason": "RSI+MA20",
+    "quantity": 11,
+    "price": 938.5,
+    "limit_price": 943.5,
+    "status": "queued",
+    "order_id": null,
+    "message": "awaiting MCP: ALUA buy (pending)"
+  },
+  {
+    "date": "2026-07-17T12:11:14.873404-03:00",
+    "symbol": "MORI",
+    "side": "buy",
+    "reason": "RSI+MA20",
+    "quantity": 437,
+    "price": 25.7,
+    "limit_price": 25.85,
+    "status": "queued",
+    "order_id": null,
+    "message": "awaiting MCP: MORI buy (pending)"
   }
 ]
