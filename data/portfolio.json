@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-07-21 17:06",
+  "last_updated": "2026-07-21 18:32",
   "total_ars": 334345.7,
   "invested_ars": 323894.3,
   "total_gain": 10451.4,
@@ -1753,11 +1753,11 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 7945.0,
-      "daily_change_pct": 1.27,
+      "unit_price": 7965.0,
+      "daily_change_pct": 1.53,
       "buy_date": null,
-      "rsi": 51.82,
-      "ma20": 7914.51,
+      "rsi": 52.21,
+      "ma20": 7915.51,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1879,7 +1879,7 @@
         },
         {
           "date": "2026-07-21",
-          "close": 7945.0
+          "close": 7965.0
         }
       ],
       "full_history": [
@@ -2141,18 +2141,18 @@
         },
         {
           "date": "2026-07-21",
-          "close": 7945.0
+          "close": 7965.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 2800.0,
-      "daily_change_pct": -0.97,
+      "unit_price": 2810.0,
+      "daily_change_pct": -0.62,
       "buy_date": null,
-      "rsi": 49.48,
-      "ma20": 2694.22,
+      "rsi": 49.92,
+      "ma20": 2694.72,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2274,7 +2274,7 @@
         },
         {
           "date": "2026-07-21",
-          "close": 2800.0
+          "close": 2810.0
         }
       ],
       "full_history": [
@@ -2536,18 +2536,18 @@
         },
         {
           "date": "2026-07-21",
-          "close": 2800.0
+          "close": 2810.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 23780.0,
-      "daily_change_pct": -0.96,
+      "unit_price": 23810.0,
+      "daily_change_pct": -0.83,
       "buy_date": null,
-      "rsi": 61.38,
-      "ma20": 23214.0,
+      "rsi": 61.83,
+      "ma20": 23215.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2669,7 +2669,7 @@
         },
         {
           "date": "2026-07-21",
-          "close": 23780.0
+          "close": 23810.0
         }
       ],
       "full_history": [
@@ -2931,7 +2931,7 @@
         },
         {
           "date": "2026-07-21",
-          "close": 23780.0
+          "close": 23810.0
         }
       ]
     }
