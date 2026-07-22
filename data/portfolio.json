@@ -1,9 +1,9 @@
 {
-  "last_updated": "2026-07-22 12:45",
-  "total_ars": 335317.1,
+  "last_updated": "2026-07-22 14:03",
+  "total_ars": 334603.6,
   "invested_ars": 323894.3,
-  "total_gain": 11422.8,
-  "total_gain_pct": 3.53,
+  "total_gain": 10709.3,
+  "total_gain_pct": 3.31,
   "cash_available": 7180.98,
   "cash_liquidation": "hrs24",
   "cash_by_liquidation": {
@@ -13,7 +13,7 @@
     "hrs72": 7180.98,
     "masHrs72": 0.0
   },
-  "account_total_ars": 342498.08,
+  "account_total_ars": 341784.58,
   "total_usd": 0,
   "invested_usd": 0,
   "alert_count": 1,
@@ -22,15 +22,15 @@
       "symbol": "ALUA",
       "description": "Aluar",
       "quantity": 103.0,
-      "unit_price": 972.5,
-      "total_value": 100167.5,
+      "unit_price": 968.0,
+      "total_value": 99704.0,
       "currency": "peso_Argentino",
       "ppc": 894.868,
-      "gain_pct": 8.67,
+      "gain_pct": 8.17,
       "daily_change_pct": 0.0,
       "buy_date": "2026-03-04",
-      "rsi": 49.07,
-      "ma20": 973.73,
+      "rsi": 47.58,
+      "ma20": 973.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -152,7 +152,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 972.5
+          "close": 968.0
         }
       ],
       "full_history": [
@@ -546,7 +546,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 972.5
+          "close": 968.0
         }
       ]
     },
@@ -954,15 +954,15 @@
       "symbol": "MIRG",
       "description": "Mirgor",
       "quantity": 10.0,
-      "unit_price": 16925.0,
-      "total_value": 169250.0,
+      "unit_price": 16900.0,
+      "total_value": 169000.0,
       "currency": "peso_Argentino",
       "ppc": 16365.0,
-      "gain_pct": 3.42,
+      "gain_pct": 3.26,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 50.56,
-      "ma20": 16820.0,
+      "rsi": 50.09,
+      "ma20": 16818.75,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1084,7 +1084,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 16925.0
+          "close": 16900.0
         }
       ],
       "full_history": [
@@ -1346,7 +1346,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 16925.0
+          "close": 16900.0
         }
       ]
     },
@@ -1757,11 +1757,11 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 8140.0,
-      "daily_change_pct": 2.2,
+      "unit_price": 8190.0,
+      "daily_change_pct": 2.82,
       "buy_date": null,
-      "rsi": 55.84,
-      "ma20": 7941.66,
+      "rsi": 56.73,
+      "ma20": 7944.16,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1883,7 +1883,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 8140.0
+          "close": 8190.0
         }
       ],
       "full_history": [
@@ -2145,18 +2145,18 @@
         },
         {
           "date": "2026-07-22",
-          "close": 8140.0
+          "close": 8190.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 2785.0,
-      "daily_change_pct": -0.89,
+      "unit_price": 2770.0,
+      "daily_change_pct": -1.42,
       "buy_date": null,
-      "rsi": 49.06,
-      "ma20": 2707.97,
+      "rsi": 48.38,
+      "ma20": 2707.22,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2278,7 +2278,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 2785.0
+          "close": 2770.0
         }
       ],
       "full_history": [
@@ -2540,18 +2540,18 @@
         },
         {
           "date": "2026-07-22",
-          "close": 2785.0
+          "close": 2770.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 23720.0,
-      "daily_change_pct": -0.38,
+      "unit_price": 23680.0,
+      "daily_change_pct": -0.55,
       "buy_date": null,
-      "rsi": 60.49,
-      "ma20": 23327.0,
+      "rsi": 59.88,
+      "ma20": 23325.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2673,7 +2673,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 23720.0
+          "close": 23680.0
         }
       ],
       "full_history": [
@@ -2935,7 +2935,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 23720.0
+          "close": 23680.0
         }
       ]
     }
