@@ -1,9 +1,9 @@
 {
-  "last_updated": "2026-07-22 14:03",
-  "total_ars": 334603.6,
+  "last_updated": "2026-07-22 15:20",
+  "total_ars": 334760.4,
   "invested_ars": 323894.3,
-  "total_gain": 10709.3,
-  "total_gain_pct": 3.31,
+  "total_gain": 10866.1,
+  "total_gain_pct": 3.35,
   "cash_available": 7180.98,
   "cash_liquidation": "hrs24",
   "cash_by_liquidation": {
@@ -13,7 +13,7 @@
     "hrs72": 7180.98,
     "masHrs72": 0.0
   },
-  "account_total_ars": 341784.58,
+  "account_total_ars": 341941.38,
   "total_usd": 0,
   "invested_usd": 0,
   "alert_count": 1,
@@ -22,15 +22,15 @@
       "symbol": "ALUA",
       "description": "Aluar",
       "quantity": 103.0,
-      "unit_price": 968.0,
-      "total_value": 99704.0,
+      "unit_price": 969.5,
+      "total_value": 99858.5,
       "currency": "peso_Argentino",
       "ppc": 894.868,
-      "gain_pct": 8.17,
+      "gain_pct": 8.34,
       "daily_change_pct": 0.0,
       "buy_date": "2026-03-04",
-      "rsi": 47.58,
-      "ma20": 973.5,
+      "rsi": 48.07,
+      "ma20": 973.58,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -152,7 +152,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 968.0
+          "close": 969.5
         }
       ],
       "full_history": [
@@ -546,7 +546,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 968.0
+          "close": 969.5
         }
       ]
     },
@@ -554,15 +554,15 @@
       "symbol": "MCD",
       "description": "Cedear Mcdonald's Corporation",
       "quantity": 3.0,
-      "unit_price": 17350.0,
-      "total_value": 52050.0,
+      "unit_price": 17380.0,
+      "total_value": 52140.0,
       "currency": "peso_Argentino",
       "ppc": 17840.0,
-      "gain_pct": -2.74,
+      "gain_pct": -2.57,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 43.22,
-      "ma20": 17790.0,
+      "rsi": 43.78,
+      "ma20": 17791.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -684,7 +684,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 17350.0
+          "close": 17380.0
         }
       ],
       "full_history": [
@@ -946,7 +946,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 17350.0
+          "close": 17380.0
         }
       ]
     },
@@ -954,15 +954,15 @@
       "symbol": "MIRG",
       "description": "Mirgor",
       "quantity": 10.0,
-      "unit_price": 16900.0,
-      "total_value": 169000.0,
+      "unit_price": 16875.0,
+      "total_value": 168750.0,
       "currency": "peso_Argentino",
       "ppc": 16365.0,
-      "gain_pct": 3.26,
+      "gain_pct": 3.11,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 50.09,
-      "ma20": 16818.75,
+      "rsi": 49.62,
+      "ma20": 16817.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1084,7 +1084,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 16900.0
+          "close": 16875.0
         }
       ],
       "full_history": [
@@ -1346,7 +1346,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 16900.0
+          "close": 16875.0
         }
       ]
     },
@@ -1354,18 +1354,18 @@
       "symbol": "MORI",
       "description": "Morixe Hermanos",
       "quantity": 541.0,
-      "unit_price": 25.6,
-      "total_value": 13849.6,
+      "unit_price": 25.9,
+      "total_value": 14011.9,
       "currency": "peso_Argentino",
       "ppc": 26.9,
-      "gain_pct": -4.83,
+      "gain_pct": -3.71,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 34.27,
-      "ma20": 26.1,
+      "rsi": 39.65,
+      "ma20": 26.11,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI 34.3 < 40 y precio bajo MA20 ($26)"
+        "RSI 39.6 < 40 y precio bajo MA20 ($26)"
       ],
       "sparkline": [
         {
@@ -1486,7 +1486,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 25.6
+          "close": 25.9
         }
       ],
       "full_history": [
@@ -1748,7 +1748,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 25.6
+          "close": 25.9
         }
       ]
     }
@@ -1757,11 +1757,11 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 8190.0,
-      "daily_change_pct": 2.82,
+      "unit_price": 8260.0,
+      "daily_change_pct": 3.7,
       "buy_date": null,
-      "rsi": 56.73,
-      "ma20": 7944.16,
+      "rsi": 57.92,
+      "ma20": 7947.66,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1883,7 +1883,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 8190.0
+          "close": 8260.0
         }
       ],
       "full_history": [
@@ -2145,18 +2145,18 @@
         },
         {
           "date": "2026-07-22",
-          "close": 8190.0
+          "close": 8260.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 2770.0,
-      "daily_change_pct": -1.42,
+      "unit_price": 2752.5,
+      "daily_change_pct": -2.05,
       "buy_date": null,
-      "rsi": 48.38,
-      "ma20": 2707.22,
+      "rsi": 47.61,
+      "ma20": 2706.35,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2278,7 +2278,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 2770.0
+          "close": 2752.5
         }
       ],
       "full_history": [
@@ -2540,18 +2540,18 @@
         },
         {
           "date": "2026-07-22",
-          "close": 2770.0
+          "close": 2752.5
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 23680.0,
-      "daily_change_pct": -0.55,
+      "unit_price": 23700.0,
+      "daily_change_pct": -0.46,
       "buy_date": null,
-      "rsi": 59.88,
-      "ma20": 23325.0,
+      "rsi": 60.18,
+      "ma20": 23326.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2673,7 +2673,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 23680.0
+          "close": 23700.0
         }
       ],
       "full_history": [
@@ -2935,7 +2935,7 @@
         },
         {
           "date": "2026-07-22",
-          "close": 23680.0
+          "close": 23700.0
         }
       ]
     }
