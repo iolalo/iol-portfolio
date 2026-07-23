@@ -1,17 +1,9 @@
 {
-<<<<<<< Updated upstream
-  "last_updated": "2026-07-23 15:53",
-  "total_ars": 334463.7,
+  "last_updated": "2026-07-23 17:17",
+  "total_ars": 335219.7,
   "invested_ars": 323894.3,
-  "total_gain": 10569.4,
-  "total_gain_pct": 3.26,
-=======
-  "last_updated": "2026-07-23 16:56",
-  "total_ars": 335392.7,
-  "invested_ars": 323894.3,
-  "total_gain": 11498.4,
-  "total_gain_pct": 3.55,
->>>>>>> Stashed changes
+  "total_gain": 11325.4,
+  "total_gain_pct": 3.5,
   "cash_available": 7180.98,
   "cash_liquidation": "hrs24",
   "cash_by_liquidation": {
@@ -21,7 +13,7 @@
     "hrs72": 7180.98,
     "masHrs72": 0.0
   },
-  "account_total_ars": 341644.68,
+  "account_total_ars": 342400.68,
   "total_usd": 0,
   "invested_usd": 0,
   "alert_count": 1,
@@ -30,27 +22,15 @@
       "symbol": "ALUA",
       "description": "Aluar",
       "quantity": 103.0,
-<<<<<<< Updated upstream
-      "unit_price": 980.0,
-      "total_value": 100940.0,
+      "unit_price": 982.0,
+      "total_value": 101146.0,
       "currency": "peso_Argentino",
       "ppc": 894.868,
-      "gain_pct": 9.51,
+      "gain_pct": 9.73,
       "daily_change_pct": 0.0,
       "buy_date": "2026-03-04",
-      "rsi": 51.74,
-      "ma20": 973.3,
-=======
-      "unit_price": 983.0,
-      "total_value": 101249.0,
-      "currency": "peso_Argentino",
-      "ppc": 894.868,
-      "gain_pct": 9.85,
-      "daily_change_pct": 0.0,
-      "buy_date": "2026-03-04",
-      "rsi": 50.30395811336213,
-      "ma20": 973.175,
->>>>>>> Stashed changes
+      "rsi": 52.42,
+      "ma20": 973.4,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -172,7 +152,7 @@
         },
         {
           "date": "2026-07-23",
-          "close": 980.0
+          "close": 982.0
         }
       ],
       "full_history": [
@@ -570,37 +550,23 @@
         },
         {
           "date": "2026-07-23",
-          "close": 980.0
+          "close": 982.0
         }
-      ],
-      "invested_ars": 92171.4,
-      "gain_ars": 9077.6
+      ]
     },
     {
       "symbol": "MCD",
       "description": "Cedear Mcdonald's Corporation",
       "quantity": 3.0,
-<<<<<<< Updated upstream
-      "unit_price": 17290.0,
-      "total_value": 51870.0,
+      "unit_price": 17390.0,
+      "total_value": 52170.0,
       "currency": "peso_Argentino",
       "ppc": 17840.0,
-      "gain_pct": -3.08,
+      "gain_pct": -2.52,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 42.21,
-      "ma20": 17798.0,
-=======
-      "unit_price": 17330.0,
-      "total_value": 51990.0,
-      "currency": "peso_Argentino",
-      "ppc": 17840.0,
-      "gain_pct": -2.86,
-      "daily_change_pct": 0.0,
-      "buy_date": null,
-      "rsi": 43.19041482296093,
-      "ma20": 17800.5,
->>>>>>> Stashed changes
+      "rsi": 44.18,
+      "ma20": 17803.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -722,7 +688,7 @@
         },
         {
           "date": "2026-07-23",
-          "close": 17290.0
+          "close": 17390.0
         }
       ],
       "full_history": [
@@ -984,37 +950,23 @@
         },
         {
           "date": "2026-07-23",
-          "close": 17290.0
+          "close": 17390.0
         }
-      ],
-      "invested_ars": 53520.0,
-      "gain_ars": -1530.0
+      ]
     },
     {
       "symbol": "MIRG",
       "description": "Mirgor",
       "quantity": 10.0,
-<<<<<<< Updated upstream
-      "unit_price": 16775.0,
-      "total_value": 167750.0,
+      "unit_price": 16800.0,
+      "total_value": 168000.0,
       "currency": "peso_Argentino",
       "ppc": 16365.0,
-      "gain_pct": 2.5,
+      "gain_pct": 2.65,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 47.42,
-      "ma20": 16856.25,
-=======
-      "unit_price": 16825.0,
-      "total_value": 168250.0,
-      "currency": "peso_Argentino",
-      "ppc": 16365.0,
-      "gain_pct": 2.81,
-      "daily_change_pct": 0.0,
-      "buy_date": null,
-      "rsi": 50.59835058203273,
-      "ma20": 16866.25,
->>>>>>> Stashed changes
+      "rsi": 47.87,
+      "ma20": 16857.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1136,7 +1088,7 @@
         },
         {
           "date": "2026-07-23",
-          "close": 16775.0
+          "close": 16800.0
         }
       ],
       "full_history": [
@@ -1398,11 +1350,9 @@
         },
         {
           "date": "2026-07-23",
-          "close": 16775.0
+          "close": 16800.0
         }
-      ],
-      "invested_ars": 163650.0,
-      "gain_ars": 4600.0
+      ]
     },
     {
       "symbol": "MORI",
@@ -1415,19 +1365,12 @@
       "gain_pct": -4.46,
       "daily_change_pct": 0.0,
       "buy_date": null,
-<<<<<<< Updated upstream
       "rsi": 36.27,
       "ma20": 26.1,
       "recommendation": "COMPRAR",
       "signals": [
         "RSI 36.3 < 40 y precio bajo MA20 ($26)"
       ],
-=======
-      "rsi": 36.7076138309086,
-      "ma20": 26.1,
-      "recommendation": "MANTENER",
-      "signals": [],
->>>>>>> Stashed changes
       "sparkline": [
         {
           "date": "2026-06-12",
@@ -1811,28 +1754,18 @@
           "date": "2026-07-23",
           "close": 25.7
         }
-      ],
-      "invested_ars": 14552.9,
-      "gain_ars": -649.2
+      ]
     }
   ],
   "watchlist": [
     {
       "symbol": "GGAL",
       "description": "GGAL",
-<<<<<<< Updated upstream
-      "unit_price": 8010.0,
-      "daily_change_pct": -3.2,
+      "unit_price": 7955.0,
+      "daily_change_pct": -3.87,
       "buy_date": null,
-      "rsi": 52.31,
-      "ma20": 7969.06,
-=======
-      "unit_price": 7965.0,
-      "daily_change_pct": 3.89,
-      "buy_date": null,
-      "rsi": 53.73428994657597,
-      "ma20": 7972.304736328125,
->>>>>>> Stashed changes
+      "rsi": 51.25,
+      "ma20": 7966.31,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1954,7 +1887,7 @@
         },
         {
           "date": "2026-07-23",
-          "close": 8010.0
+          "close": 7955.0
         }
       ],
       "full_history": [
@@ -2216,26 +2149,18 @@
         },
         {
           "date": "2026-07-23",
-          "close": 8010.0
+          "close": 7955.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-<<<<<<< Updated upstream
-      "unit_price": 2652.5,
-      "daily_change_pct": -1.21,
-      "buy_date": null,
-      "rsi": 43.51,
-      "ma20": 2716.5,
-=======
       "unit_price": 2700.0,
-      "daily_change_pct": -4.45,
+      "daily_change_pct": 0.56,
       "buy_date": null,
-      "rsi": 42.92758250941185,
-      "ma20": 2715.625,
->>>>>>> Stashed changes
+      "rsi": 45.56,
+      "ma20": 2718.88,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2357,7 +2282,7 @@
         },
         {
           "date": "2026-07-23",
-          "close": 2652.5
+          "close": 2700.0
         }
       ],
       "full_history": [
@@ -2619,26 +2544,18 @@
         },
         {
           "date": "2026-07-23",
-          "close": 2652.5
+          "close": 2700.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-<<<<<<< Updated upstream
-      "unit_price": 23610.0,
-      "daily_change_pct": 0.0,
+      "unit_price": 23800.0,
+      "daily_change_pct": 0.8,
       "buy_date": null,
-      "rsi": 58.58,
-      "ma20": 23461.0,
-=======
-      "unit_price": 23810.0,
-      "daily_change_pct": -0.84,
-      "buy_date": null,
-      "rsi": 54.65051587370442,
-      "ma20": 23448.5,
->>>>>>> Stashed changes
+      "rsi": 60.58,
+      "ma20": 23470.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2760,7 +2677,7 @@
         },
         {
           "date": "2026-07-23",
-          "close": 23610.0
+          "close": 23800.0
         }
       ],
       "full_history": [
@@ -3022,61 +2939,9 @@
         },
         {
           "date": "2026-07-23",
-          "close": 23610.0
+          "close": 23800.0
         }
       ]
-    }
-  ],
-  "total_positions": 4,
-  "pending_orders_count": 1,
-  "pending_orders": [
-    {
-      "id": "e0e37f30",
-      "timestamp": "2026-07-15T12:24:50.749281-03:00",
-      "symbol": "ALUA",
-      "side": "buy",
-      "qty": 11,
-      "limit_price": 957.5,
-      "term": "t1",
-      "status": "stale",
-      "order_id": null,
-      "result": "Marked stale automatically after 2 days without resolution."
-    },
-    {
-      "id": "889d4f32",
-      "timestamp": "2026-07-15T12:25:23.485892-03:00",
-      "symbol": "MORI",
-      "side": "buy",
-      "qty": 432,
-      "limit_price": 26.15,
-      "term": "t1",
-      "status": "stale",
-      "order_id": null,
-      "result": "Marked stale automatically after 2 days without resolution."
-    },
-    {
-      "id": "abfca556",
-      "timestamp": "2026-07-20T12:48:05.321233-03:00",
-      "symbol": "MORI",
-      "side": "buy",
-      "qty": 440,
-      "limit_price": 25.65,
-      "term": "t1",
-      "status": "stale",
-      "order_id": null,
-      "result": "Marked stale automatically after 2 days without resolution."
-    },
-    {
-      "id": "46ce0a1e",
-      "timestamp": "2026-07-23T12:52:56.048159-03:00",
-      "symbol": "MORI",
-      "side": "buy",
-      "qty": 179,
-      "limit_price": 25.85,
-      "term": "t1",
-      "status": "pending",
-      "order_id": null,
-      "result": null
     }
   ]
 }
