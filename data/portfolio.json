@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-07-23 17:17",
+  "last_updated": "2026-07-23 18:31",
   "total_ars": 335219.7,
   "invested_ars": 323894.3,
   "total_gain": 11325.4,
@@ -1761,11 +1761,11 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 7955.0,
-      "daily_change_pct": -3.87,
+      "unit_price": 7945.0,
+      "daily_change_pct": -3.99,
       "buy_date": null,
-      "rsi": 51.25,
-      "ma20": 7966.31,
+      "rsi": 51.06,
+      "ma20": 7965.81,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1887,7 +1887,7 @@
         },
         {
           "date": "2026-07-23",
-          "close": 7955.0
+          "close": 7945.0
         }
       ],
       "full_history": [
@@ -2149,18 +2149,18 @@
         },
         {
           "date": "2026-07-23",
-          "close": 7955.0
+          "close": 7945.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 2700.0,
-      "daily_change_pct": 0.56,
+      "unit_price": 2692.5,
+      "daily_change_pct": 0.28,
       "buy_date": null,
-      "rsi": 45.56,
-      "ma20": 2718.88,
+      "rsi": 45.19,
+      "ma20": 2718.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2282,7 +2282,7 @@
         },
         {
           "date": "2026-07-23",
-          "close": 2700.0
+          "close": 2692.5
         }
       ],
       "full_history": [
@@ -2544,18 +2544,18 @@
         },
         {
           "date": "2026-07-23",
-          "close": 2700.0
+          "close": 2692.5
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 23800.0,
-      "daily_change_pct": 0.8,
+      "unit_price": 23760.0,
+      "daily_change_pct": 0.64,
       "buy_date": null,
-      "rsi": 60.58,
-      "ma20": 23470.5,
+      "rsi": 60.18,
+      "ma20": 23468.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2677,7 +2677,7 @@
         },
         {
           "date": "2026-07-23",
-          "close": 23800.0
+          "close": 23760.0
         }
       ],
       "full_history": [
@@ -2939,7 +2939,7 @@
         },
         {
           "date": "2026-07-23",
-          "close": 23800.0
+          "close": 23760.0
         }
       ]
     }
