@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-07-24 17:24",
+  "last_updated": "2026-07-24 18:39",
   "total_ars": 333888.5,
   "invested_ars": 323894.3,
   "total_gain": 9994.2,
@@ -2553,11 +2553,11 @@
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 23940.0,
-      "daily_change_pct": 0.76,
+      "unit_price": 23990.0,
+      "daily_change_pct": 0.97,
       "buy_date": null,
-      "rsi": 61.84,
-      "ma20": 23590.0,
+      "rsi": 62.33,
+      "ma20": 23592.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2679,7 +2679,7 @@
         },
         {
           "date": "2026-07-24",
-          "close": 23940.0
+          "close": 23990.0
         }
       ],
       "full_history": [
@@ -2941,7 +2941,7 @@
         },
         {
           "date": "2026-07-24",
-          "close": 23940.0
+          "close": 23990.0
         }
       ]
     }
