@@ -1,9 +1,9 @@
 {
-  "last_updated": "2026-07-24 18:39",
-  "total_ars": 333888.5,
+  "last_updated": "2026-07-27 13:26",
+  "total_ars": 332126.9,
   "invested_ars": 323894.3,
-  "total_gain": 9994.2,
-  "total_gain_pct": 3.09,
+  "total_gain": 8232.6,
+  "total_gain_pct": 2.54,
   "cash_available": 7180.98,
   "cash_liquidation": "hrs24",
   "cash_by_liquidation": {
@@ -13,7 +13,7 @@
     "hrs72": 7180.98,
     "masHrs72": 0.0
   },
-  "account_total_ars": 341069.48,
+  "account_total_ars": 339307.88,
   "total_usd": 0,
   "invested_usd": 0,
   "alert_count": 0,
@@ -22,22 +22,18 @@
       "symbol": "ALUA",
       "description": "Aluar",
       "quantity": 103.0,
-      "unit_price": 977.5,
-      "total_value": 100682.5,
+      "unit_price": 975.0,
+      "total_value": 100425.0,
       "currency": "peso_Argentino",
       "ppc": 894.868,
-      "gain_pct": 9.23,
+      "gain_pct": 8.95,
       "daily_change_pct": 0.0,
       "buy_date": "2026-03-04",
-      "rsi": 50.68,
-      "ma20": 972.75,
+      "rsi": 49.86,
+      "ma20": 972.1,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-06-15",
-          "close": 1029.0
-        },
         {
           "date": "2026-06-16",
           "close": 985.0
@@ -152,7 +148,11 @@
         },
         {
           "date": "2026-07-24",
-          "close": 977.5
+          "close": 972.0
+        },
+        {
+          "date": "2026-07-27",
+          "close": 975.0
         }
       ],
       "full_history": [
@@ -554,7 +554,11 @@
         },
         {
           "date": "2026-07-24",
-          "close": 977.5
+          "close": 972.0
+        },
+        {
+          "date": "2026-07-27",
+          "close": 975.0
         }
       ]
     },
@@ -562,22 +566,18 @@
       "symbol": "MCD",
       "description": "Cedear Mcdonald's Corporation",
       "quantity": 3.0,
-      "unit_price": 17630.0,
-      "total_value": 52890.0,
+      "unit_price": 17980.0,
+      "total_value": 53940.0,
       "currency": "peso_Argentino",
       "ppc": 17840.0,
-      "gain_pct": -1.17,
+      "gain_pct": 0.78,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 48.83,
-      "ma20": 17814.5,
+      "rsi": 54.6,
+      "ma20": 17850.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-06-15",
-          "close": 17800.0
-        },
         {
           "date": "2026-06-16",
           "close": 18000.0
@@ -693,13 +693,13 @@
         {
           "date": "2026-07-24",
           "close": 17630.0
+        },
+        {
+          "date": "2026-07-27",
+          "close": 17980.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-04-27",
-          "close": 18399.92
-        },
         {
           "date": "2026-04-28",
           "close": 18319.92
@@ -955,6 +955,10 @@
         {
           "date": "2026-07-24",
           "close": 17630.0
+        },
+        {
+          "date": "2026-07-27",
+          "close": 17980.0
         }
       ]
     },
@@ -962,22 +966,18 @@
       "symbol": "MIRG",
       "description": "Mirgor",
       "quantity": 10.0,
-      "unit_price": 16625.0,
-      "total_value": 166250.0,
+      "unit_price": 16375.0,
+      "total_value": 163750.0,
       "currency": "peso_Argentino",
       "ppc": 16365.0,
-      "gain_pct": 1.58,
+      "gain_pct": 0.06,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 44.51,
-      "ma20": 16881.25,
+      "rsi": 40.38,
+      "ma20": 16891.25,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-06-15",
-          "close": 17150.0
-        },
         {
           "date": "2026-06-16",
           "close": 16950.0
@@ -1092,14 +1092,14 @@
         },
         {
           "date": "2026-07-24",
-          "close": 16625.0
+          "close": 16525.0
+        },
+        {
+          "date": "2026-07-27",
+          "close": 16375.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-04-27",
-          "close": 19175.0
-        },
         {
           "date": "2026-04-28",
           "close": 19175.0
@@ -1354,7 +1354,11 @@
         },
         {
           "date": "2026-07-24",
-          "close": 16625.0
+          "close": 16525.0
+        },
+        {
+          "date": "2026-07-27",
+          "close": 16375.0
         }
       ]
     },
@@ -1362,22 +1366,18 @@
       "symbol": "MORI",
       "description": "Morixe Hermanos",
       "quantity": 541.0,
-      "unit_price": 26.0,
-      "total_value": 14066.0,
+      "unit_price": 25.9,
+      "total_value": 14011.9,
       "currency": "peso_Argentino",
       "ppc": 26.9,
-      "gain_pct": -3.34,
+      "gain_pct": -3.71,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 43.38,
-      "ma20": 26.1,
+      "rsi": 41.6,
+      "ma20": 26.09,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-06-15",
-          "close": 27.8
-        },
         {
           "date": "2026-06-16",
           "close": 27.5
@@ -1492,14 +1492,14 @@
         },
         {
           "date": "2026-07-24",
-          "close": 26.0
+          "close": 25.9
+        },
+        {
+          "date": "2026-07-27",
+          "close": 25.9
         }
       ],
       "full_history": [
-        {
-          "date": "2026-04-27",
-          "close": 29.2
-        },
         {
           "date": "2026-04-28",
           "close": 28.8
@@ -1754,7 +1754,11 @@
         },
         {
           "date": "2026-07-24",
-          "close": 26.0
+          "close": 25.9
+        },
+        {
+          "date": "2026-07-27",
+          "close": 25.9
         }
       ]
     }
@@ -1763,18 +1767,14 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 7890.0,
-      "daily_change_pct": -0.69,
+      "unit_price": 7970.0,
+      "daily_change_pct": 1.01,
       "buy_date": null,
-      "rsi": 49.94,
-      "ma20": 7974.96,
+      "rsi": 51.54,
+      "ma20": 7979.62,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-06-15",
-          "close": 8201.45
-        },
         {
           "date": "2026-06-16",
           "close": 8151.5
@@ -1890,13 +1890,13 @@
         {
           "date": "2026-07-24",
           "close": 7890.0
+        },
+        {
+          "date": "2026-07-27",
+          "close": 7970.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-04-27",
-          "close": 6413.09
-        },
         {
           "date": "2026-04-28",
           "close": 6413.09
@@ -2152,24 +2152,24 @@
         {
           "date": "2026-07-24",
           "close": 7890.0
+        },
+        {
+          "date": "2026-07-27",
+          "close": 7970.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 2790.0,
-      "daily_change_pct": 3.62,
+      "unit_price": 2937.5,
+      "daily_change_pct": 5.29,
       "buy_date": null,
-      "rsi": 49.9,
-      "ma20": 2729.0,
+      "rsi": 56.27,
+      "ma20": 2745.75,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-06-15",
-          "close": 3107.5
-        },
         {
           "date": "2026-06-16",
           "close": 3047.5
@@ -2285,13 +2285,13 @@
         {
           "date": "2026-07-24",
           "close": 2790.0
+        },
+        {
+          "date": "2026-07-27",
+          "close": 2937.5
         }
       ],
       "full_history": [
-        {
-          "date": "2026-04-27",
-          "close": 3582.5
-        },
         {
           "date": "2026-04-28",
           "close": 3440.0
@@ -2547,24 +2547,24 @@
         {
           "date": "2026-07-24",
           "close": 2790.0
+        },
+        {
+          "date": "2026-07-27",
+          "close": 2937.5
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 23990.0,
-      "daily_change_pct": 0.97,
+      "unit_price": 24370.0,
+      "daily_change_pct": 1.58,
       "buy_date": null,
-      "rsi": 62.33,
-      "ma20": 23592.5,
+      "rsi": 66.16,
+      "ma20": 23722.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-06-15",
-          "close": 19860.0
-        },
         {
           "date": "2026-06-16",
           "close": 20860.0
@@ -2680,13 +2680,13 @@
         {
           "date": "2026-07-24",
           "close": 23990.0
+        },
+        {
+          "date": "2026-07-27",
+          "close": 24370.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-04-27",
-          "close": 23310.0
-        },
         {
           "date": "2026-04-28",
           "close": 22450.0
@@ -2942,6 +2942,10 @@
         {
           "date": "2026-07-24",
           "close": 23990.0
+        },
+        {
+          "date": "2026-07-27",
+          "close": 24370.0
         }
       ]
     }
