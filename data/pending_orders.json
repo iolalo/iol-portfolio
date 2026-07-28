@@ -46,5 +46,29 @@
     "status": "stale",
     "order_id": null,
     "result": "Marked stale automatically after 2 days without resolution."
+  },
+  {
+    "id": "2ea2601a",
+    "timestamp": "2026-07-28T13:03:46.497278-03:00",
+    "symbol": "MORI",
+    "side": "buy",
+    "qty": 180,
+    "limit_price": 25.75,
+    "term": "t1",
+    "status": "pending",
+    "order_id": null,
+    "result": null
+  },
+  {
+    "id": "2d986f93",
+    "timestamp": "2026-07-28T13:04:26.760448-03:00",
+    "symbol": "COME",
+    "side": "buy",
+    "qty": 110,
+    "limit_price": 42.2,
+    "term": "t1",
+    "status": "pending",
+    "order_id": null,
+    "result": null
   }
 ]
