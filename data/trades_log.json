@@ -695,5 +695,17 @@
     "status": "queued",
     "order_id": null,
     "message": "queued #2d986f93"
+  },
+  {
+    "date": "2026-07-29T12:48:25.555285-03:00",
+    "symbol": "MORI",
+    "side": "buy",
+    "reason": "RSI+MA20",
+    "quantity": 181,
+    "price": 25.4,
+    "limit_price": 25.55,
+    "status": "queued",
+    "order_id": null,
+    "message": "awaiting MCP: MORI buy (pending)"
   }
 ]
