@@ -719,5 +719,29 @@
     "status": "queued",
     "order_id": null,
     "message": "awaiting MCP: MORI buy (pending)"
+  },
+  {
+    "date": "2026-07-31T13:00:01.299523-03:00",
+    "symbol": "MORI",
+    "side": "buy",
+    "reason": "RSI+MA20",
+    "quantity": 186,
+    "price": 24.8,
+    "limit_price": 24.95,
+    "status": "queued",
+    "order_id": null,
+    "message": "queued #43db723b"
+  },
+  {
+    "date": "2026-07-31T14:30:06.751678-03:00",
+    "symbol": "MORI",
+    "side": "sell",
+    "reason": "stop-loss",
+    "quantity": 541.0,
+    "price": 24.7,
+    "limit_price": 24.55,
+    "status": "queued",
+    "order_id": null,
+    "message": "queued #3248353f"
   }
 ]
