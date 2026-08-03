@@ -743,5 +743,29 @@
     "status": "queued",
     "order_id": null,
     "message": "queued #3248353f"
+  },
+  {
+    "date": "2026-08-03T13:19:54.960186-03:00",
+    "symbol": "MORI",
+    "side": "sell",
+    "reason": "stop-loss",
+    "quantity": 541.0,
+    "price": 24.65,
+    "limit_price": 24.5,
+    "status": "queued",
+    "order_id": null,
+    "message": "queued #a250fd80"
+  },
+  {
+    "date": "2026-08-03T14:07:09.626537-03:00",
+    "symbol": "MIRG",
+    "side": "sell",
+    "reason": "stop-loss",
+    "quantity": 10.0,
+    "price": 1650.0,
+    "limit_price": 1640.0,
+    "status": "queued",
+    "order_id": null,
+    "message": "queued #93d39383"
   }
 ]
