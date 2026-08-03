@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-08-03 17:13",
+  "last_updated": "2026-08-03 18:34",
   "total_ars": 349988.0,
   "invested_ars": 1963894.28,
   "total_gain": -1613906.28,
@@ -1939,7 +1939,7 @@
         },
         {
           "date": "2026-05-11",
-          "close": 6416.54
+          "close": 6416.55
         },
         {
           "date": "2026-05-12",
@@ -2031,7 +2031,7 @@
         },
         {
           "date": "2026-06-11",
-          "close": 8252.7
+          "close": 8252.69
         },
         {
           "date": "2026-06-12",
@@ -2043,7 +2043,7 @@
         },
         {
           "date": "2026-06-16",
-          "close": 8142.92
+          "close": 8142.93
         },
         {
           "date": "2026-06-17",
@@ -2186,11 +2186,11 @@
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 3282.5,
-      "daily_change_pct": 2.82,
+      "unit_price": 3280.0,
+      "daily_change_pct": 2.74,
       "buy_date": null,
-      "rsi": 63.25,
-      "ma20": 2864.75,
+      "rsi": 63.18,
+      "ma20": 2864.62,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2312,7 +2312,7 @@
         },
         {
           "date": "2026-08-03",
-          "close": 3282.5
+          "close": 3280.0
         }
       ],
       "full_history": [
@@ -2574,18 +2574,18 @@
         },
         {
           "date": "2026-08-03",
-          "close": 3282.5
+          "close": 3280.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 25040.0,
-      "daily_change_pct": 1.75,
+      "unit_price": 25000.0,
+      "daily_change_pct": 1.58,
       "buy_date": null,
-      "rsi": 69.43,
-      "ma20": 24154.0,
+      "rsi": 69.11,
+      "ma20": 24152.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2707,7 +2707,7 @@
         },
         {
           "date": "2026-08-03",
-          "close": 25040.0
+          "close": 25000.0
         }
       ],
       "full_history": [
@@ -2969,7 +2969,7 @@
         },
         {
           "date": "2026-08-03",
-          "close": 25040.0
+          "close": 25000.0
         }
       ]
     }
