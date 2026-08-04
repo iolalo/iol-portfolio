@@ -118,5 +118,17 @@
     "status": "pending",
     "order_id": null,
     "result": null
+  },
+  {
+    "id": "a044ac3b",
+    "timestamp": "2026-08-04T15:14:19.951740-03:00",
+    "symbol": "BPAT",
+    "side": "buy",
+    "qty": 7,
+    "limit_price": 1910.0,
+    "term": "t1",
+    "status": "pending",
+    "order_id": null,
+    "result": null
   }
 ]

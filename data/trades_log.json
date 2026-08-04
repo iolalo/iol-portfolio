@@ -767,5 +767,41 @@
     "status": "queued",
     "order_id": null,
     "message": "queued #93d39383"
+  },
+  {
+    "date": "2026-08-04T13:09:41.919840-03:00",
+    "symbol": "MIRG",
+    "side": "sell",
+    "reason": "stop-loss",
+    "quantity": 110.0,
+    "price": 1655.0,
+    "limit_price": 1645.0,
+    "status": "queued",
+    "order_id": null,
+    "message": "awaiting MCP: MIRG sell (pending)"
+  },
+  {
+    "date": "2026-08-04T13:10:14.161688-03:00",
+    "symbol": "MORI",
+    "side": "sell",
+    "reason": "stop-loss",
+    "quantity": 541.0,
+    "price": 24.25,
+    "limit_price": 24.1,
+    "status": "queued",
+    "order_id": null,
+    "message": "awaiting MCP: MORI sell (pending)"
+  },
+  {
+    "date": "2026-08-04T15:14:19.952180-03:00",
+    "symbol": "BPAT",
+    "side": "buy",
+    "reason": "market_scanner",
+    "quantity": 7,
+    "price": 1900.0,
+    "limit_price": 1910.0,
+    "status": "queued",
+    "order_id": null,
+    "message": "queued #a044ac3b"
   }
 ]
