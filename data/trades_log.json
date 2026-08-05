@@ -803,5 +803,53 @@
     "status": "queued",
     "order_id": null,
     "message": "queued #a044ac3b"
+  },
+  {
+    "date": "2026-08-05T12:59:57.218497-03:00",
+    "symbol": "MIRG",
+    "side": "sell",
+    "reason": "stop-loss",
+    "quantity": 100.0,
+    "price": 1640.0,
+    "limit_price": 1630.0,
+    "status": "queued",
+    "order_id": null,
+    "message": "awaiting MCP: MIRG sell (pending)"
+  },
+  {
+    "date": "2026-08-05T13:00:37.176947-03:00",
+    "symbol": "MORI",
+    "side": "buy",
+    "reason": "market_scanner",
+    "quantity": 252,
+    "price": 24.15,
+    "limit_price": 24.3,
+    "status": "queued",
+    "order_id": null,
+    "message": "queued #05b88a58"
+  },
+  {
+    "date": "2026-08-05T14:48:58.226007-03:00",
+    "symbol": "BPAT",
+    "side": "buy",
+    "reason": "market_scanner",
+    "quantity": 33,
+    "price": 1870.0,
+    "limit_price": 1880.0,
+    "status": "queued",
+    "order_id": null,
+    "message": "awaiting MCP: BPAT buy (pending)"
+  },
+  {
+    "date": "2026-08-05T14:49:30.352816-03:00",
+    "symbol": "TGNO4",
+    "side": "buy",
+    "reason": "market_scanner",
+    "quantity": 16,
+    "price": 3830.0,
+    "limit_price": 3850.0,
+    "status": "queued",
+    "order_id": null,
+    "message": "queued #d42175de"
   }
 ]

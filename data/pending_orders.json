@@ -103,9 +103,9 @@
     "qty": 541.0,
     "limit_price": 24.5,
     "term": "t1",
-    "status": "pending",
+    "status": "stale",
     "order_id": null,
-    "result": null
+    "result": "Marked stale automatically after 2 days without resolution."
   },
   {
     "id": "93d39383",
@@ -115,9 +115,9 @@
     "qty": 10.0,
     "limit_price": 1640.0,
     "term": "t1",
-    "status": "pending",
+    "status": "stale",
     "order_id": null,
-    "result": null
+    "result": "Marked stale automatically after 2 days without resolution."
   },
   {
     "id": "a044ac3b",
@@ -126,6 +126,30 @@
     "side": "buy",
     "qty": 7,
     "limit_price": 1910.0,
+    "term": "t1",
+    "status": "pending",
+    "order_id": null,
+    "result": null
+  },
+  {
+    "id": "05b88a58",
+    "timestamp": "2026-08-05T13:00:37.176447-03:00",
+    "symbol": "MORI",
+    "side": "buy",
+    "qty": 252,
+    "limit_price": 24.3,
+    "term": "t1",
+    "status": "pending",
+    "order_id": null,
+    "result": null
+  },
+  {
+    "id": "d42175de",
+    "timestamp": "2026-08-05T14:49:30.352017-03:00",
+    "symbol": "TGNO4",
+    "side": "buy",
+    "qty": 16,
+    "limit_price": 3850.0,
     "term": "t1",
     "status": "pending",
     "order_id": null,
