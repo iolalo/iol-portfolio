@@ -163,6 +163,42 @@
     "qty": 1,
     "limit_price": 1625.0,
     "term": "t1",
+    "status": "stale",
+    "order_id": null,
+    "result": "Marked stale automatically after 2 days without resolution."
+  },
+  {
+    "id": "c5ed0507",
+    "timestamp": "2026-08-10T11:53:59.683133-03:00",
+    "symbol": "ALUA",
+    "side": "buy",
+    "qty": 3,
+    "limit_price": 937.0,
+    "term": "t1",
+    "status": "pending",
+    "order_id": null,
+    "result": null
+  },
+  {
+    "id": "256c5071",
+    "timestamp": "2026-08-10T11:54:32.788787-03:00",
+    "symbol": "MIRG",
+    "side": "buy",
+    "qty": 1,
+    "limit_price": 1625.0,
+    "term": "t1",
+    "status": "pending",
+    "order_id": null,
+    "result": null
+  },
+  {
+    "id": "7c695f85",
+    "timestamp": "2026-08-10T11:55:13.564887-03:00",
+    "symbol": "MORI",
+    "side": "buy",
+    "qty": 122,
+    "limit_price": 24.4,
+    "term": "t1",
     "status": "pending",
     "order_id": null,
     "result": null
