@@ -911,5 +911,29 @@
     "status": "queued",
     "order_id": null,
     "message": "queued #7c695f85"
+  },
+  {
+    "date": "2026-08-11T11:53:51.917156-03:00",
+    "symbol": "MIRG",
+    "side": "buy",
+    "reason": "RSI+MA20 (watchlist)",
+    "quantity": 1,
+    "price": 1665.0,
+    "limit_price": 1675.0,
+    "status": "queued",
+    "order_id": null,
+    "message": "awaiting MCP: MIRG buy (pending)"
+  },
+  {
+    "date": "2026-08-11T11:54:30.084670-03:00",
+    "symbol": "MORI",
+    "side": "buy",
+    "reason": "market_scanner",
+    "quantity": 125,
+    "price": 23.7,
+    "limit_price": 23.85,
+    "status": "queued",
+    "order_id": null,
+    "message": "awaiting MCP: MORI buy (pending)"
   }
 ]
