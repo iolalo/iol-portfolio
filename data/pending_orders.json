@@ -226,5 +226,17 @@
     "status": "pending",
     "order_id": null,
     "result": null
+  },
+  {
+    "id": "66efea12",
+    "timestamp": "2026-08-14T11:47:05.493899-03:00",
+    "symbol": "ALUA",
+    "side": "buy",
+    "qty": 3,
+    "limit_price": 909.5,
+    "term": "t1",
+    "status": "pending",
+    "order_id": null,
+    "result": null
   }
 ]
