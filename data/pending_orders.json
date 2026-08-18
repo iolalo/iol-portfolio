@@ -211,9 +211,9 @@
     "qty": 1,
     "limit_price": 1645.0,
     "term": "t1",
-    "status": "pending",
+    "status": "stale",
     "order_id": null,
-    "result": null
+    "result": "Marked stale automatically after 2 days without resolution."
   },
   {
     "id": "242aca1f",
@@ -223,9 +223,9 @@
     "qty": 129,
     "limit_price": 23.1,
     "term": "t1",
-    "status": "pending",
+    "status": "stale",
     "order_id": null,
-    "result": null
+    "result": "Marked stale automatically after 2 days without resolution."
   },
   {
     "id": "66efea12",
@@ -234,6 +234,54 @@
     "side": "buy",
     "qty": 3,
     "limit_price": 909.5,
+    "term": "t1",
+    "status": "stale",
+    "order_id": null,
+    "result": "Marked stale automatically after 2 days without resolution."
+  },
+  {
+    "id": "0d919740",
+    "timestamp": "2026-08-18T11:28:45.053089-03:00",
+    "symbol": "ALUA",
+    "side": "buy",
+    "qty": 3,
+    "limit_price": 886.5,
+    "term": "t1",
+    "status": "pending",
+    "order_id": null,
+    "result": null
+  },
+  {
+    "id": "06186cdb",
+    "timestamp": "2026-08-18T11:29:17.824944-03:00",
+    "symbol": "MIRG",
+    "side": "buy",
+    "qty": 1,
+    "limit_price": 1645.0,
+    "term": "t1",
+    "status": "pending",
+    "order_id": null,
+    "result": null
+  },
+  {
+    "id": "afc2290a",
+    "timestamp": "2026-08-18T11:29:56.100990-03:00",
+    "symbol": "MORI",
+    "side": "buy",
+    "qty": 132,
+    "limit_price": 22.6,
+    "term": "t1",
+    "status": "pending",
+    "order_id": null,
+    "result": null
+  },
+  {
+    "id": "4bbde665",
+    "timestamp": "2026-08-18T11:30:28.784002-03:00",
+    "symbol": "COME",
+    "side": "buy",
+    "qty": 74,
+    "limit_price": 40.1,
     "term": "t1",
     "status": "pending",
     "order_id": null,

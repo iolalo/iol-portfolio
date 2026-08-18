@@ -1019,5 +1019,53 @@
     "status": "queued",
     "order_id": null,
     "message": "awaiting MCP: MORI buy (pending)"
+  },
+  {
+    "date": "2026-08-18T11:28:45.053390-03:00",
+    "symbol": "ALUA",
+    "side": "buy",
+    "reason": "RSI+MA20",
+    "quantity": 3,
+    "price": 882.0,
+    "limit_price": 886.5,
+    "status": "queued",
+    "order_id": null,
+    "message": "queued #0d919740"
+  },
+  {
+    "date": "2026-08-18T11:29:17.825399-03:00",
+    "symbol": "MIRG",
+    "side": "buy",
+    "reason": "RSI+MA20 (watchlist)",
+    "quantity": 1,
+    "price": 1635.0,
+    "limit_price": 1645.0,
+    "status": "queued",
+    "order_id": null,
+    "message": "queued #06186cdb"
+  },
+  {
+    "date": "2026-08-18T11:29:56.101442-03:00",
+    "symbol": "MORI",
+    "side": "buy",
+    "reason": "market_scanner",
+    "quantity": 132,
+    "price": 22.45,
+    "limit_price": 22.6,
+    "status": "queued",
+    "order_id": null,
+    "message": "queued #afc2290a"
+  },
+  {
+    "date": "2026-08-18T11:30:28.785419-03:00",
+    "symbol": "COME",
+    "side": "buy",
+    "reason": "market_scanner",
+    "quantity": 74,
+    "price": 39.87,
+    "limit_price": 40.1,
+    "status": "queued",
+    "order_id": null,
+    "message": "queued #4bbde665"
   }
 ]
