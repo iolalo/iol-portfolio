@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-08-19 17:09",
+  "last_updated": "2026-08-19 17:46",
   "total_ars": 318485.0,
   "invested_ars": 318991.4,
   "total_gain": -506.4,
@@ -29,17 +29,13 @@
       "gain_pct": -3.33,
       "daily_change_pct": 0.0,
       "buy_date": "2026-03-04",
-      "rsi": 25.24,
-      "ma20": 943.1,
+      "rsi": 24.8,
+      "ma20": 941.98,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI 25.2 < 40 y precio bajo MA20 ($943)"
+        "RSI 24.8 < 40 y precio bajo MA20 ($942)"
       ],
       "sparkline": [
-        {
-          "date": "2026-07-08",
-          "close": 968.5
-        },
         {
           "date": "2026-07-09",
           "close": 968.5
@@ -127,6 +123,10 @@
         {
           "date": "2026-08-07",
           "close": 934.5
+        },
+        {
+          "date": "2026-08-10",
+          "close": 951.5
         },
         {
           "date": "2026-08-11",
@@ -597,6 +597,10 @@
         {
           "date": "2026-08-07",
           "close": 934.5
+        },
+        {
+          "date": "2026-08-10",
+          "close": 951.5
         },
         {
           "date": "2026-08-11",
@@ -1165,14 +1169,14 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 6540.0,
-      "daily_change_pct": -1.65,
+      "unit_price": 6550.0,
+      "daily_change_pct": -1.5,
       "buy_date": null,
-      "rsi": 27.7,
-      "ma20": 7436.59,
+      "rsi": 27.83,
+      "ma20": 7437.09,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI 27.7 < 40 y precio bajo MA20 ($7,437)"
+        "RSI 27.8 < 40 y precio bajo MA20 ($7,437)"
       ],
       "sparkline": [
         {
@@ -1293,7 +1297,7 @@
         },
         {
           "date": "2026-08-19",
-          "close": 6540.0
+          "close": 6550.0
         }
       ],
       "full_history": [
@@ -1555,25 +1559,21 @@
         },
         {
           "date": "2026-08-19",
-          "close": 6540.0
+          "close": 6550.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 3472.5,
-      "daily_change_pct": 6.93,
+      "unit_price": 3465.0,
+      "daily_change_pct": 6.7,
       "buy_date": null,
-      "rsi": 60.81,
-      "ma20": 3207.75,
+      "rsi": 60.45,
+      "ma20": 3243.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-07-08",
-          "close": 2612.5
-        },
         {
           "date": "2026-07-09",
           "close": 2612.5
@@ -1663,6 +1663,10 @@
           "close": 3290.0
         },
         {
+          "date": "2026-08-10",
+          "close": 3397.5
+        },
+        {
           "date": "2026-08-11",
           "close": 3437.5
         },
@@ -1688,7 +1692,7 @@
         },
         {
           "date": "2026-08-19",
-          "close": 3472.5
+          "close": 3465.0
         }
       ],
       "full_history": [
@@ -1921,6 +1925,10 @@
           "close": 3290.0
         },
         {
+          "date": "2026-08-10",
+          "close": 3397.5
+        },
+        {
           "date": "2026-08-11",
           "close": 3437.5
         },
@@ -1946,25 +1954,21 @@
         },
         {
           "date": "2026-08-19",
-          "close": 3472.5
+          "close": 3465.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 25100.0,
-      "daily_change_pct": 6.81,
+      "unit_price": 25080.0,
+      "daily_change_pct": 6.72,
       "buy_date": null,
-      "rsi": 57.96,
-      "ma20": 24393.0,
+      "rsi": 57.99,
+      "ma20": 24414.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-07-08",
-          "close": 23730.0
-        },
         {
           "date": "2026-07-09",
           "close": 23730.0
@@ -2054,6 +2058,10 @@
           "close": 24020.0
         },
         {
+          "date": "2026-08-10",
+          "close": 24060.0
+        },
+        {
           "date": "2026-08-11",
           "close": 25560.0
         },
@@ -2079,7 +2087,7 @@
         },
         {
           "date": "2026-08-19",
-          "close": 25100.0
+          "close": 25080.0
         }
       ],
       "full_history": [
@@ -2312,6 +2320,10 @@
           "close": 24020.0
         },
         {
+          "date": "2026-08-10",
+          "close": 24060.0
+        },
+        {
           "date": "2026-08-11",
           "close": 25560.0
         },
@@ -2337,27 +2349,23 @@
         },
         {
           "date": "2026-08-19",
-          "close": 25100.0
+          "close": 25080.0
         }
       ]
     },
     {
       "symbol": "MIRG",
       "description": "MIRG",
-      "unit_price": 1615.0,
-      "daily_change_pct": -1.22,
+      "unit_price": 1625.0,
+      "daily_change_pct": -0.61,
       "buy_date": null,
-      "rsi": 6.81,
-      "ma20": 7634.0,
+      "rsi": 6.97,
+      "ma20": 6872.75,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI 6.8 < 40 y precio bajo MA20 ($7,634)"
+        "RSI 7.0 < 40 y precio bajo MA20 ($6,873)"
       ],
       "sparkline": [
-        {
-          "date": "2026-07-08",
-          "close": 17200.0
-        },
         {
           "date": "2026-07-09",
           "close": 17200.0
@@ -2447,6 +2455,10 @@
           "close": 1630.0
         },
         {
+          "date": "2026-08-10",
+          "close": 1690.0
+        },
+        {
           "date": "2026-08-11",
           "close": 1670.0
         },
@@ -2472,7 +2484,7 @@
         },
         {
           "date": "2026-08-19",
-          "close": 1615.0
+          "close": 1625.0
         }
       ],
       "full_history": [
@@ -2705,6 +2717,10 @@
           "close": 1630.0
         },
         {
+          "date": "2026-08-10",
+          "close": 1690.0
+        },
+        {
           "date": "2026-08-11",
           "close": 1670.0
         },
@@ -2730,7 +2746,7 @@
         },
         {
           "date": "2026-08-19",
-          "close": 1615.0
+          "close": 1625.0
         }
       ]
     }
