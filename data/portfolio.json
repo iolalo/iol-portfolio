@@ -1,9 +1,9 @@
 {
-  "last_updated": "2026-08-18 17:58",
-  "total_ars": 320908.0,
+  "last_updated": "2026-08-19 11:40",
+  "total_ars": 325567.0,
   "invested_ars": 318991.4,
-  "total_gain": 1916.6,
-  "total_gain_pct": 0.6,
+  "total_gain": 6575.6,
+  "total_gain_pct": 2.06,
   "cash_available": 4815.71,
   "cash_liquidation": "hrs24",
   "cash_by_liquidation": {
@@ -13,7 +13,7 @@
     "hrs72": 4815.71,
     "masHrs72": 0.0
   },
-  "account_total_ars": 325723.71,
+  "account_total_ars": 330382.71,
   "total_usd": 0,
   "invested_usd": 0,
   "alert_count": 3,
@@ -22,28 +22,20 @@
       "symbol": "ALUA",
       "description": "Aluar",
       "quantity": 103.0,
-      "unit_price": 866.0,
-      "total_value": 89198.0,
+      "unit_price": 869.0,
+      "total_value": 89507.0,
       "currency": "peso_Argentino",
       "ppc": 894.868,
-      "gain_pct": -3.22,
+      "gain_pct": -2.89,
       "daily_change_pct": 0.0,
       "buy_date": "2026-03-04",
-      "rsi": 25.35,
-      "ma20": 951.0,
+      "rsi": 25.46,
+      "ma20": 942.17,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI 25.4 < 40 y precio bajo MA20 ($951)"
+        "RSI 25.5 < 40 y precio bajo MA20 ($942)"
       ],
       "sparkline": [
-        {
-          "date": "2026-07-07",
-          "close": 990.0
-        },
-        {
-          "date": "2026-07-08",
-          "close": 968.5
-        },
         {
           "date": "2026-07-09",
           "close": 968.5
@@ -153,8 +145,16 @@
           "close": 898.0
         },
         {
+          "date": "2026-08-17",
+          "close": 898.0
+        },
+        {
           "date": "2026-08-18",
-          "close": 866.0
+          "close": 869.5
+        },
+        {
+          "date": "2026-08-19",
+          "close": 869.0
         }
       ],
       "full_history": [
@@ -619,8 +619,16 @@
           "close": 898.0
         },
         {
+          "date": "2026-08-17",
+          "close": 898.0
+        },
+        {
           "date": "2026-08-18",
-          "close": 866.0
+          "close": 869.5
+        },
+        {
+          "date": "2026-08-19",
+          "close": 869.0
         }
       ]
     },
@@ -628,22 +636,18 @@
       "symbol": "YPFD",
       "description": "Ypf",
       "quantity": 29.0,
-      "unit_price": 7990.0,
-      "total_value": 231710.0,
+      "unit_price": 8140.0,
+      "total_value": 236060.0,
       "currency": "peso_Argentino",
       "ppc": 7821.379,
-      "gain_pct": 2.15,
+      "gain_pct": 4.07,
       "daily_change_pct": 0.0,
       "buy_date": "2026-04-01",
-      "rsi": 54.11,
-      "ma20": 7988.25,
+      "rsi": 57.88,
+      "ma20": 7992.12,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-07-07",
-          "close": 7442.5
-        },
         {
           "date": "2026-07-08",
           "close": 7577.5
@@ -759,6 +763,10 @@
         {
           "date": "2026-08-18",
           "close": 7990.0
+        },
+        {
+          "date": "2026-08-19",
+          "close": 8140.0
         }
       ],
       "full_history": [
@@ -1149,6 +1157,10 @@
         {
           "date": "2026-08-18",
           "close": 7990.0
+        },
+        {
+          "date": "2026-08-19",
+          "close": 8140.0
         }
       ]
     }
@@ -1157,24 +1169,16 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 6650.0,
-      "daily_change_pct": -2.92,
+      "unit_price": 6695.0,
+      "daily_change_pct": 0.68,
       "buy_date": null,
-      "rsi": 29.62,
-      "ma20": 7578.23,
+      "rsi": 30.91,
+      "ma20": 7444.34,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI 29.6 < 40 y precio bajo MA20 ($7,578)"
+        "RSI 30.9 < 40 y precio bajo MA20 ($7,444)"
       ],
       "sparkline": [
-        {
-          "date": "2026-07-07",
-          "close": 8036.54
-        },
-        {
-          "date": "2026-07-08",
-          "close": 7871.71
-        },
         {
           "date": "2026-07-09",
           "close": 7871.71
@@ -1284,15 +1288,19 @@
           "close": 6850.0
         },
         {
+          "date": "2026-08-17",
+          "close": 6850.0
+        },
+        {
           "date": "2026-08-18",
           "close": 6650.0
+        },
+        {
+          "date": "2026-08-19",
+          "close": 6695.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-05-20",
-          "close": 6221.95
-        },
         {
           "date": "2026-05-21",
           "close": 6476.42
@@ -1542,30 +1550,30 @@
           "close": 6850.0
         },
         {
+          "date": "2026-08-17",
+          "close": 6850.0
+        },
+        {
           "date": "2026-08-18",
           "close": 6650.0
+        },
+        {
+          "date": "2026-08-19",
+          "close": 6695.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 3247.5,
-      "daily_change_pct": -0.54,
+      "unit_price": 3495.0,
+      "daily_change_pct": 7.62,
       "buy_date": null,
-      "rsi": 53.39,
-      "ma20": 3181.25,
+      "rsi": 61.25,
+      "ma20": 3244.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-07-07",
-          "close": 2765.0
-        },
-        {
-          "date": "2026-07-08",
-          "close": 2612.5
-        },
         {
           "date": "2026-07-09",
           "close": 2612.5
@@ -1675,15 +1683,19 @@
           "close": 3265.0
         },
         {
+          "date": "2026-08-17",
+          "close": 3265.0
+        },
+        {
           "date": "2026-08-18",
           "close": 3247.5
+        },
+        {
+          "date": "2026-08-19",
+          "close": 3495.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-05-20",
-          "close": 3405.0
-        },
         {
           "date": "2026-05-21",
           "close": 3317.5
@@ -1933,30 +1945,30 @@
           "close": 3265.0
         },
         {
+          "date": "2026-08-17",
+          "close": 3265.0
+        },
+        {
           "date": "2026-08-18",
           "close": 3247.5
+        },
+        {
+          "date": "2026-08-19",
+          "close": 3495.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 23500.0,
-      "daily_change_pct": -2.73,
+      "unit_price": 24200.0,
+      "daily_change_pct": 2.98,
       "buy_date": null,
-      "rsi": 45.83,
-      "ma20": 24323.5,
+      "rsi": 51.81,
+      "ma20": 24370.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-07-07",
-          "close": 23790.0
-        },
-        {
-          "date": "2026-07-08",
-          "close": 23730.0
-        },
         {
           "date": "2026-07-09",
           "close": 23730.0
@@ -2066,15 +2078,19 @@
           "close": 24160.0
         },
         {
+          "date": "2026-08-17",
+          "close": 24160.0
+        },
+        {
           "date": "2026-08-18",
           "close": 23500.0
+        },
+        {
+          "date": "2026-08-19",
+          "close": 24200.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-05-20",
-          "close": 20450.0
-        },
         {
           "date": "2026-05-21",
           "close": 20630.0
@@ -2324,32 +2340,32 @@
           "close": 24160.0
         },
         {
+          "date": "2026-08-17",
+          "close": 24160.0
+        },
+        {
           "date": "2026-08-18",
           "close": 23500.0
+        },
+        {
+          "date": "2026-08-19",
+          "close": 24200.0
         }
       ]
     },
     {
       "symbol": "MIRG",
       "description": "MIRG",
-      "unit_price": 1635.0,
-      "daily_change_pct": 0.62,
+      "unit_price": 1615.0,
+      "daily_change_pct": -1.22,
       "buy_date": null,
-      "rsi": 6.95,
-      "ma20": 8395.25,
+      "rsi": 6.96,
+      "ma20": 6872.25,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI 7.0 < 40 y precio bajo MA20 ($8,395)"
+        "RSI 7.0 < 40 y precio bajo MA20 ($6,872)"
       ],
       "sparkline": [
-        {
-          "date": "2026-07-07",
-          "close": 17300.0
-        },
-        {
-          "date": "2026-07-08",
-          "close": 17200.0
-        },
         {
           "date": "2026-07-09",
           "close": 17200.0
@@ -2459,15 +2475,19 @@
           "close": 1625.0
         },
         {
+          "date": "2026-08-17",
+          "close": 1625.0
+        },
+        {
           "date": "2026-08-18",
           "close": 1635.0
+        },
+        {
+          "date": "2026-08-19",
+          "close": 1615.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-05-20",
-          "close": 16225.0
-        },
         {
           "date": "2026-05-21",
           "close": 16275.0
@@ -2717,8 +2737,16 @@
           "close": 1625.0
         },
         {
+          "date": "2026-08-17",
+          "close": 1625.0
+        },
+        {
           "date": "2026-08-18",
           "close": 1635.0
+        },
+        {
+          "date": "2026-08-19",
+          "close": 1615.0
         }
       ]
     }
