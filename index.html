@@ -11,7 +11,7 @@
   <header>
     <div class="header-left">
       <h1>IOL Portfolio</h1>
-      <span id="last-updated">Cargando…</span>
+      <span id="last-updated">Cargando...</span>
     </div>
     <div class="header-right">
       <span class="refresh-label">Próxima actualización en <span id="countdown">—</span></span>
@@ -19,7 +19,14 @@
   </header>
 
   <main>
-    <!-- Summary cards -->
+    <section class="mode-banner">
+      <div class="mode-banner__badge">Modo manual</div>
+      <div class="mode-banner__content">
+        <strong>Sin automatización activa.</strong>
+        Este tablero quedó solo para visualización de portfolio, señales y operaciones reales ya ejecutadas.
+      </div>
+    </section>
+
     <section class="summary-row">
       <div class="card">
         <span class="label">Valor Total</span>
@@ -39,31 +46,26 @@
         <span class="value" id="total-positions">—</span>
       </div>
       <div class="card card--alert">
-        <span class="label">Alertas activas</span>
+        <span class="label">Señales activas</span>
         <span class="value" id="alert-count">—</span>
-      </div>
-      <div class="card">
-        <span class="label">Pendientes</span>
-        <span class="value" id="pending-orders">—</span>
       </div>
       <div class="card">
         <span class="label">Cash operable</span>
         <span class="value" id="cash-available">—</span>
         <span class="sublabel" id="cash-liquidation"></span>
       </div>
-      <div class="card card--bot">
-        <span class="label">Bot hoy</span>
-        <span class="value" id="bot-ops">—</span>
+      <div class="card card--manual">
+        <span class="label">Operativa</span>
+        <span class="value" id="manual-mode">Manual</span>
+        <span class="sublabel" id="manual-detail">Sin compras ni ventas automáticas</span>
       </div>
     </section>
 
-    <!-- Alerts -->
     <section id="alerts-section" class="hidden">
-      <h2>Alertas</h2>
+      <h2>Señales</h2>
       <div id="alerts-container"></div>
     </section>
 
-    <!-- Positions table -->
     <section>
       <h2>Posiciones</h2>
       <div class="table-wrapper">
@@ -85,16 +87,15 @@
             </tr>
           </thead>
           <tbody id="positions-body">
-            <tr><td colspan="12" class="loading">Cargando portafolio…</td></tr>
+            <tr><td colspan="12" class="loading">Cargando portfolio...</td></tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <!-- Portfolio charts -->
     <section id="charts-section">
       <div class="section-header">
-        <h2>Gráficos — Portafolio</h2>
+        <h2>Gráficos del portfolio</h2>
         <div class="period-tabs" id="period-tabs">
           <button class="period-btn active" data-period="30">30D</button>
           <button class="period-btn" data-period="90">90D</button>
@@ -104,9 +105,8 @@
       <div id="charts-grid"></div>
     </section>
 
-    <!-- Trades history -->
     <section id="trades-section" class="hidden">
-      <h2>Operaciones del bot</h2>
+      <h2>Operaciones reales registradas</h2>
       <div class="table-wrapper">
         <table>
           <thead>
@@ -126,27 +126,6 @@
       </div>
     </section>
 
-    <section id="pending-section" class="hidden">
-      <h2>Órdenes pendientes</h2>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Ticker</th>
-              <th>Acción</th>
-              <th>Cantidad</th>
-              <th>Límite</th>
-              <th>Estado</th>
-              <th>Id cola</th>
-            </tr>
-          </thead>
-          <tbody id="pending-body"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Watchlist -->
     <section id="watchlist-section" class="hidden">
       <div class="section-header">
         <h2>Watchlist</h2>
@@ -154,7 +133,7 @@
           <input
             type="text"
             id="ticker-search"
-            placeholder="Buscar ticker… (ej: GGAL, MELI)"
+            placeholder="Buscar ticker... (ej: GGAL, MELI)"
             autocomplete="off"
           />
         </div>
@@ -164,7 +143,7 @@
   </main>
 
   <footer>
-    Datos vía API Invertir Online · Web actualiza cada 10 min (horario BYMA) · Telegram: resumen diario 18:15 hs
+    Datos vía API Invertir Online · GitHub actualiza el portfolio cada 10 min en horario BYMA · Operativa manual
   </footer>
 
   <script src="assets/app.js"></script>

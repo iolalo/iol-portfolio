@@ -1,9 +1,6 @@
 name: Trade Bot
 
 on:
-  schedule:
-    # 11:00 ART = 14:00 UTC — arranca al inicio de BYMA, el loop interno corre hasta las 17:00
-    - cron: "0 14 * * 1-5"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -21,6 +18,7 @@ permissions:
 
 jobs:
   trade:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     timeout-minutes: 370
     env:

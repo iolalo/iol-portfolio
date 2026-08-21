@@ -39,6 +39,40 @@ header h1    { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
 .refresh-label { font-size: 12px; color: var(--muted); }
 #countdown { color: var(--blue); font-weight: 600; }
 
+.mode-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(59, 130, 246, 0.08)),
+    var(--surface);
+}
+
+.mode-banner__badge {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.18);
+  color: var(--yellow);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.mode-banner__content {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.mode-banner__content strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
 /* ── Layout ─────────────────────────────────────────────────── */
 main { padding: 24px 32px; display: flex; flex-direction: column; gap: 32px; }
 
@@ -86,7 +120,7 @@ h2 {
 .card--gain-neg { border-left: 3px solid var(--red); }
 .card--gain-neg .value { color: var(--red); }
 
-.card--bot .value { color: var(--purple); }
+.card--manual .value { color: var(--yellow); }
 
 /* ── Alerts ─────────────────────────────────────────────────── */
 #alerts-container { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }

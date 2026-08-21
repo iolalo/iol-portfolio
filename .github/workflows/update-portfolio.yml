@@ -24,12 +24,13 @@ jobs:
       - name: Install dependencies
         run: pip install -r scripts/requirements.txt
 
-      - name: Fetch portfolio & send alerts
+      - name: Fetch portfolio for dashboard
         env:
           IOL_USERNAME:    ${{ secrets.IOL_USERNAME }}
           IOL_PASSWORD:    ${{ secrets.IOL_PASSWORD }}
           TELEGRAM_TOKEN:  ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DISABLE_TELEGRAM: "true"
         run: python scripts/fetch_portfolio.py
 
       - name: Commit updated data

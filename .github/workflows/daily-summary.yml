@@ -1,13 +1,11 @@
 name: Daily Telegram Summary
 
 on:
-  schedule:
-    # 18:15 ART = 21:15 UTC, lunes a viernes
-    - cron: "15 21 * * 1-5"
   workflow_dispatch:
 
 jobs:
   summary:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
