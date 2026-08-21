@@ -1,64 +1,105 @@
 """
-Envía al chat de Telegram un resumen fijo de la lógica del bot.
-Uso: set TELEGRAM_TOKEN=... && set TELEGRAM_CHAT_ID=... && python send_bot_summary.py
+Envia al chat de Telegram un resumen fijo de la logica del bot.
+Uso: python send_bot_summary.py
 """
 import os
+from pathlib import Path
+
 import requests
 
-TG_TOKEN   = os.environ["TELEGRAM_TOKEN"]
-TG_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
-MSG = """📋 *IOL Trading Bot — Lógica de decisiones*
+ROOT = Path(__file__).resolve().parent.parent
 
-*🛑 Stop-loss (prioridad 1)*
-Si el precio actual cae ≥ 8 % por debajo del PPC (precio promedio de compra), vende TODA la posición con orden límite (precio × 0.995).
-Objetivo: cortar pérdidas antes de que se profundicen.
 
-*🎯 Take-profit (prioridad 2)*
-Si el precio sube ≥ 25 % sobre el PPC, vende la MITAD de la posición.
+def _load_local_env() -> None:
+    env_file = ROOT / ".env"
+    if not env_file.exists():
+        return
+    for raw_line in env_file.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip())
+
+
+_load_local_env()
+
+TG_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
+TG_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
+DISABLE_TELEGRAM = os.environ.get("DISABLE_TELEGRAM", "").strip().lower() in ("1", "true", "yes", "on")
+
+MSG = """📋 *IOL Trading Bot - Logica de decisiones*
+
+*Stop-loss (prioridad 1)*
+Si el precio actual cae >= 8 % por debajo del PPC, vende toda la posicion con orden limite (precio x 0.995).
+Objetivo: cortar perdidas antes de que se profundicen.
+
+*Take-profit (prioridad 2)*
+Si el precio sube >= 25 % sobre el PPC, vende la mitad de la posicion.
 Objetivo: realizar ganancia parcial dejando correr el resto.
 
-*🟢 Señal de compra (prioridad 3)*
-Condición doble:
-• RSI(14) < 35 → activo sobrevendido
-• Precio actual < MA20 → todavía por debajo de la media
-Compra con el 70 % del efectivo disponible (reservando $500 ARS mínimo).
-Orden límite = precio × 1.005 (0.5 % de slippage).
+*Senal de compra (prioridad 3)*
+Condicion doble:
+- RSI(14) < 35
+- Precio actual < MA20
+Compra con el 70 % del efectivo disponible, reservando $500 ARS minimo.
+Orden limite = precio x 1.005.
 
-*🔴 Señal de venta (prioridad 4)*
-Condición doble:
-• RSI(14) > 65 → activo sobrecomprado
-• Precio actual > MA20 → extendido sobre la media
-Vende TODA la posición con orden límite = precio × 0.995.
+*Senal de venta (prioridad 4)*
+Condicion doble:
+- RSI(14) > 65
+- Precio actual > MA20
+Vende toda la posicion con orden limite = precio x 0.995.
 
-*⚙️ Reglas generales*
-• Máximo 2 operaciones por día
-• Solo opera en horario BYMA: lun–vie 11:00–17:00 ART
-• Liquidación T+1
-• Aplica a todas las posiciones por igual (sin excepciones manuales)
+*Reglas generales*
+- Maximo 2 operaciones por dia
+- Solo opera en horario BYMA: lunes a viernes, 11:00 a 17:00 ART
+- Liquidacion T+1
+- Aplica a todas las posiciones por igual
 
-*📊 Parámetros actuales*
+*Parametros actuales*
 RSI compra: 35 | RSI venta: 65
 Stop-loss: 8 % | Take-profit: 25 %
-Cash por operación: 70 % | Reserva mínima: $500 ARS"""
+Cash por operacion: 70 % | Reserva minima: $500 ARS"""
 
-base = f"https://api.telegram.org/bot{TG_TOKEN}"
 
-resp = requests.post(f"{base}/sendMessage", json={
-    "chat_id":    TG_CHAT_ID,
-    "text":       MSG,
-    "parse_mode": "Markdown",
-})
-resp.raise_for_status()
-msg_id = resp.json()["result"]["message_id"]
-print("Enviado OK:", msg_id)
+def main() -> None:
+    if DISABLE_TELEGRAM:
+        print("Telegram disabled via DISABLE_TELEGRAM=true. Bot summary not sent.")
+        return
+    if not TG_TOKEN or not TG_CHAT_ID:
+        raise RuntimeError("Missing TELEGRAM_TOKEN or TELEGRAM_CHAT_ID")
 
-pin = requests.post(f"{base}/pinChatMessage", json={
-    "chat_id":              TG_CHAT_ID,
-    "message_id":           msg_id,
-    "disable_notification": True,
-})
-if pin.ok:
-    print("Fijado OK")
-else:
-    print("No se pudo fijar (el bot necesita ser admin del grupo):", pin.text)
+    base = f"https://api.telegram.org/bot{TG_TOKEN}"
+
+    resp = requests.post(
+        f"{base}/sendMessage",
+        json={
+            "chat_id": TG_CHAT_ID,
+            "text": MSG,
+            "parse_mode": "Markdown",
+        },
+        timeout=10,
+    )
+    resp.raise_for_status()
+    msg_id = resp.json()["result"]["message_id"]
+    print("Enviado OK:", msg_id)
+
+    pin = requests.post(
+        f"{base}/pinChatMessage",
+        json={
+            "chat_id": TG_CHAT_ID,
+            "message_id": msg_id,
+            "disable_notification": True,
+        },
+        timeout=10,
+    )
+    if pin.ok:
+        print("Fijado OK")
+    else:
+        print("No se pudo fijar:", pin.text)
+
+
+if __name__ == "__main__":
+    main()

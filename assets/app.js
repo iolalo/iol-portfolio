@@ -100,6 +100,63 @@ function renderAlerts(positions) {
   `).join("");
 }
 
+function focusTone(recommendation) {
+  if (recommendation === "COMPRAR") return "buy";
+  if (recommendation === "VENDER") return "sell";
+  if (recommendation === "ALERTA") return "alert";
+  return "hold";
+}
+
+function renderFocus(data) {
+  const section = document.getElementById("focus-section");
+  const grid = document.getElementById("focus-grid");
+  const positions = data.positions ?? [];
+  const active = positions
+    .filter((p) => ["COMPRAR", "VENDER", "ALERTA"].includes(p.recommendation))
+    .sort((a, b) => {
+      const order = { VENDER: 0, ALERTA: 1, COMPRAR: 2 };
+      return (order[a.recommendation] ?? 9) - (order[b.recommendation] ?? 9);
+    })
+    .slice(0, 4);
+
+  const cards = [];
+
+  if (active.length > 0) {
+    active.forEach((item) => {
+      cards.push(`
+        <article class="focus-card focus-card--${focusTone(item.recommendation)}">
+          <div class="focus-card__eyebrow">${item.recommendation}</div>
+          <h3>${item.symbol}</h3>
+          <div>Precio: $${fmt(item.unit_price)} | PPC: $${fmt(item.ppc)}</div>
+          <div class="${pctClass(item.gain_pct)}">Resultado: ${item.gain_pct > 0 ? "+" : ""}${fmt(item.gain_pct, 2)}%</div>
+          <div class="focus-card__meta">${(item.signals ?? []).slice(0, 2).join(" · ") || "Sin detalle adicional"}</div>
+        </article>
+      `);
+    });
+  } else {
+    cards.push(`
+      <article class="focus-card focus-card--hold">
+        <div class="focus-card__eyebrow">Sin urgencias</div>
+        <h3>Cartera estable</h3>
+        <div>No hay señales activas de compra o venta en este momento.</div>
+        <div class="focus-card__meta">Revisar de nuevo tras la próxima actualización del portfolio.</div>
+      </article>
+    `);
+  }
+
+  cards.push(`
+    <article class="focus-card focus-card--hold">
+      <div class="focus-card__eyebrow">Caja disponible</div>
+      <h3>$${fmt(data.cash_available ?? 0)}</h3>
+      <div>${liquidationLabel(data.cash_liquidation)}</div>
+      <div class="focus-card__meta">Referencia rápida para decidir compras manuales.</div>
+    </article>
+  `);
+
+  section.classList.remove("hidden");
+  grid.innerHTML = cards.join("");
+}
+
 function sparklineHTML(data, id) {
   if (!data || data.length < 2) return "—";
   return `<canvas id="spark-${id}" width="80" height="32" style="vertical-align:middle"></canvas>`;
@@ -292,62 +349,6 @@ function renderCharts(positions) {
   });
 }
 
-function renderWatchlist(watchlist) {
-  const section = document.getElementById("watchlist-section");
-  if (!watchlist || watchlist.length === 0) {
-    section.classList.add("hidden");
-    return;
-  }
-  section.classList.remove("hidden");
-
-  const query = document.getElementById("ticker-search")?.value.toUpperCase().trim() || "";
-  const filtered = query
-    ? watchlist.filter((w) => w.symbol.includes(query) || w.description.toUpperCase().includes(query))
-    : watchlist;
-
-  const grid = document.getElementById("watchlist-grid");
-  grid.innerHTML = "";
-
-  if (filtered.length === 0) {
-    grid.innerHTML = `<p class="loading">Sin resultados para "${query}".</p>`;
-    return;
-  }
-
-  filtered.forEach((w) => {
-    const sliced = sliceHistory(w);
-    if (!sliced || sliced.closes.length < 2) return;
-
-    const changePct = ((sliced.closes[sliced.closes.length - 1] - sliced.closes[0]) / sliced.closes[0] * 100).toFixed(2);
-    const color = parseFloat(changePct) >= 0 ? "#22c55e" : "#ef4444";
-    const canvasId = `wl-chart-${w.symbol}`;
-
-    const div = document.createElement("div");
-    div.className = "chart-card";
-    div.innerHTML = `
-      <div class="chart-card-header">
-        <div>
-          <h3>${w.symbol}</h3>
-          <div class="chart-meta">
-            $${fmt(w.unit_price)}
-            · Día: <span class="${pctClass(w.daily_change_pct)}">${w.daily_change_pct > 0 ? "+" : ""}${fmt(w.daily_change_pct, 2)}%</span>
-            · <span style="color:${color}">${changePct > 0 ? "+" : ""}${changePct}% período</span>
-            ${w.ma20 ? ` · MA20: $${fmt(w.ma20)}` : ""}
-            ${w.rsi ? ` · RSI: <span class="${rsiClass(w.rsi)}">${fmt(w.rsi, 1)}</span>` : ""}
-          </div>
-        </div>
-        <span class="badge ${w.recommendation}">${w.recommendation}</span>
-      </div>
-      <canvas id="${canvasId}" height="100"></canvas>`;
-    grid.appendChild(div);
-
-    destroyChart(`wl-${w.symbol}`);
-    const canvas = document.getElementById(canvasId);
-    if (canvas) {
-      chartRegistry[`wl-${w.symbol}`] = buildChart(canvas, w, sliced);
-    }
-  });
-}
-
 let countdownSecs = REFRESH_MS / 1000;
 
 function startCountdown() {
@@ -379,14 +380,7 @@ function setupPeriodTabs() {
         delete chartRegistry[k];
       });
       renderCharts(globalData.positions);
-      renderWatchlist(globalData.watchlist ?? []);
     }
-  });
-}
-
-function setupSearch() {
-  document.getElementById("ticker-search")?.addEventListener("input", () => {
-    if (globalData) renderWatchlist(globalData.watchlist ?? []);
   });
 }
 
@@ -398,6 +392,7 @@ async function loadAndRender() {
 
     renderSummary(globalData);
     renderAlerts(globalData.positions ?? []);
+    renderFocus(globalData);
     renderTable(globalData.positions ?? []);
     drawSparklines(globalData.positions ?? []);
 
@@ -408,7 +403,6 @@ async function loadAndRender() {
     });
 
     renderCharts(globalData.positions ?? []);
-    renderWatchlist(globalData.watchlist ?? []);
   } catch (err) {
     document.getElementById("positions-body").innerHTML =
       `<tr><td colspan="12" class="loading">Error al cargar datos: ${err.message}</td></tr>`;
@@ -469,7 +463,6 @@ async function loadAndRenderTrades() {
 
 async function init() {
   setupPeriodTabs();
-  setupSearch();
   await loadAndRender();
   await loadAndRenderTrades();
   startCountdown();

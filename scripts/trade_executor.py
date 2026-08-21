@@ -3,12 +3,15 @@ import logging
 import math
 import os
 import re
+import socket
 import subprocess
 import threading
 import time
+import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -66,6 +69,9 @@ TRADES_LOG     = ROOT / "data" / "trades_log.json"
 PORTFOLIO      = ROOT / "data" / "portfolio.json"
 PENDING_ORDERS = ROOT / "data" / "pending_orders.json"
 MOBILE_APPROVALS = ROOT / "data" / "mobile_approvals.json"
+RECOMMENDATIONS = ROOT / "data" / "recommendations.json"
+RECOMMENDATIONS_MD = ROOT / "data" / "recommendations.md"
+RECOMMENDATIONS_STATE = ROOT / "data" / "recommendations_state.json"
 CONTEXT_MD     = SCRIPT_DIR / "trading_context.md"
 
 # FIX P9: Comisiones (~0.6% + IVA) -> reducir presupuesto de compra en 0.7%
@@ -127,6 +133,10 @@ SCAN_BUDGET_PCT  = float(os.environ.get("SCAN_BUDGET_PCT", "30"))
 SCAN_ASSET_TYPES = os.environ.get("SCAN_ASSET_TYPES", "ACCION,CEDEAR").upper().split(",")
 LOOP_MINUTES     = int(os.environ.get("LOOP_MINUTES", "5"))
 MAX_ITERATIONS   = int(os.environ.get("MAX_ITERATIONS", "0"))
+IOL_WEB_NODE     = os.environ.get("IOL_WEB_NODE", "node").strip() or "node"
+IOL_WEB_SCRIPT   = os.environ.get("IOL_WEB_SCRIPT", str(SCRIPT_DIR / "iol_web_order.js")).strip()
+IOL_WEB_TIMEOUT  = int(os.environ.get("IOL_WEB_TIMEOUT_SECS", "180"))
+DISABLE_TELEGRAM = os.environ.get("DISABLE_TELEGRAM", "false").strip().lower() in ("1", "true", "yes", "on")
 
 
 def _env_flag(name: str, default: bool = False) -> bool:
@@ -141,6 +151,8 @@ TELEGRAM_NOTIFY_DRY_RUN = _env_flag("TELEGRAM_NOTIFY_DRY_RUN", False)
 N8N_QUEUE_WEBHOOK_URL   = os.environ.get("N8N_QUEUE_WEBHOOK_URL", "").strip()
 APPROVAL_BRIDGE_SECRET  = os.environ.get("APPROVAL_BRIDGE_SECRET", "").strip()
 APPROVAL_BRIDGE_PORT    = int(os.environ.get("APPROVAL_BRIDGE_PORT", "8765"))
+IOL_WEB_EXECUTOR_ENABLED = _env_flag("IOL_WEB_EXECUTOR_ENABLED", False)
+REQUIRE_APPROVAL_CHANNEL = _env_flag("REQUIRE_APPROVAL_CHANNEL", True)
 
 # ── Telegram helpers (MarkdownV2) ─────────────────────────────────────────────
 _MD_V2_SPECIAL = [
@@ -154,6 +166,8 @@ def _escape_md(text: str) -> str:
     return text
 
 def send_telegram(text: str) -> None:
+    if DISABLE_TELEGRAM:
+        return
     if not TG_TOKEN or not TG_CHAT_ID:
         return
     try:
@@ -172,12 +186,39 @@ def send_telegram(text: str) -> None:
         log.warning("Telegram send failed: %s", exc)
 
 
+def _normalize_api_position(symbol: str, qty: int, ppc: float, price: float) -> tuple[int, float, float]:
+    """Normaliza posiciones de IOL cuando hay corporate actions que dejan PPC viejo.
+
+    Caso conocido:
+    - MIRG 2026-08-04: IOL expone cantidad post-split pero PPC pre-split.
+      Si no se corrige, el portfolio local muestra una pérdida falsa ~90% y el
+      bot evalúa señales con base contaminada.
+    """
+    if (
+        symbol == "MIRG"
+        and qty >= 100
+        and ppc > 10_000
+        and 0 < price < 5_000
+    ):
+        adjusted_ppc = round(ppc / 10, 4)
+        log.info(
+            "Sync normalize: %s qty=%d ppc=%.2f -> %.4f por desajuste post-split",
+            symbol, qty, ppc, adjusted_ppc,
+        )
+        return qty, adjusted_ppc, price
+    return qty, ppc, price
+
+
 def _is_pending_mcp_message(msg: str | None) -> bool:
     return bool(msg) and msg.startswith(("queued #", "awaiting MCP", "MCP ejecut"))
 
 
+def _is_terminal_infra_failure(msg: str | None) -> bool:
+    return bool(msg) and msg.startswith("Manual review unavailable:")
+
+
 def _should_mark_signal_done(ok: bool, msg: str | None) -> bool:
-    return ok or _is_pending_mcp_message(msg)
+    return ok or _is_pending_mcp_message(msg) or _is_terminal_infra_failure(msg)
 
 
 def load_mobile_approvals() -> list[dict]:
@@ -297,6 +338,32 @@ def notify_n8n_pending_order(order: dict, reason: str) -> None:
         log.warning("n8n webhook failed: %s", exc)
 
 
+def _n8n_webhook_reachable(timeout_secs: float = 2.0) -> bool:
+    if not N8N_QUEUE_WEBHOOK_URL:
+        return False
+    try:
+        parsed = urlparse(N8N_QUEUE_WEBHOOK_URL)
+        if not parsed.hostname:
+            return False
+        port = parsed.port
+        if port is None:
+            port = 443 if parsed.scheme == "https" else 80
+        with socket.create_connection((parsed.hostname, port), timeout=timeout_secs):
+            return True
+    except OSError:
+        return False
+
+
+def _manual_review_channel_available() -> tuple[bool, str]:
+    if IOL_WEB_EXECUTOR_ENABLED:
+        return True, "web_executor_enabled"
+    if _n8n_webhook_reachable():
+        return True, "n8n_webhook_reachable"
+    if not N8N_QUEUE_WEBHOOK_URL:
+        return False, "n8n_webhook_missing"
+    return False, "n8n_webhook_unreachable"
+
+
 def apply_mobile_decisions() -> None:
     items = load_mobile_approvals()
     if not items:
@@ -393,6 +460,76 @@ def apply_mobile_decisions() -> None:
     if changed:
         save_pending_orders(orders)
     save_mobile_approvals(remaining)
+
+
+def retry_approved_pending_orders() -> None:
+    orders = sanitize_pending_orders(load_pending_orders(), persist=False)
+    changed = False
+
+    for order in orders:
+        if str(order.get("status", "")).strip().lower() != "approved_pending":
+            continue
+
+        order_id = str(order.get("id", "?"))
+        symbol = order.get("symbol")
+        side = order.get("side")
+        qty = order.get("qty")
+        limit_price = order.get("limit_price")
+        term = order.get("term")
+
+        order["status"] = "executing"
+        order["result"] = "Reintentando ejecución automática de orden aprobada..."
+        order["attempts"] = int(order.get("attempts", 0) or 0) + 1
+        order["last_attempt_at"] = datetime.now(ART).isoformat()
+        changed = True
+        save_pending_orders(orders)
+
+        log.info(
+            "Retrying approved pending order %s: %s %s qty=%s lp=%s",
+            order_id, side, symbol, qty, limit_price,
+        )
+
+        ok, oid, msg = place_order(
+            symbol,
+            side,
+            qty,
+            limit_price,
+            term,
+            queue_on_fail=False,
+        )
+        order["last_error"] = None if ok else msg
+
+        if ok:
+            order["status"] = "done"
+            order["order_id"] = oid
+            order["result"] = msg
+            order["resolved_at"] = datetime.now(ART).isoformat()
+            log.info("Approved pending order %s executed automatically: #%s", order_id, oid)
+            _append_trade_log_entry({
+                "date": datetime.now(ART).isoformat(),
+                "symbol": symbol,
+                "side": side,
+                "reason": "approved_pending_retry",
+                "quantity": qty,
+                "price": limit_price,
+                "limit_price": limit_price,
+                "status": "executed",
+                "order_id": oid,
+                "message": msg,
+            })
+            send_telegram(
+                f"✅ *ORDEN EJECUTADA* \\#{_escape_md(order_id)}\n"
+                f"{_escape_md(str(symbol or '?'))} · {_escape_md(str(side or '?').upper())}\n"
+                "_Reintento automático de orden aprobada_\n"
+                f"Orden IOL: \\#{_escape_md(str(oid))}"
+            )
+        else:
+            order["status"] = "approved_pending"
+            order["result"] = f"Sigue pendiente tras reintento automático: {msg}"
+            log.warning("Approved pending order %s still pending after auto retry: %s", order_id, msg)
+
+    if changed:
+        save_pending_orders(orders)
 
 # ── HTTP session ──────────────────────────────────────────────────────────────
 def _build_session():
@@ -876,6 +1013,495 @@ def save_portfolio(portfolio: dict) -> None:
     except Exception as exc:
         log.error("Error guardando portfolio.json: %s", exc)
 
+
+def save_recommendations(payload: dict) -> None:
+    try:
+        RECOMMENDATIONS.parent.mkdir(exist_ok=True)
+        RECOMMENDATIONS.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        log.info("Recommendations saved to %s", RECOMMENDATIONS)
+    except Exception as exc:
+        log.error("Error guardando recommendations.json: %s", exc)
+
+
+def save_recommendations_markdown(payload: dict) -> None:
+    try:
+        lines = [
+            f"# Advisor Plan - {payload.get('generated_at', '')}",
+            "",
+            f"- Cash disponible: ${payload.get('cash_available_ars', 0):,.2f}",
+            f"- Presupuesto sugerido de compra: ${payload.get('buy_budget_ars', 0):,.2f}",
+            f"- Presupuesto restante: ${payload.get('remaining_buy_budget_ars', 0):,.2f}",
+            "",
+            "## Resumen",
+        ]
+        for item in payload.get("summary", {}).get("top_actions", []):
+            lines.append(f"- {item}")
+
+        sells = payload.get("sell_recommendations", [])
+        buys = payload.get("buy_recommendations", [])
+        holds = payload.get("hold_positions", [])
+
+        lines.extend(["", "## Vender"])
+        if sells:
+            for item in sells:
+                lines.append(
+                    f"- {item['symbol']}: vender {item['suggested_quantity']} acc "
+                    f"({item['position_pct']:.0f}% de la posicion, prioridad {item['priority']}) "
+                    f"a limite ${item['limit_price']:,.2f} por {item['reason']}"
+                )
+        else:
+            lines.append("- Sin ventas sugeridas.")
+
+        lines.extend(["", "## Comprar"])
+        if buys:
+            for item in buys:
+                lines.append(
+                    f"- {item['symbol']}: invertir ${item['suggested_amount_ars']:,.2f} "
+                    f"({item['suggested_quantity']} acc a limite ${item['limit_price']:,.2f}, "
+                    f"prioridad {item['priority']}) [{item['source']}]"
+                )
+        else:
+            lines.append("- Sin compras sugeridas.")
+
+        lines.extend(["", "## Mantener"])
+        if holds:
+            for item in holds:
+                lines.append(
+                    f"- {item['symbol']}: mantener. Precio ${item['current_price']:,.2f} | PPC ${item['ppc']:,.2f}"
+                )
+        else:
+            lines.append("- Sin posiciones para mantener.")
+
+        RECOMMENDATIONS_MD.parent.mkdir(exist_ok=True)
+        RECOMMENDATIONS_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        log.info("Recommendations markdown saved to %s", RECOMMENDATIONS_MD)
+    except Exception as exc:
+        log.error("Error guardando recommendations.md: %s", exc)
+
+
+def _round_sell_quantity(qty_int: int, pct: float) -> int:
+    if qty_int <= 0:
+        return 0
+    raw_qty = max(1, math.ceil(qty_int * pct))
+    if qty_int <= 10:
+        return min(qty_int, raw_qty)
+    rounded = int(math.ceil(raw_qty / 5.0) * 5)
+    return min(qty_int, max(1, rounded))
+
+
+def _sell_qty_for_reason(
+    qty: float,
+    reason: str | None,
+    gain_pct: float | None = None,
+    position_weight_pct: float = 0.0,
+    position_value_ars: float = 0.0,
+    price: float = 0.0,
+) -> int:
+    qty_int = max(0, int(qty))
+    if qty_int <= 0:
+        return 0
+
+    gain = 0.0 if gain_pct is None else float(gain_pct)
+    exposure = float(position_weight_pct)
+    value = float(position_value_ars)
+
+    # Proxy simple de liquidez por tamaño/precio de la posición.
+    liquidity_penalty = 0.0
+    if price > 0 and price < 100 and value < 30_000:
+        liquidity_penalty = 0.05
+
+    if reason == "stop-loss":
+        pct = 0.60
+        if gain <= -12:
+            pct += 0.15
+        if gain <= -20:
+            pct += 0.10
+        if exposure >= 20:
+            pct += 0.10
+        if exposure >= 35:
+            pct += 0.05
+        pct = min(1.0, pct)
+        return _round_sell_quantity(qty_int, max(0.50, pct - liquidity_penalty))
+
+    if reason == "take-profit":
+        pct = 0.20
+        if gain >= 12:
+            pct += 0.10
+        if gain >= 20:
+            pct += 0.10
+        if exposure >= 20:
+            pct += 0.10
+        if exposure >= 35:
+            pct += 0.10
+        pct = min(0.60, pct)
+        return _round_sell_quantity(qty_int, max(0.15, pct - liquidity_penalty))
+
+    if reason == "RSI+MA20":
+        pct = 0.25
+        if gain > 0:
+            pct += 0.05
+        if gain >= 10:
+            pct += 0.10
+        if exposure >= 20:
+            pct += 0.10
+        if exposure >= 35:
+            pct += 0.10
+        if gain <= -5:
+            pct -= 0.10
+        pct = max(0.15, min(0.50, pct))
+        return _round_sell_quantity(qty_int, max(0.10, pct - liquidity_penalty))
+
+    return qty_int
+
+
+def _sell_priority(reason: str | None) -> str:
+    return {
+        "stop-loss": "alta",
+        "take-profit": "media",
+        "RSI+MA20": "media",
+    }.get(reason, "baja")
+
+
+def _buy_priority(score: float) -> str:
+    if score >= 1.12:
+        return "alta"
+    if score >= 0.95:
+        return "media"
+    return "baja"
+
+
+def _candidate_buy_score(source: str, item: dict) -> float:
+    base = {
+        "position_add": 1.0,
+        "watchlist": 0.9,
+        "scanner": 0.8,
+    }.get(source, 0.5)
+    rsi = _safe_float(item.get("rsi"))
+    ma20 = _safe_float(item.get("ma20"))
+    price = _safe_float(item.get("price", item.get("unit_price")))
+    if ma20 > 0 and price > 0 and price < ma20:
+        base += min(0.25, (ma20 - price) / ma20)
+    if rsi > 0:
+        base += min(0.2, max(0.0, (40.0 - rsi) / 100.0))
+    return round(base, 4)
+
+
+def _position_weight(total_ars: float, position_value: float) -> float:
+    if total_ars <= 0:
+        return 0.0
+    return round((position_value / total_ars) * 100, 2)
+
+
+def _buy_penalty_for_concentration(symbol: str, position_value: float, total_ars: float) -> tuple[float, str | None]:
+    weight = _position_weight(total_ars, position_value)
+    if weight >= 45:
+        return 0.22, f"concentracion actual alta ({weight:.1f}% del portfolio)"
+    if weight >= 35:
+        return 0.12, f"concentracion actual elevada ({weight:.1f}% del portfolio)"
+    if weight >= 25:
+        return 0.05, f"concentracion moderada ({weight:.1f}% del portfolio)"
+    return 0.0, None
+
+
+def _allocation_weights(count: int) -> list[float]:
+    if count <= 0:
+        return []
+    if count == 1:
+        return [1.0]
+    if count == 2:
+        return [0.6, 0.4]
+    return [0.5, 0.3, 0.2][:count]
+
+
+def _load_recommendation_state() -> dict:
+    if not RECOMMENDATIONS_STATE.exists():
+        return {}
+    try:
+        data = json.loads(RECOMMENDATIONS_STATE.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _save_recommendation_state(state: dict) -> None:
+    try:
+        RECOMMENDATIONS_STATE.parent.mkdir(exist_ok=True)
+        RECOMMENDATIONS_STATE.write_text(
+            json.dumps(state, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    except Exception as exc:
+        log.warning("No se pudo guardar recommendations_state.json: %s", exc)
+
+
+def _advisor_signature(payload: dict) -> str:
+    normalized = {
+        "sell_recommendations": payload.get("sell_recommendations", []),
+        "buy_recommendations": payload.get("buy_recommendations", []),
+        "summary": payload.get("summary", {}),
+    }
+    raw = json.dumps(normalized, ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def notify_advisor_plan(payload: dict) -> None:
+    if DISABLE_TELEGRAM or not TG_TOKEN or not TG_CHAT_ID:
+        return
+
+    signature = _advisor_signature(payload)
+    state = _load_recommendation_state()
+    if state.get("last_signature") == signature:
+        log.info("Advisor Telegram unchanged; skipping notification.")
+        return
+
+    sells = payload.get("sell_recommendations", [])
+    buys = payload.get("buy_recommendations", [])
+    generated_at = payload.get("generated_at", "")
+
+    lines = [
+        "🧠 *Sugerencias IOL*",
+        f"_{_escape_md(generated_at)}_",
+        f"💰 Cash: ${_escape_md(f'{payload.get('cash_available_ars', 0):,.2f}')}",
+        f"🛒 Presupuesto compra: ${_escape_md(f'{payload.get('buy_budget_ars', 0):,.2f}')}",
+    ]
+
+    if sells:
+        lines.append("")
+        lines.append("*Vender*")
+        for item in sells[:5]:
+            lines.append(
+                f"• {_escape_md(item['symbol'])}: {int(item['suggested_quantity'])} acc "
+                f"\\({_escape_md(item['priority'])}, {_escape_md(item['reason'])}, "
+                f"{_escape_md(f'{item['position_pct']:.0f}')}% pos\\)"
+            )
+
+    if buys:
+        lines.append("")
+        lines.append("*Comprar*")
+        for item in buys[:5]:
+            lines.append(
+                f"• {_escape_md(item['symbol'])}: {int(item['suggested_quantity'])} acc "
+                f"por ${_escape_md(f'{item['suggested_amount_ars']:,.0f}')} "
+                f"\\({_escape_md(item['priority'])}\\)"
+            )
+
+    if not sells and not buys:
+        lines.append("")
+        lines.append("_Sin cambios sugeridos por ahora\\._")
+
+    send_telegram("\n".join(lines))
+    _save_recommendation_state({
+        "last_signature": signature,
+        "last_sent_at": generated_at,
+    })
+    log.info("Advisor Telegram notification sent.")
+
+
+def build_advisor_plan(
+    portfolio: dict,
+    rules: dict,
+    overrides: dict,
+    cash: float,
+    buy_budget: float,
+    slip: float,
+    portfolio_syms: set[str],
+    scanner_opportunities: list[dict] | None = None,
+) -> dict:
+    generated_at = datetime.now(ART).strftime("%Y-%m-%d %H:%M:%S")
+    sales: list[dict] = []
+    buys: list[dict] = []
+    hold: list[dict] = []
+    total_ars = _safe_float(portfolio.get("total_ars"))
+    position_values = {
+        pos.get("symbol"): _safe_float(pos.get("total_value"))
+        for pos in portfolio.get("positions", [])
+        if pos.get("symbol")
+    }
+
+    for pos in portfolio.get("positions", []):
+        sym = pos.get("symbol")
+        if not sym:
+            continue
+        qty = _safe_float(pos.get("quantity"))
+        price = _safe_float(pos.get("unit_price"))
+        ppc = _safe_float(pos.get("ppc"), price)
+        gain_pct = pos.get("gain_pct")
+        position_value = position_values.get(sym, 0.0)
+        position_weight = _position_weight(total_ars, position_value)
+        rsi = pos.get("rsi")
+        ma20 = pos.get("ma20")
+        decision, signals, reason = get_position_recommendation(
+            sym, price, ppc, qty, rsi, ma20, rules, overrides
+        )
+        if decision == "VENDER":
+            sell_qty = _sell_qty_for_reason(
+                qty,
+                reason,
+                gain_pct=gain_pct,
+                position_weight_pct=position_weight,
+                position_value_ars=position_value,
+                price=price,
+            )
+            lp = _round_to_tick(price * (1 - slip), "sell") if price > 0 else 0.0
+            sales.append({
+                "symbol": sym,
+                "priority": _sell_priority(reason),
+                "reason": reason,
+                "signals": signals,
+                "quantity": sell_qty,
+                "suggested_quantity": sell_qty,
+                "position_quantity": int(qty),
+                "position_pct": round((sell_qty / qty) * 100, 2) if qty > 0 else 0.0,
+                "portfolio_weight_pct": position_weight,
+                "current_price": round(price, 4),
+                "limit_price": lp,
+                "ppc": round(ppc, 4),
+                "gain_pct": None if gain_pct is None else round(float(gain_pct), 2),
+                "estimated_value_ars": round(sell_qty * lp, 2),
+            })
+        elif decision == "COMPRAR":
+            lp = _round_to_tick(price * (1 + slip), "buy") if price > 0 else 0.0
+            raw_score = _candidate_buy_score("position_add", pos)
+            penalty, penalty_note = _buy_penalty_for_concentration(
+                sym, position_values.get(sym, 0.0), total_ars
+            )
+            final_score = round(max(0.0, raw_score - penalty), 4)
+            enriched_signals = list(signals)
+            if penalty_note:
+                enriched_signals.append(f"Penalizacion por {penalty_note}")
+            buys.append({
+                "symbol": sym,
+                "source": "position_add",
+                "reason": reason,
+                "signals": enriched_signals,
+                "current_price": round(price, 4),
+                "limit_price": lp,
+                "rsi": None if rsi is None else round(float(rsi), 2),
+                "ma20": None if ma20 is None else round(float(ma20), 2),
+                "score": final_score,
+            })
+        else:
+            hold.append({
+                "symbol": sym,
+                "action": "hold",
+                "current_price": round(price, 4),
+                "ppc": round(ppc, 4),
+            })
+
+    for item in portfolio.get("watchlist", []):
+        sym = item.get("symbol")
+        if not sym or sym in portfolio_syms:
+            continue
+        price = _safe_float(item.get("unit_price"))
+        rsi = item.get("rsi")
+        ma20 = item.get("ma20")
+        decision, signals, reason = get_watchlist_recommendation(
+            sym, price, rsi, ma20, rules, overrides
+        )
+        if decision != "COMPRAR":
+            continue
+        lp = _round_to_tick(price * (1 + slip), "buy") if price > 0 else 0.0
+        buys.append({
+            "symbol": sym,
+            "source": "watchlist",
+            "reason": reason,
+            "signals": signals,
+            "current_price": round(price, 4),
+            "limit_price": lp,
+            "rsi": None if rsi is None else round(float(rsi), 2),
+            "ma20": None if ma20 is None else round(float(ma20), 2),
+            "score": _candidate_buy_score("watchlist", item),
+        })
+
+    if scanner_opportunities:
+        for opp in scanner_opportunities[:3]:
+            sym = opp.get("symbol")
+            if not sym:
+                continue
+            lp = _round_to_tick(_safe_float(opp.get("price")) * (1 + slip), "buy")
+            buys.append({
+                "symbol": sym,
+                "source": "scanner",
+                "reason": "market_scanner",
+                "signals": [
+                    f"Score scanner {opp.get('score')}",
+                    f"RSI {opp.get('rsi')} | MA20 ${opp.get('ma20')}",
+                ],
+                "current_price": round(_safe_float(opp.get("price")), 4),
+                "limit_price": lp,
+                "rsi": opp.get("rsi"),
+                "ma20": opp.get("ma20"),
+                "score": max(_candidate_buy_score("scanner", opp), _safe_float(opp.get("score"))),
+            })
+
+    buys.sort(key=lambda item: (-_safe_float(item.get("score")), item.get("symbol", "")))
+    sales.sort(
+        key=lambda item: (
+            {"stop-loss": 0, "take-profit": 1, "RSI+MA20": 2}.get(item.get("reason"), 9),
+            item.get("symbol", ""),
+        )
+    )
+
+    available_budget = round(max(0.0, buy_budget), 2)
+    top_buys = buys[:3]
+    weights = _allocation_weights(len(top_buys))
+    allocated_buys: list[dict] = []
+    remaining_budget = available_budget
+    for idx, item in enumerate(top_buys):
+        lp = _safe_float(item.get("limit_price"))
+        if lp <= 0:
+            continue
+        target_amount = round(available_budget * weights[idx], 2)
+        if idx == len(top_buys) - 1:
+            target_amount = round(remaining_budget, 2)
+        qty = int(target_amount // lp)
+        if qty <= 0:
+            continue
+        amount = round(qty * lp, 2)
+        remaining_budget = round(max(0.0, remaining_budget - amount), 2)
+        allocated = dict(item)
+        allocated["suggested_amount_ars"] = amount
+        allocated["suggested_quantity"] = qty
+        allocated["priority"] = _buy_priority(_safe_float(allocated.get("score")))
+        allocated_buys.append(allocated)
+
+    summary_lines = []
+    if sales:
+        summary_lines.append(
+            "Vender: " + ", ".join(
+                f"{item['symbol']} ({item['quantity']} acc, {item['reason']})"
+                for item in sales[:3]
+            )
+        )
+    if allocated_buys:
+        summary_lines.append(
+            "Comprar: " + ", ".join(
+                f"{item['symbol']} (${item['suggested_amount_ars']:,.0f}, {item['suggested_quantity']} acc)"
+                for item in allocated_buys
+            )
+        )
+    if not summary_lines:
+        summary_lines.append("Sin cambios sugeridos; mantener cartera actual.")
+
+    return {
+        "generated_at": generated_at,
+        "mode": "advisor",
+        "cash_available_ars": round(cash, 2),
+        "buy_budget_ars": available_budget,
+        "remaining_buy_budget_ars": remaining_budget,
+        "sell_recommendations": sales,
+        "buy_recommendations": allocated_buys,
+        "hold_positions": hold,
+        "summary": {
+            "sell_count": len(sales),
+            "buy_count": len(allocated_buys),
+            "top_actions": summary_lines,
+        },
+    }
+
 def update_portfolio_position(portfolio: dict, symbol: str, side: str, qty: int, price: float) -> None:
     """Actualiza la posición en el portfolio (compra/venta). Crea, modifica o elimina según corresponda."""
     positions = portfolio.setdefault("positions", [])
@@ -935,6 +1561,7 @@ def sync_portfolio_from_api(portfolio: dict) -> bool:
         qty   = int(pos.get("cantidad", pos.get("quantity", 0)) or 0)
         ppc   = float(pos.get("ppc", 0) or 0)
         price = float(pos.get("ultimoPrecio", pos.get("unit_price", 0)) or 0)
+        qty, ppc, price = _normalize_api_position(symbol, qty, ppc, price)
         if qty > 0:
             api_positions[symbol] = {"quantity": qty, "ppc": ppc, "unit_price": price}
 
@@ -992,6 +1619,18 @@ def _queue_pending_order(symbol: str, side: str, qty: int, limit_price: float, t
         existing = load_pending_orders()
     except Exception:
         existing = []
+
+    if not REQUIRE_APPROVAL_CHANNEL:
+        msg = "Autonomous mode: pending approval queue disabled"
+        log.warning("Skipping queue for %s %s - %s", side, symbol, msg)
+        return False, None, msg
+
+    if REQUIRE_APPROVAL_CHANNEL:
+        channel_ok, channel_reason = _manual_review_channel_available()
+        if not channel_ok:
+            msg = f"Manual review unavailable: {channel_reason}"
+            log.warning("Skipping queue for %s %s — %s", side, symbol, msg)
+            return False, None, msg
 
     # FIX P3: Limpiar órdenes zombie (>2 días de antigüedad)
     existing = sanitize_pending_orders(existing)
@@ -1082,6 +1721,101 @@ def _place_order_gw(body: dict) -> tuple:
     return False, None, "GW: all paths failed"
 
 
+def _place_order_direct_v2(body: dict, validation_id: str | None = None) -> tuple:
+    endpoints = []
+    if validation_id:
+        endpoints.append(f"/api/v2/operaciones/{validation_id}")
+    endpoints.append("/api/v2/operaciones")
+
+    last_http_error = None
+    for endpoint in endpoints:
+        try:
+            resp = iol.post(endpoint, body)
+            oid = str(resp.get("id", resp.get("numeroOperacion", "?")))
+            log.info("Order placed OK: #%s via %s", oid, endpoint)
+            return True, oid, f"OK #{oid}"
+        except requests.exceptions.HTTPError as exc:
+            status = exc.response.status_code if exc.response is not None else 0
+            body_snippet = exc.response.text[:200] if exc.response is not None and exc.response.text else str(exc)
+            log.warning("Direct POST failed on %s: HTTP %d %s", endpoint, status, body_snippet)
+            last_http_error = exc
+            if status == 405:
+                continue
+            err_str = str(exc).lower()
+            if any(k in err_str for k in ("ddjj", "declaraci", "sworn", "jurada")):
+                msg = f"DDJJ requerida para {body.get('simbolo')} — aceptar en app IOL"
+                log.warning(msg)
+                return False, None, msg
+        except Exception as exc:
+            log.warning("Direct POST error on %s: %s", endpoint, exc)
+            return False, None, str(exc)
+
+    if last_http_error is not None:
+        return False, None, str(last_http_error)
+    return False, None, "Direct v2: no viable endpoint"
+
+
+def _place_order_web(symbol, side, qty, limit_price, term) -> tuple:
+    if not IOL_WEB_EXECUTOR_ENABLED:
+        return False, None, "WEB executor disabled"
+
+    script_path = Path(IOL_WEB_SCRIPT)
+    if not script_path.exists():
+        return False, None, f"WEB script missing: {script_path}"
+
+    payload = {
+        "symbol": symbol,
+        "side": side,
+        "qty": int(qty),
+        "limit_price": round(float(limit_price), 6),
+        "term": term,
+    }
+    try:
+        result = subprocess.run(
+            [IOL_WEB_NODE, str(script_path), json.dumps(payload, ensure_ascii=False)],
+            cwd=str(ROOT),
+            capture_output=True,
+            text=True,
+            timeout=IOL_WEB_TIMEOUT,
+            encoding="utf-8",
+        )
+    except subprocess.TimeoutExpired:
+        return False, None, f"WEB timeout after {IOL_WEB_TIMEOUT}s"
+    except Exception as exc:
+        return False, None, f"WEB launcher error: {exc}"
+
+    stdout = (result.stdout or "").strip()
+    stderr = (result.stderr or "").strip()
+    if stderr:
+        log.warning("WEB executor stderr: %s", stderr[:500])
+
+    parsed = None
+    if stdout:
+        for line in reversed(stdout.splitlines()):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                parsed = json.loads(line)
+                break
+            except json.JSONDecodeError:
+                continue
+
+    if parsed:
+        status = str(parsed.get("status", "")).strip().lower()
+        order_id = parsed.get("order_id")
+        message = str(parsed.get("message") or parsed.get("error") or stdout[:300]).strip()
+        if status in ("executed", "confirmed"):
+            return True, str(order_id or "WEB"), message
+        if status == "prepared":
+            return False, None, f"WEB prepared: {message}"
+        return False, None, f"WEB failed: {message}"
+
+    if result.returncode == 0:
+        return False, None, stdout[:300] or "WEB executor finished without structured output"
+    return False, None, stderr[:300] or stdout[:300] or f"WEB executor rc={result.returncode}"
+
+
 def place_order(symbol, side, qty, limit_price, term, *, queue_on_fail: bool = True):
     body = {
         "mercado":   "bCBA",
@@ -1107,11 +1841,20 @@ def place_order(symbol, side, qty, limit_price, term, *, queue_on_fail: bool = T
     except requests.exceptions.HTTPError as exc:
         status = exc.response.status_code if exc.response is not None else 0
         if status == 405:
-            log.info("Validate 405 — trying GW then MCP")
+            log.info("Validate 405 — trying direct POST v2 without validation")
+            ok, oid, msg = _place_order_direct_v2(body)
+            if ok:
+                return ok, oid, msg
+            log.warning("Direct POST failed (%s) — trying GW then MCP", msg)
             ok, oid, msg = _place_order_gw(body)
             if ok:
                 return ok, oid, msg
-            log.warning("GW failed (%s) — trying Claude MCP", msg)
+            log.warning("GW failed (%s) — trying WEB then Claude MCP", msg)
+            ok, oid, web_msg = _place_order_web(symbol, side, qty, limit_price, term)
+            if ok:
+                return ok, oid, web_msg
+            if web_msg and web_msg != "WEB executor disabled":
+                log.warning("WEB fallback failed (%s) — trying Claude MCP", web_msg)
             if queue_on_fail:
                 return _queue_pending_order(symbol, side, qty, limit_price, term)
             return False, None, f"Pendiente tras reintento local: {msg}"
@@ -1120,29 +1863,35 @@ def place_order(symbol, side, qty, limit_price, term, *, queue_on_fail: bool = T
         log.warning("Validate skipped (%s) — proceeding with direct POST", exc)
 
     # Step 2: place order via v2
+    ok, oid, msg = _place_order_direct_v2(body, validation_id)
+    if ok:
+        return ok, oid, msg
+    if "DDJJ requerida" in str(msg):
+        return False, None, msg
     try:
-        endpoint = f"/api/v2/operaciones/{validation_id}" if validation_id else "/api/v2/operaciones"
-        resp = iol.post(endpoint, body)
-        oid  = str(resp.get("id", resp.get("numeroOperacion", "?")))
-        log.info("Order placed OK: #%s via %s", oid, endpoint)
-        return True, oid, f"OK #{oid}"
+        raise requests.exceptions.HTTPError(msg)
     except requests.exceptions.HTTPError as exc:
         status = exc.response.status_code if exc.response is not None else 0
-        if status == 405:
+        if status == 405 or "405" in str(msg):
             log.warning("HTTP 405 on v2 POST — trying GW then MCP")
             ok, oid, msg = _place_order_gw(body)
             if ok:
                 return ok, oid, msg
-            log.warning("GW failed (%s) — trying Claude MCP", msg)
+            log.warning("GW failed (%s) — trying WEB then Claude MCP", msg)
+            ok, oid, web_msg = _place_order_web(symbol, side, qty, limit_price, term)
+            if ok:
+                return ok, oid, web_msg
+            if web_msg and web_msg != "WEB executor disabled":
+                log.warning("WEB fallback failed (%s) — trying Claude MCP", web_msg)
             if queue_on_fail:
                 return _queue_pending_order(symbol, side, qty, limit_price, term)
             return False, None, f"Pendiente tras reintento local: {msg}"
-        err_str = str(exc).lower()
+        err_str = str(msg).lower()
         if any(k in err_str for k in ("ddjj", "declaraci", "sworn", "jurada")):
             msg = f"DDJJ requerida para {symbol} — aceptar en app IOL"
             log.warning(msg)
             return False, None, msg
-        return False, None, str(exc)
+        return False, None, msg
     except Exception as exc:
         return False, None, str(exc)
 
@@ -1255,6 +2004,13 @@ def main():
 
     rules, overrides = parse_context()
     log.info("Rules: %s", rules)
+    channel_ok, channel_reason = _manual_review_channel_available()
+    log.info(
+        "Manual review channel: %s (%s) | REQUIRE_APPROVAL_CHANNEL=%s",
+        "available" if channel_ok else "unavailable",
+        channel_reason,
+        REQUIRE_APPROVAL_CHANNEL,
+    )
 
     if not PORTFOLIO.exists():
         log.error("portfolio.json missing — run fetch_portfolio.py first.")
@@ -1276,12 +2032,15 @@ def main():
     trade_log_initial = load_log()
     today_str = now.strftime("%Y-%m-%d")
     for t in trade_log_initial:
-        if t.get("date", "").startswith(today_str) and t.get("status") in ("executed", "queued"):
-            side = t.get("side")
-            sym  = t.get("symbol")
-            reason = t.get("reason", "")
-            if side in ("buy", "sell") and sym:
-                signals_done.add((side, sym, reason))
+        if not t.get("date", "").startswith(today_str):
+            continue
+        side = t.get("side")
+        sym  = t.get("symbol")
+        reason = t.get("reason", "")
+        if side not in ("buy", "sell") or not sym:
+            continue
+        if t.get("status") in ("executed", "queued") or _is_terminal_infra_failure(t.get("message")):
+            signals_done.add((side, sym, reason))
 
     cash_init = get_cash(term)
     if cash_init is None:
@@ -1325,6 +2084,7 @@ def main():
 
         log.info("── Iteración %s ──", now.strftime("%H:%M"))
         apply_mobile_decisions()
+        retry_approved_pending_orders()
 
         cash = get_cash(term)
         if cash is None:
@@ -1337,6 +2097,7 @@ def main():
 
         trade_log = load_log()
         ops_today = today_op_count(trade_log)
+        advisor_scanner_opportunities: list[dict] = []
 
         if ops_today >= max_ops and not DRY_RUN:
             log.info("Límite diario alcanzado (%d/%d). Esperando...", ops_today, max_ops)
@@ -1470,8 +2231,8 @@ def main():
         # ── 4) Market scanner ──────────────────────────────────────────────
         scan_budget = buy_budget * (SCAN_BUDGET_PCT / 100)
         if scan_budget > 0 and not DRY_RUN:
-            opportunities = scan_market(rules, overrides, portfolio_syms, scan_budget, signals_done)
-            for opp in opportunities:
+            advisor_scanner_opportunities = scan_market(rules, overrides, portfolio_syms, scan_budget, signals_done)
+            for opp in advisor_scanner_opportunities:
                 if ops_today >= max_ops or buy_budget <= 0:
                     break
                 sym     = opp["symbol"]
@@ -1495,6 +2256,31 @@ def main():
                         update_portfolio_position(portfolio, sym, "buy", bought_qty, lp)
                         ops_today += 1
 
+        if scan_budget > 0 and not advisor_scanner_opportunities:
+            advisor_scanner_opportunities = scan_market(
+                rules, overrides, portfolio_syms, scan_budget, set()
+            )
+
+        advisor_plan = build_advisor_plan(
+            portfolio,
+            rules,
+            overrides,
+            cash,
+            buy_budget,
+            slip,
+            portfolio_syms,
+            advisor_scanner_opportunities,
+        )
+        portfolio["advisor_recommendations"] = {
+            "generated_at": advisor_plan["generated_at"],
+            "sell_count": advisor_plan["summary"]["sell_count"],
+            "buy_count": advisor_plan["summary"]["buy_count"],
+            "top_actions": advisor_plan["summary"]["top_actions"],
+        }
+        save_recommendations(advisor_plan)
+        save_recommendations_markdown(advisor_plan)
+        notify_advisor_plan(advisor_plan)
+
         # Diagnostic state log
         for pos in portfolio.get("positions", []):
             sym  = pos["symbol"]
@@ -1512,6 +2298,7 @@ def main():
                 ov.get("no_sell", False), ov.get("no_buy", False),
                 cash, buy_budget,
             )
+        log.info("ADVISOR %s", " | ".join(advisor_plan["summary"]["top_actions"]))
 
         # FIX P1: Guardar portfolio actualizado (con posiciones, precios e indicadores)
         save_portfolio(portfolio)

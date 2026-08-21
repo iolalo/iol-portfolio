@@ -13,6 +13,7 @@ limit_slippage_pct: 0.5
 ## Notas por ticker
 
 - GLOB: posicion ya reconciliada en portfolio local; mantener seguimiento por stop-loss y take-profit normales
+- MIRG: no_buy=true no_sell=true. Congelada temporalmente desde 2026-08-04 por desajuste post-split entre cantidad/PPC/historico; no operar hasta normalizar serie e indicadores.
 
 ## Contexto de mercado
 - Julio 2026: posiciones ALUA/MIRG/MCD/GLOB/MORI. Cash operativo muy bajo; priorizar observacion en simulacion antes de cualquier reactivacion real.

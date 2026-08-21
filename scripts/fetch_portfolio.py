@@ -37,6 +37,21 @@ ROOT         = SCRIPT_DIR.parent
 CACHE_DIR    = ROOT / "data" / "cache"
 SIGNALS_FILE = ROOT / "data" / "last_signals.json"
 
+
+def _load_local_env() -> None:
+    env_file = ROOT / ".env"
+    if not env_file.exists():
+        return
+    for raw_line in env_file.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip())
+
+
+_load_local_env()
+
 # ── Environment validation ────────────────────────────────────────────────────
 
 def _require_env(*names):
@@ -51,6 +66,7 @@ IOL_USER   = os.environ["IOL_USERNAME"]
 IOL_PASS   = os.environ["IOL_PASSWORD"]
 TG_TOKEN   = os.environ["TELEGRAM_TOKEN"]
 TG_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
+DISABLE_TELEGRAM = os.environ.get("DISABLE_TELEGRAM", "").strip().lower() in ("1", "true", "yes", "on")
 
 
 def _env_flag(name, default=False):
@@ -336,6 +352,9 @@ def analyze_ticker(symbol, current_price, daily_pct, buy_date, today):
 # ── Telegram ──────────────────────────────────────────────────────────────────
 
 def send_telegram(text):
+    if DISABLE_TELEGRAM:
+        log.info("Telegram disabled via DISABLE_TELEGRAM=true; skipping notification.")
+        return
     MAX = 4000
     if len(text) <= MAX:
         chunks = [text]

@@ -2,14 +2,41 @@ import os
 import json
 import requests
 from datetime import datetime, timezone, timedelta
+from pathlib import Path
 
-TG_TOKEN = os.environ["TELEGRAM_TOKEN"]
-TG_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
+ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = ROOT / "data"
+PORTFOLIO = DATA_DIR / "portfolio.json"
+TRADES_LOG = DATA_DIR / "trades_log.json"
+
+
+def _load_local_env() -> None:
+    env_file = ROOT / ".env"
+    if not env_file.exists():
+        return
+    for raw_line in env_file.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip())
+
+
+_load_local_env()
+
+TG_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
+TG_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
+DISABLE_TELEGRAM = os.environ.get("DISABLE_TELEGRAM", "").strip().lower() in ("1", "true", "yes", "on")
 
 ART = timezone(timedelta(hours=-3))
 
 
 def send_telegram(text):
+    if DISABLE_TELEGRAM:
+        print("Telegram disabled via DISABLE_TELEGRAM=true. Summary not sent.")
+        return
+    if not TG_TOKEN or not TG_CHAT_ID:
+        raise RuntimeError("Missing TELEGRAM_TOKEN or TELEGRAM_CHAT_ID")
     url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
     requests.post(
         url,
@@ -19,7 +46,7 @@ def send_telegram(text):
 
 
 def main():
-    with open("data/portfolio.json", encoding="utf-8") as f:
+    with PORTFOLIO.open(encoding="utf-8") as f:
         data = json.load(f)
 
     positions = data["positions"]
@@ -54,7 +81,7 @@ def main():
         )
 
     try:
-        with open("data/trades_log.json", encoding="utf-8") as f:
+        with TRADES_LOG.open(encoding="utf-8") as f:
             raw = json.load(f)
             trades = raw if isinstance(raw, list) else raw.get("trades", [])
         today = datetime.now(ART).strftime("%Y-%m-%d")

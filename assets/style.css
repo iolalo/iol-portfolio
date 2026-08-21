@@ -124,6 +124,7 @@ h2 {
 
 /* ── Alerts ─────────────────────────────────────────────────── */
 #alerts-container { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+#focus-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
 
 .alert-card {
   background: var(--surface);
@@ -141,6 +142,37 @@ h2 {
 .alert-card .rec.VENDER  { color: var(--red); }
 .alert-card .rec.ALERTA  { color: var(--yellow); }
 .alert-card ul      { padding-left: 16px; color: var(--muted); font-size: 12px; }
+
+.focus-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.focus-card--buy { border-left: 3px solid var(--green); }
+.focus-card--sell { border-left: 3px solid var(--red); }
+.focus-card--alert { border-left: 3px solid var(--yellow); }
+.focus-card--hold { border-left: 3px solid var(--blue); }
+
+.focus-card__eyebrow {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.focus-card h3 {
+  font-size: 18px;
+  margin: 4px 0 6px;
+}
+
+.focus-card__meta {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 6px;
+}
 
 /* ── Table ──────────────────────────────────────────────────── */
 .table-wrapper { overflow-x: auto; margin-top: 14px; }
