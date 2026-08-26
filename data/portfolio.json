@@ -1,9 +1,9 @@
 {
-  "last_updated": "2026-08-26 15:17",
-  "total_ars": 323385.0,
+  "last_updated": "2026-08-26 17:16",
+  "total_ars": 322805.0,
   "invested_ars": 319874.41,
-  "total_gain": 3510.59,
-  "total_gain_pct": 1.1,
+  "total_gain": 2930.59,
+  "total_gain_pct": 0.92,
   "cash_available": 3926.83,
   "cash_liquidation": "hrs24",
   "cash_by_liquidation": {
@@ -13,7 +13,7 @@
     "hrs72": 3926.83,
     "masHrs72": 0.0
   },
-  "account_total_ars": 327311.83,
+  "account_total_ars": 326731.83,
   "total_usd": 0,
   "invested_usd": 0,
   "alert_count": 1,
@@ -656,15 +656,15 @@
       "symbol": "YPFD",
       "description": "Ypf",
       "quantity": 29.0,
-      "unit_price": 8085.0,
-      "total_value": 234465.0,
+      "unit_price": 8065.0,
+      "total_value": 233885.0,
       "currency": "peso_Argentino",
       "ppc": 7821.379,
-      "gain_pct": 3.37,
+      "gain_pct": 3.11,
       "daily_change_pct": 0.0,
       "buy_date": "2026-04-01",
-      "rsi": 55.3,
-      "ma20": 7959.12,
+      "rsi": 54.72,
+      "ma20": 7958.12,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -786,7 +786,7 @@
         },
         {
           "date": "2026-08-26",
-          "close": 8085.0
+          "close": 8065.0
         }
       ],
       "full_history": [
@@ -1204,7 +1204,7 @@
         },
         {
           "date": "2026-08-26",
-          "close": 8085.0
+          "close": 8065.0
         }
       ]
     }
@@ -1608,11 +1608,11 @@
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 3447.5,
-      "daily_change_pct": -2.68,
+      "unit_price": 3450.0,
+      "daily_change_pct": -2.61,
       "buy_date": null,
-      "rsi": 57.69,
-      "ma20": 3373.25,
+      "rsi": 57.81,
+      "ma20": 3373.38,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1734,7 +1734,7 @@
         },
         {
           "date": "2026-08-26",
-          "close": 3447.5
+          "close": 3450.0
         }
       ],
       "full_history": [
@@ -1996,7 +1996,7 @@
         },
         {
           "date": "2026-08-26",
-          "close": 3447.5
+          "close": 3450.0
         }
       ]
     },
@@ -2398,11 +2398,11 @@
     {
       "symbol": "MIRG",
       "description": "MIRG",
-      "unit_price": 1780.0,
-      "daily_change_pct": 2.89,
+      "unit_price": 1765.0,
+      "daily_change_pct": 2.02,
       "buy_date": null,
-      "rsi": 9.64,
-      "ma20": 3139.75,
+      "rsi": 9.37,
+      "ma20": 3139.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2524,7 +2524,7 @@
         },
         {
           "date": "2026-08-26",
-          "close": 1780.0
+          "close": 1765.0
         }
       ],
       "full_history": [
@@ -2786,7 +2786,7 @@
         },
         {
           "date": "2026-08-26",
-          "close": 1780.0
+          "close": 1765.0
         }
       ]
     }
