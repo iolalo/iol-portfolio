@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-08-26 13:23",
+  "last_updated": "2026-08-26 15:17",
   "total_ars": 323385.0,
   "invested_ars": 319874.41,
   "total_gain": 3510.59,
@@ -1213,11 +1213,11 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 7025.0,
-      "daily_change_pct": -0.71,
+      "unit_price": 7060.0,
+      "daily_change_pct": -0.21,
       "buy_date": null,
-      "rsi": 44.53,
-      "ma20": 7176.16,
+      "rsi": 45.34,
+      "ma20": 7177.91,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1339,7 +1339,7 @@
         },
         {
           "date": "2026-08-26",
-          "close": 7025.0
+          "close": 7060.0
         }
       ],
       "full_history": [
@@ -1385,7 +1385,7 @@
         },
         {
           "date": "2026-06-11",
-          "close": 8252.7
+          "close": 8252.69
         },
         {
           "date": "2026-06-12",
@@ -1397,7 +1397,7 @@
         },
         {
           "date": "2026-06-16",
-          "close": 8142.92
+          "close": 8142.93
         },
         {
           "date": "2026-06-17",
@@ -1601,18 +1601,18 @@
         },
         {
           "date": "2026-08-26",
-          "close": 7025.0
+          "close": 7060.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 3417.5,
-      "daily_change_pct": -3.53,
+      "unit_price": 3447.5,
+      "daily_change_pct": -2.68,
       "buy_date": null,
-      "rsi": 56.24,
-      "ma20": 3371.75,
+      "rsi": 57.69,
+      "ma20": 3373.25,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1734,7 +1734,7 @@
         },
         {
           "date": "2026-08-26",
-          "close": 3417.5
+          "close": 3447.5
         }
       ],
       "full_history": [
@@ -1996,18 +1996,18 @@
         },
         {
           "date": "2026-08-26",
-          "close": 3417.5
+          "close": 3447.5
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 26120.0,
-      "daily_change_pct": -1.51,
+      "unit_price": 26100.0,
+      "daily_change_pct": -1.58,
       "buy_date": null,
-      "rsi": 62.36,
-      "ma20": 24821.0,
+      "rsi": 62.17,
+      "ma20": 24820.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2129,7 +2129,7 @@
         },
         {
           "date": "2026-08-26",
-          "close": 26120.0
+          "close": 26100.0
         }
       ],
       "full_history": [
@@ -2391,7 +2391,7 @@
         },
         {
           "date": "2026-08-26",
-          "close": 26120.0
+          "close": 26100.0
         }
       ]
     },
