@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-09-02 17:16",
+  "last_updated": "2026-09-02 19:42",
   "total_ars": 248965.0,
   "invested_ars": 226819.99,
   "total_gain": 22145.01,
@@ -601,11 +601,11 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 7165.0,
-      "daily_change_pct": 1.49,
+      "unit_price": 7170.0,
+      "daily_change_pct": 1.56,
       "buy_date": null,
-      "rsi": 50.44,
-      "ma20": 6961.75,
+      "rsi": 50.58,
+      "ma20": 6962.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -727,7 +727,7 @@
         },
         {
           "date": "2026-09-02",
-          "close": 7165.0
+          "close": 7170.0
         }
       ],
       "full_history": [
@@ -989,18 +989,18 @@
         },
         {
           "date": "2026-09-02",
-          "close": 7165.0
+          "close": 7170.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 3430.0,
-      "daily_change_pct": -2.07,
+      "unit_price": 3440.0,
+      "daily_change_pct": -1.78,
       "buy_date": null,
-      "rsi": 53.13,
-      "ma20": 3442.0,
+      "rsi": 53.62,
+      "ma20": 3442.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1122,7 +1122,7 @@
         },
         {
           "date": "2026-09-02",
-          "close": 3430.0
+          "close": 3440.0
         }
       ],
       "full_history": [
@@ -1384,18 +1384,18 @@
         },
         {
           "date": "2026-09-02",
-          "close": 3430.0
+          "close": 3440.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 26620.0,
-      "daily_change_pct": 2.54,
+      "unit_price": 26580.0,
+      "daily_change_pct": 2.39,
       "buy_date": null,
-      "rsi": 62.97,
-      "ma20": 25133.5,
+      "rsi": 62.74,
+      "ma20": 25131.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1517,7 +1517,7 @@
         },
         {
           "date": "2026-09-02",
-          "close": 26620.0
+          "close": 26580.0
         }
       ],
       "full_history": [
@@ -1779,18 +1779,18 @@
         },
         {
           "date": "2026-09-02",
-          "close": 26620.0
+          "close": 26580.0
         }
       ]
     },
     {
       "symbol": "MIRG",
       "description": "MIRG",
-      "unit_price": 1820.0,
-      "daily_change_pct": 2.82,
+      "unit_price": 1810.0,
+      "daily_change_pct": 2.26,
       "buy_date": null,
-      "rsi": 11.24,
-      "ma20": 1691.5,
+      "rsi": 11.0,
+      "ma20": 1691.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1912,7 +1912,7 @@
         },
         {
           "date": "2026-09-02",
-          "close": 1820.0
+          "close": 1810.0
         }
       ],
       "full_history": [
@@ -2174,7 +2174,7 @@
         },
         {
           "date": "2026-09-02",
-          "close": 1820.0
+          "close": 1810.0
         }
       ]
     }
