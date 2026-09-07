@@ -1,19 +1,19 @@
 {
-  "last_updated": "2026-09-04 19:17",
-  "total_ars": 319280.0,
-  "invested_ars": 305715.85,
-  "total_gain": 13564.15,
+  "last_updated": "2026-09-07 15:40",
+  "total_ars": 340800.0,
+  "invested_ars": 326305.86,
+  "total_gain": 14494.14,
   "total_gain_pct": 4.44,
-  "cash_available": 41886.93,
+  "cash_available": 21159.9,
   "cash_liquidation": "hrs24",
   "cash_by_liquidation": {
-    "inmediato": 41886.93,
-    "hrs24": 41886.93,
-    "hrs48": 41886.93,
-    "hrs72": 41886.93,
+    "inmediato": 21159.9,
+    "hrs24": 21159.9,
+    "hrs48": 21159.9,
+    "hrs72": 21159.9,
     "masHrs72": 0.0
   },
-  "account_total_ars": 361166.93,
+  "account_total_ars": 361959.9,
   "total_usd": 0,
   "invested_usd": 0,
   "alert_count": 0,
@@ -21,23 +21,19 @@
     {
       "symbol": "SPY",
       "description": "Cedear Spdr S&P 500",
-      "quantity": 5.0,
-      "unit_price": 20410.0,
-      "total_value": 102050.0,
+      "quantity": 6.0,
+      "unit_price": 20530.0,
+      "total_value": 123180.0,
       "currency": "peso_Argentino",
-      "ppc": 20472.0,
-      "gain_pct": -0.3,
+      "ppc": 20491.667,
+      "gain_pct": 0.18,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 55.65,
-      "ma20": 20406.0,
+      "rsi": 58.94,
+      "ma20": 20411.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-07-24",
-          "close": 19690.0
-        },
         {
           "date": "2026-07-27",
           "close": 19720.0
@@ -152,14 +148,14 @@
         },
         {
           "date": "2026-09-04",
-          "close": 20410.0
+          "close": 20390.0
+        },
+        {
+          "date": "2026-09-07",
+          "close": 20530.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-06-08",
-          "close": 18737.8
-        },
         {
           "date": "2026-06-09",
           "close": 18528.16
@@ -402,7 +398,11 @@
         },
         {
           "date": "2026-09-04",
-          "close": 20410.0
+          "close": 20390.0
+        },
+        {
+          "date": "2026-09-07",
+          "close": 20530.0
         }
       ]
     },
@@ -410,22 +410,18 @@
       "symbol": "YPFD",
       "description": "Ypf",
       "quantity": 26.0,
-      "unit_price": 8355.0,
-      "total_value": 217230.0,
+      "unit_price": 8370.0,
+      "total_value": 217620.0,
       "currency": "peso_Argentino",
       "ppc": 7821.379,
-      "gain_pct": 6.82,
+      "gain_pct": 7.01,
       "daily_change_pct": 0.0,
       "buy_date": "2026-04-01",
-      "rsi": 58.64,
-      "ma20": 8078.5,
+      "rsi": 59.03,
+      "ma20": 8093.75,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-07-27",
-          "close": 8122.5
-        },
         {
           "date": "2026-07-28",
           "close": 7952.5
@@ -541,6 +537,10 @@
         {
           "date": "2026-09-04",
           "close": 8355.0
+        },
+        {
+          "date": "2026-09-07",
+          "close": 8370.0
         }
       ],
       "full_history": [
@@ -987,6 +987,10 @@
         {
           "date": "2026-09-04",
           "close": 8355.0
+        },
+        {
+          "date": "2026-09-07",
+          "close": 8370.0
         }
       ]
     }
@@ -995,413 +999,409 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 7005.0,
-      "daily_change_pct": -0.99,
+      "unit_price": 6960.0,
+      "daily_change_pct": -0.52,
       "buy_date": null,
-      "rsi": 46.03,
-      "ma20": 6931.5,
+      "rsi": 44.88,
+      "ma20": 6903.72,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
         {
-          "date": "2026-07-27",
-          "close": 7951.63
-        },
-        {
           "date": "2026-07-28",
-          "close": 7846.74
+          "close": 7837.44
         },
         {
           "date": "2026-07-29",
-          "close": 7786.8
+          "close": 7777.57
         },
         {
           "date": "2026-07-30",
-          "close": 8006.57
+          "close": 7997.08
         },
         {
           "date": "2026-07-31",
-          "close": 7881.7
+          "close": 7872.36
         },
         {
           "date": "2026-08-03",
-          "close": 7970.0
+          "close": 7960.56
         },
         {
           "date": "2026-08-04",
-          "close": 7740.0
+          "close": 7730.83
         },
         {
           "date": "2026-08-05",
-          "close": 7640.0
+          "close": 7630.95
         },
         {
           "date": "2026-08-06",
-          "close": 7375.0
+          "close": 7366.26
         },
         {
           "date": "2026-08-07",
-          "close": 7315.0
+          "close": 7306.33
         },
         {
           "date": "2026-08-10",
-          "close": 7360.0
+          "close": 7351.28
         },
         {
           "date": "2026-08-11",
-          "close": 7035.0
+          "close": 7026.66
         },
         {
           "date": "2026-08-12",
-          "close": 7020.0
+          "close": 7011.68
         },
         {
           "date": "2026-08-13",
-          "close": 7095.0
+          "close": 7086.59
         },
         {
           "date": "2026-08-14",
-          "close": 6850.0
+          "close": 6841.88
         },
         {
           "date": "2026-08-17",
-          "close": 6850.0
+          "close": 6841.88
         },
         {
           "date": "2026-08-18",
-          "close": 6650.0
+          "close": 6642.12
         },
         {
           "date": "2026-08-19",
-          "close": 6550.0
+          "close": 6542.24
         },
         {
           "date": "2026-08-20",
-          "close": 6515.0
+          "close": 6507.28
         },
         {
           "date": "2026-08-21",
-          "close": 6620.0
+          "close": 6612.16
         },
         {
           "date": "2026-08-24",
-          "close": 6950.0
+          "close": 6941.76
         },
         {
           "date": "2026-08-25",
-          "close": 7075.0
+          "close": 7066.62
         },
         {
           "date": "2026-08-26",
-          "close": 7045.0
+          "close": 7036.65
         },
         {
           "date": "2026-08-27",
-          "close": 6880.0
+          "close": 6871.85
         },
         {
           "date": "2026-08-28",
-          "close": 6810.0
+          "close": 6801.93
         },
         {
           "date": "2026-08-31",
-          "close": 7015.0
+          "close": 7006.69
         },
         {
           "date": "2026-09-01",
-          "close": 7060.0
+          "close": 7051.63
         },
         {
           "date": "2026-09-02",
-          "close": 7170.0
+          "close": 7161.5
         },
         {
           "date": "2026-09-03",
-          "close": 7075.0
+          "close": 7066.62
         },
         {
           "date": "2026-09-04",
-          "close": 7005.0
+          "close": 6996.7
+        },
+        {
+          "date": "2026-09-07",
+          "close": 6960.0
         }
       ],
       "full_history": [
         {
-          "date": "2026-06-08",
-          "close": 7324.64
-        },
-        {
           "date": "2026-06-09",
-          "close": 7529.21
+          "close": 7520.29
         },
         {
           "date": "2026-06-10",
-          "close": 7469.34
+          "close": 7460.49
         },
         {
           "date": "2026-06-11",
-          "close": 8252.69
+          "close": 8242.92
         },
         {
           "date": "2026-06-12",
-          "close": 8192.82
+          "close": 8183.11
         },
         {
           "date": "2026-06-15",
-          "close": 8192.82
+          "close": 8183.11
         },
         {
           "date": "2026-06-16",
-          "close": 8142.93
+          "close": 8133.28
         },
         {
           "date": "2026-06-17",
-          "close": 8347.5
+          "close": 8337.6
         },
         {
           "date": "2026-06-18",
-          "close": 8482.21
+          "close": 8472.16
         },
         {
           "date": "2026-06-19",
-          "close": 8242.72
+          "close": 8232.95
         },
         {
           "date": "2026-06-22",
-          "close": 8147.91
+          "close": 8138.26
         },
         {
           "date": "2026-06-23",
-          "close": 7943.34
+          "close": 7933.93
         },
         {
           "date": "2026-06-24",
-          "close": 7609.04
+          "close": 7600.03
         },
         {
           "date": "2026-06-25",
-          "close": 7589.09
+          "close": 7580.09
         },
         {
           "date": "2026-06-26",
-          "close": 7698.86
+          "close": 7689.73
         },
         {
           "date": "2026-06-29",
-          "close": 7868.5
+          "close": 7859.18
         },
         {
           "date": "2026-06-30",
-          "close": 7773.7
+          "close": 7764.49
         },
         {
           "date": "2026-07-01",
-          "close": 7668.92
+          "close": 7659.83
         },
         {
           "date": "2026-07-02",
-          "close": 7893.45
+          "close": 7884.09
         },
         {
           "date": "2026-07-03",
-          "close": 7953.32
+          "close": 7943.9
         },
         {
           "date": "2026-07-06",
-          "close": 8311.25
+          "close": 8301.4
         },
         {
           "date": "2026-07-07",
-          "close": 8036.54
+          "close": 8027.01
         },
         {
           "date": "2026-07-08",
-          "close": 7871.71
+          "close": 7862.38
         },
         {
           "date": "2026-07-09",
-          "close": 7871.71
+          "close": 7862.38
         },
         {
           "date": "2026-07-10",
-          "close": 8326.23
+          "close": 8316.36
         },
         {
           "date": "2026-07-13",
-          "close": 8071.5
+          "close": 8061.93
         },
         {
           "date": "2026-07-14",
-          "close": 7901.68
+          "close": 7892.31
         },
         {
           "date": "2026-07-15",
-          "close": 8196.37
+          "close": 8186.65
         },
         {
           "date": "2026-07-16",
-          "close": 7856.73
+          "close": 7847.42
         },
         {
           "date": "2026-07-17",
-          "close": 7851.73
+          "close": 7842.43
         },
         {
           "date": "2026-07-20",
-          "close": 7836.75
+          "close": 7827.46
         },
         {
           "date": "2026-07-21",
-          "close": 7956.62
+          "close": 7947.19
         },
         {
           "date": "2026-07-22",
-          "close": 8266.29
+          "close": 8256.5
         },
         {
           "date": "2026-07-23",
-          "close": 7936.64
+          "close": 7927.24
         },
         {
           "date": "2026-07-24",
-          "close": 7881.7
+          "close": 7872.36
         },
         {
           "date": "2026-07-27",
-          "close": 7951.63
+          "close": 7942.2
         },
         {
           "date": "2026-07-28",
-          "close": 7846.74
+          "close": 7837.44
         },
         {
           "date": "2026-07-29",
-          "close": 7786.8
+          "close": 7777.57
         },
         {
           "date": "2026-07-30",
-          "close": 8006.57
+          "close": 7997.08
         },
         {
           "date": "2026-07-31",
-          "close": 7881.7
+          "close": 7872.36
         },
         {
           "date": "2026-08-03",
-          "close": 7970.0
+          "close": 7960.56
         },
         {
           "date": "2026-08-04",
-          "close": 7740.0
+          "close": 7730.83
         },
         {
           "date": "2026-08-05",
-          "close": 7640.0
+          "close": 7630.95
         },
         {
           "date": "2026-08-06",
-          "close": 7375.0
+          "close": 7366.26
         },
         {
           "date": "2026-08-07",
-          "close": 7315.0
+          "close": 7306.33
         },
         {
           "date": "2026-08-10",
-          "close": 7360.0
+          "close": 7351.28
         },
         {
           "date": "2026-08-11",
-          "close": 7035.0
+          "close": 7026.66
         },
         {
           "date": "2026-08-12",
-          "close": 7020.0
+          "close": 7011.68
         },
         {
           "date": "2026-08-13",
-          "close": 7095.0
+          "close": 7086.59
         },
         {
           "date": "2026-08-14",
-          "close": 6850.0
+          "close": 6841.88
         },
         {
           "date": "2026-08-17",
-          "close": 6850.0
+          "close": 6841.88
         },
         {
           "date": "2026-08-18",
-          "close": 6650.0
+          "close": 6642.12
         },
         {
           "date": "2026-08-19",
-          "close": 6550.0
+          "close": 6542.24
         },
         {
           "date": "2026-08-20",
-          "close": 6515.0
+          "close": 6507.28
         },
         {
           "date": "2026-08-21",
-          "close": 6620.0
+          "close": 6612.16
         },
         {
           "date": "2026-08-24",
-          "close": 6950.0
+          "close": 6941.76
         },
         {
           "date": "2026-08-25",
-          "close": 7075.0
+          "close": 7066.62
         },
         {
           "date": "2026-08-26",
-          "close": 7045.0
+          "close": 7036.65
         },
         {
           "date": "2026-08-27",
-          "close": 6880.0
+          "close": 6871.85
         },
         {
           "date": "2026-08-28",
-          "close": 6810.0
+          "close": 6801.93
         },
         {
           "date": "2026-08-31",
-          "close": 7015.0
+          "close": 7006.69
         },
         {
           "date": "2026-09-01",
-          "close": 7060.0
+          "close": 7051.63
         },
         {
           "date": "2026-09-02",
-          "close": 7170.0
+          "close": 7161.5
         },
         {
           "date": "2026-09-03",
-          "close": 7075.0
+          "close": 7066.62
         },
         {
           "date": "2026-09-04",
-          "close": 7005.0
+          "close": 6996.7
+        },
+        {
+          "date": "2026-09-07",
+          "close": 6960.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 3447.5,
-      "daily_change_pct": -3.02,
+      "unit_price": 3415.0,
+      "daily_change_pct": -0.94,
       "buy_date": null,
-      "rsi": 53.08,
-      "ma20": 3459.12,
+      "rsi": 51.61,
+      "ma20": 3465.38,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-07-24",
-          "close": 2790.0
-        },
         {
           "date": "2026-07-27",
           "close": 2900.0
@@ -1517,13 +1517,13 @@
         {
           "date": "2026-09-04",
           "close": 3447.5
+        },
+        {
+          "date": "2026-09-07",
+          "close": 3415.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-06-08",
-          "close": 3217.5
-        },
         {
           "date": "2026-06-09",
           "close": 3120.0
@@ -1775,24 +1775,24 @@
         {
           "date": "2026-09-04",
           "close": 3447.5
+        },
+        {
+          "date": "2026-09-07",
+          "close": 3415.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 26100.0,
-      "daily_change_pct": -0.76,
+      "unit_price": 26040.0,
+      "daily_change_pct": -0.23,
       "buy_date": null,
-      "rsi": 57.77,
-      "ma20": 25353.5,
+      "rsi": 57.12,
+      "ma20": 25454.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-07-24",
-          "close": 23990.0
-        },
         {
           "date": "2026-07-27",
           "close": 24300.0
@@ -1908,13 +1908,13 @@
         {
           "date": "2026-09-04",
           "close": 26100.0
+        },
+        {
+          "date": "2026-09-07",
+          "close": 26040.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-06-08",
-          "close": 20500.0
-        },
         {
           "date": "2026-06-09",
           "close": 20690.0
@@ -2166,28 +2166,24 @@
         {
           "date": "2026-09-04",
           "close": 26100.0
+        },
+        {
+          "date": "2026-09-07",
+          "close": 26040.0
         }
       ]
     },
     {
       "symbol": "MIRG",
       "description": "MIRG",
-      "unit_price": 1920.0,
-      "daily_change_pct": 4.07,
+      "unit_price": 1900.0,
+      "daily_change_pct": -1.04,
       "buy_date": null,
-      "rsi": 13.2,
-      "ma20": 1713.5,
+      "rsi": 13.72,
+      "ma20": 1727.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-07-24",
-          "close": 16525.0
-        },
-        {
-          "date": "2026-07-27",
-          "close": 16825.0
-        },
         {
           "date": "2026-07-28",
           "close": 16525.0
@@ -2223,6 +2219,10 @@
         {
           "date": "2026-08-07",
           "close": 1630.0
+        },
+        {
+          "date": "2026-08-10",
+          "close": 1690.0
         },
         {
           "date": "2026-08-11",
@@ -2299,13 +2299,13 @@
         {
           "date": "2026-09-04",
           "close": 1920.0
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1900.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-06-08",
-          "close": 16875.0
-        },
         {
           "date": "2026-06-09",
           "close": 16725.0
@@ -2483,6 +2483,10 @@
           "close": 1630.0
         },
         {
+          "date": "2026-08-10",
+          "close": 1690.0
+        },
+        {
           "date": "2026-08-11",
           "close": 1670.0
         },
@@ -2557,6 +2561,10 @@
         {
           "date": "2026-09-04",
           "close": 1920.0
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1900.0
         }
       ]
     }
