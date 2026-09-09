@@ -1,9 +1,9 @@
 {
-  "last_updated": "2026-09-09 17:03",
-  "total_ars": 369814.0,
+  "last_updated": "2026-09-09 19:32",
+  "total_ars": 369694.0,
   "invested_ars": 347149.86,
-  "total_gain": 22664.14,
-  "total_gain_pct": 6.53,
+  "total_gain": 22544.14,
+  "total_gain_pct": 6.49,
   "cash_available": 177.18,
   "cash_liquidation": "hrs24",
   "cash_by_liquidation": {
@@ -13,7 +13,7 @@
     "hrs72": 177.18,
     "masHrs72": 0.0
   },
-  "account_total_ars": 369991.18,
+  "account_total_ars": 369871.18,
   "total_usd": 0,
   "invested_usd": 0,
   "alert_count": 1,
@@ -422,15 +422,15 @@
       "symbol": "SPY",
       "description": "Cedear Spdr S&P 500",
       "quantity": 6.0,
-      "unit_price": 20310.0,
-      "total_value": 121860.0,
+      "unit_price": 20290.0,
+      "total_value": 121740.0,
       "currency": "peso_Argentino",
       "ppc": 20491.667,
-      "gain_pct": -0.88,
+      "gain_pct": -0.98,
       "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 52.09,
-      "ma20": 20404.0,
+      "rsi": 51.44,
+      "ma20": 20403.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -552,7 +552,7 @@
         },
         {
           "date": "2026-09-09",
-          "close": 20310.0
+          "close": 20290.0
         }
       ],
       "full_history": [
@@ -802,7 +802,7 @@
         },
         {
           "date": "2026-09-09",
-          "close": 20310.0
+          "close": 20290.0
         }
       ]
     },
@@ -1405,11 +1405,11 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 7090.0,
-      "daily_change_pct": 1.07,
+      "unit_price": 7085.0,
+      "daily_change_pct": 1.0,
       "buy_date": null,
-      "rsi": 48.88,
-      "ma20": 6905.8,
+      "rsi": 48.72,
+      "ma20": 6905.55,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1531,7 +1531,7 @@
         },
         {
           "date": "2026-09-09",
-          "close": 7090.0
+          "close": 7085.0
         }
       ],
       "full_history": [
@@ -1793,25 +1793,21 @@
         },
         {
           "date": "2026-09-09",
-          "close": 7090.0
+          "close": 7085.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 3227.5,
-      "daily_change_pct": -1.68,
+      "unit_price": 3207.5,
+      "daily_change_pct": -2.28,
       "buy_date": null,
-      "rsi": 43.74,
-      "ma20": 3447.38,
+      "rsi": 42.65,
+      "ma20": 3446.38,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
-        {
-          "date": "2026-07-29",
-          "close": 3365.0
-        },
         {
           "date": "2026-07-30",
           "close": 3167.5
@@ -1839,6 +1835,10 @@
         {
           "date": "2026-08-07",
           "close": 3290.0
+        },
+        {
+          "date": "2026-08-10",
+          "close": 3397.5
         },
         {
           "date": "2026-08-11",
@@ -1926,7 +1926,7 @@
         },
         {
           "date": "2026-09-09",
-          "close": 3227.5
+          "close": 3207.5
         }
       ],
       "full_history": [
@@ -2099,6 +2099,10 @@
           "close": 3290.0
         },
         {
+          "date": "2026-08-10",
+          "close": 3397.5
+        },
+        {
           "date": "2026-08-11",
           "close": 3437.5
         },
@@ -2184,18 +2188,18 @@
         },
         {
           "date": "2026-09-09",
-          "close": 3227.5
+          "close": 3207.5
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 25020.0,
-      "daily_change_pct": -2.04,
+      "unit_price": 25000.0,
+      "daily_change_pct": -2.11,
       "buy_date": null,
-      "rsi": 47.6,
-      "ma20": 25490.5,
+      "rsi": 47.43,
+      "ma20": 25489.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2317,7 +2321,7 @@
         },
         {
           "date": "2026-09-09",
-          "close": 25020.0
+          "close": 25000.0
         }
       ],
       "full_history": [
@@ -2579,7 +2583,7 @@
         },
         {
           "date": "2026-09-09",
-          "close": 25020.0
+          "close": 25000.0
         }
       ]
     },
