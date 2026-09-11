@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-09-11 17:04",
+  "last_updated": "2026-09-11 19:34",
   "total_ars": 373908.0,
   "invested_ars": 347149.86,
   "total_gain": 26758.14,
@@ -1413,11 +1413,11 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 6975.0,
-      "daily_change_pct": -2.38,
+      "unit_price": 7000.0,
+      "daily_change_pct": -2.03,
       "buy_date": null,
-      "rsi": 45.32,
-      "ma20": 6915.13,
+      "rsi": 46.04,
+      "ma20": 6916.38,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1539,7 +1539,7 @@
         },
         {
           "date": "2026-09-11",
-          "close": 6975.0
+          "close": 7000.0
         }
       ],
       "full_history": [
@@ -1801,18 +1801,18 @@
         },
         {
           "date": "2026-09-11",
-          "close": 6975.0
+          "close": 7000.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 3365.0,
-      "daily_change_pct": 3.14,
+      "unit_price": 3355.0,
+      "daily_change_pct": 2.84,
       "buy_date": null,
-      "rsi": 50.19,
-      "ma20": 3434.25,
+      "rsi": 49.75,
+      "ma20": 3433.75,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1934,7 +1934,7 @@
         },
         {
           "date": "2026-09-11",
-          "close": 3365.0
+          "close": 3355.0
         }
       ],
       "full_history": [
@@ -2196,18 +2196,18 @@
         },
         {
           "date": "2026-09-11",
-          "close": 3365.0
+          "close": 3355.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 25340.0,
-      "daily_change_pct": -0.08,
+      "unit_price": 25280.0,
+      "daily_change_pct": -0.32,
       "buy_date": null,
-      "rsi": 50.69,
-      "ma20": 25612.0,
+      "rsi": 50.13,
+      "ma20": 25609.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -2329,7 +2329,7 @@
         },
         {
           "date": "2026-09-11",
-          "close": 25340.0
+          "close": 25280.0
         }
       ],
       "full_history": [
@@ -2591,7 +2591,7 @@
         },
         {
           "date": "2026-09-11",
-          "close": 25340.0
+          "close": 25280.0
         }
       ]
     },
