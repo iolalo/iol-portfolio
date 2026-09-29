@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-09-28 17:28",
+  "last_updated": "2026-09-28 21:30",
   "total_ars": 359138.0,
   "invested_ars": 347149.86,
   "total_gain": 11988.14,
@@ -1643,7 +1643,7 @@
         },
         {
           "date": "2026-07-15",
-          "close": 8186.65
+          "close": 8186.66
         },
         {
           "date": "2026-07-16",
@@ -1865,11 +1865,11 @@
       "unit_price": 3035.0,
       "daily_change_pct": -2.25,
       "buy_date": null,
-      "rsi": 38.14,
+      "rsi": 37.93,
       "ma20": 3307.25,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI 38.1 < 40 y precio bajo MA20 ($3,307)"
+        "RSI 37.9 < 40 y precio bajo MA20 ($3,307)"
       ],
       "sparkline": [
         {
@@ -2111,6 +2111,10 @@
           "close": 3290.0
         },
         {
+          "date": "2026-08-10",
+          "close": 3397.5
+        },
+        {
           "date": "2026-08-11",
           "close": 3437.5
         },
@@ -2258,11 +2262,11 @@
       "unit_price": 23100.0,
       "daily_change_pct": -2.45,
       "buy_date": null,
-      "rsi": 34.31,
+      "rsi": 34.21,
       "ma20": 24876.5,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI 34.3 < 40 y precio bajo MA20 ($24,876)"
+        "RSI 34.2 < 40 y precio bajo MA20 ($24,876)"
       ],
       "sparkline": [
         {
@@ -2502,6 +2506,10 @@
         {
           "date": "2026-08-07",
           "close": 24020.0
+        },
+        {
+          "date": "2026-08-10",
+          "close": 24060.0
         },
         {
           "date": "2026-08-11",
