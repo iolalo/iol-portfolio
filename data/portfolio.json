@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-09-29 16:15",
+  "last_updated": "2026-09-29 20:02",
   "total_ars": 0,
   "invested_ars": 0,
   "total_gain": 0,
@@ -22,14 +22,14 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 5960.0,
-      "daily_change_pct": -1.0,
+      "unit_price": 6000.0,
+      "daily_change_pct": -0.33,
       "buy_date": null,
-      "rsi": 23.04,
-      "ma20": 6731.49,
+      "rsi": 23.66,
+      "ma20": 6733.49,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI 23.0 < 40 y precio bajo MA20 ($6,731)"
+        "RSI 23.7 < 40 y precio bajo MA20 ($6,733)"
       ],
       "sparkline": [
         {
@@ -150,7 +150,7 @@
         },
         {
           "date": "2026-09-29",
-          "close": 5960.0
+          "close": 6000.0
         }
       ],
       "full_history": [
@@ -412,21 +412,21 @@
         },
         {
           "date": "2026-09-29",
-          "close": 5960.0
+          "close": 6000.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 3037.5,
-      "daily_change_pct": -0.08,
+      "unit_price": 3050.0,
+      "daily_change_pct": 0.33,
       "buy_date": null,
-      "rsi": 37.91,
-      "ma20": 3284.25,
+      "rsi": 38.65,
+      "ma20": 3284.88,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI 37.9 < 40 y precio bajo MA20 ($3,284)"
+        "RSI 38.6 < 40 y precio bajo MA20 ($3,285)"
       ],
       "sparkline": [
         {
@@ -547,7 +547,7 @@
         },
         {
           "date": "2026-09-29",
-          "close": 3037.5
+          "close": 3050.0
         }
       ],
       "full_history": [
@@ -805,21 +805,21 @@
         },
         {
           "date": "2026-09-29",
-          "close": 3037.5
+          "close": 3050.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 23320.0,
-      "daily_change_pct": 0.78,
+      "unit_price": 23250.0,
+      "daily_change_pct": 0.48,
       "buy_date": null,
-      "rsi": 36.86,
-      "ma20": 24746.5,
+      "rsi": 35.92,
+      "ma20": 24743.0,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI 36.9 < 40 y precio bajo MA20 ($24,746)"
+        "RSI 35.9 < 40 y precio bajo MA20 ($24,743)"
       ],
       "sparkline": [
         {
@@ -940,7 +940,7 @@
         },
         {
           "date": "2026-09-29",
-          "close": 23320.0
+          "close": 23250.0
         }
       ],
       "full_history": [
@@ -1198,18 +1198,18 @@
         },
         {
           "date": "2026-09-29",
-          "close": 23320.0
+          "close": 23250.0
         }
       ]
     },
     {
       "symbol": "MIRG",
       "description": "MIRG",
-      "unit_price": 1630.0,
-      "daily_change_pct": -1.81,
+      "unit_price": 1660.0,
+      "daily_change_pct": 0.0,
       "buy_date": null,
-      "rsi": 14.83,
-      "ma20": 1822.75,
+      "rsi": 15.2,
+      "ma20": 1824.25,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1331,7 +1331,7 @@
         },
         {
           "date": "2026-09-29",
-          "close": 1630.0
+          "close": 1660.0
         }
       ],
       "full_history": [
@@ -1593,7 +1593,7 @@
         },
         {
           "date": "2026-09-29",
-          "close": 1630.0
+          "close": 1660.0
         }
       ]
     }
