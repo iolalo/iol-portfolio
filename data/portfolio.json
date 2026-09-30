@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-09-30 16:03",
+  "last_updated": "2026-09-30 19:59",
   "total_ars": 0,
   "invested_ars": 0,
   "total_gain": 0,
@@ -22,14 +22,14 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 6140.0,
-      "daily_change_pct": 2.33,
+      "unit_price": 6050.0,
+      "daily_change_pct": 0.83,
       "buy_date": null,
-      "rsi": 30.61,
-      "ma20": 6682.42,
+      "rsi": 26.18,
+      "ma20": 6677.92,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI 30.6 < 40 y precio bajo MA20 ($6,682)"
+        "RSI 26.2 < 40 y precio bajo MA20 ($6,678)"
       ],
       "sparkline": [
         {
@@ -150,7 +150,7 @@
         },
         {
           "date": "2026-09-30",
-          "close": 6140.0
+          "close": 6050.0
         }
       ],
       "full_history": [
@@ -412,18 +412,18 @@
         },
         {
           "date": "2026-09-30",
-          "close": 6140.0
+          "close": 6050.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 3110.0,
-      "daily_change_pct": 1.97,
+      "unit_price": 3095.0,
+      "daily_change_pct": 1.48,
       "buy_date": null,
-      "rsi": 42.33,
-      "ma20": 3268.38,
+      "rsi": 41.42,
+      "ma20": 3267.62,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -545,7 +545,7 @@
         },
         {
           "date": "2026-09-30",
-          "close": 3110.0
+          "close": 3095.0
         }
       ],
       "full_history": [
@@ -803,21 +803,21 @@
         },
         {
           "date": "2026-09-30",
-          "close": 3110.0
+          "close": 3095.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 23300.0,
-      "daily_change_pct": 0.22,
+      "unit_price": 23320.0,
+      "daily_change_pct": 0.3,
       "buy_date": null,
-      "rsi": 36.52,
-      "ma20": 24579.0,
+      "rsi": 36.8,
+      "ma20": 24580.0,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI 36.5 < 40 y precio bajo MA20 ($24,579)"
+        "RSI 36.8 < 40 y precio bajo MA20 ($24,580)"
       ],
       "sparkline": [
         {
@@ -938,7 +938,7 @@
         },
         {
           "date": "2026-09-30",
-          "close": 23300.0
+          "close": 23320.0
         }
       ],
       "full_history": [
@@ -1196,7 +1196,7 @@
         },
         {
           "date": "2026-09-30",
-          "close": 23300.0
+          "close": 23320.0
         }
       ]
     },
