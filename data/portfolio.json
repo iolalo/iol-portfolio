@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-12 19:02",
+  "last_updated": "2026-10-13 17:09",
   "total_ars": 0,
   "invested_ars": 0,
   "total_gain": 0,
@@ -22,14 +22,14 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 5940.0,
-      "daily_change_pct": -0.17,
+      "unit_price": 5935.0,
+      "daily_change_pct": -0.08,
       "buy_date": null,
-      "rsi": 32.75,
-      "ma20": 6263.75,
+      "rsi": 32.26,
+      "ma20": 6263.5,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI 32.8 < 40 y precio bajo MA20 ($6,264)"
+        "RSI 32.3 < 40 y precio bajo MA20 ($6,264)"
       ],
       "sparkline": [
         {
@@ -149,15 +149,11 @@
           "close": 5940.0
         },
         {
-          "date": "2026-10-12",
-          "close": 5940.0
+          "date": "2026-10-13",
+          "close": 5935.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-07-14",
-          "close": 7892.31
-        },
         {
           "date": "2026-07-15",
           "close": 8186.66
@@ -407,19 +403,19 @@
           "close": 5940.0
         },
         {
-          "date": "2026-10-12",
-          "close": 5940.0
+          "date": "2026-10-13",
+          "close": 5935.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 3245.0,
-      "daily_change_pct": -1.82,
+      "unit_price": 3305.0,
+      "daily_change_pct": 1.85,
       "buy_date": null,
-      "rsi": 50.89,
-      "ma20": 3202.0,
+      "rsi": 53.67,
+      "ma20": 3205.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -540,15 +536,11 @@
           "close": 3245.0
         },
         {
-          "date": "2026-10-12",
-          "close": 3245.0
+          "date": "2026-10-13",
+          "close": 3305.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-07-14",
-          "close": 2662.5
-        },
         {
           "date": "2026-07-15",
           "close": 2760.0
@@ -798,19 +790,19 @@
           "close": 3245.0
         },
         {
-          "date": "2026-10-12",
-          "close": 3245.0
+          "date": "2026-10-13",
+          "close": 3305.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 25360.0,
-      "daily_change_pct": 1.81,
+      "unit_price": 25240.0,
+      "daily_change_pct": -0.47,
       "buy_date": null,
-      "rsi": 58.71,
-      "ma20": 24156.0,
+      "rsi": 57.44,
+      "ma20": 24150.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -931,15 +923,11 @@
           "close": 25360.0
         },
         {
-          "date": "2026-10-12",
-          "close": 25360.0
+          "date": "2026-10-13",
+          "close": 25240.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-07-14",
-          "close": 24300.0
-        },
         {
           "date": "2026-07-15",
           "close": 23990.0
@@ -1189,19 +1177,19 @@
           "close": 25360.0
         },
         {
-          "date": "2026-10-12",
-          "close": 25360.0
+          "date": "2026-10-13",
+          "close": 25240.0
         }
       ]
     },
     {
       "symbol": "MIRG",
       "description": "MIRG",
-      "unit_price": 1770.0,
-      "daily_change_pct": -1.94,
+      "unit_price": 1740.0,
+      "daily_change_pct": -1.69,
       "buy_date": null,
-      "rsi": 26.56,
-      "ma20": 1758.75,
+      "rsi": 24.36,
+      "ma20": 1757.25,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1322,15 +1310,11 @@
           "close": 1770.0
         },
         {
-          "date": "2026-10-12",
-          "close": 1770.0
+          "date": "2026-10-13",
+          "close": 1740.0
         }
       ],
       "full_history": [
-        {
-          "date": "2026-07-14",
-          "close": 16750.0
-        },
         {
           "date": "2026-07-15",
           "close": 16975.0
@@ -1580,8 +1564,8 @@
           "close": 1770.0
         },
         {
-          "date": "2026-10-12",
-          "close": 1770.0
+          "date": "2026-10-13",
+          "close": 1740.0
         }
       ]
     }
