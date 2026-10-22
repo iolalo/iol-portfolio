@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-22 15:26",
+  "last_updated": "2026-10-22 18:52",
   "total_ars": 0,
   "invested_ars": 0,
   "total_gain": 0,
@@ -22,11 +22,11 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 5910.0,
-      "daily_change_pct": -1.75,
+      "unit_price": 5900.0,
+      "daily_change_pct": -1.91,
       "buy_date": null,
-      "rsi": 41.51,
-      "ma20": 5969.5,
+      "rsi": 41.24,
+      "ma20": 5969.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -148,7 +148,7 @@
         },
         {
           "date": "2026-10-22",
-          "close": 5910.0
+          "close": 5900.0
         }
       ],
       "full_history": [
@@ -402,18 +402,18 @@
         },
         {
           "date": "2026-10-22",
-          "close": 5910.0
+          "close": 5900.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 4055.0,
-      "daily_change_pct": 3.05,
+      "unit_price": 4140.0,
+      "daily_change_pct": 5.21,
       "buy_date": null,
-      "rsi": 76.65,
-      "ma20": 3348.0,
+      "rsi": 78.1,
+      "ma20": 3352.25,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -535,7 +535,7 @@
         },
         {
           "date": "2026-10-22",
-          "close": 4055.0
+          "close": 4140.0
         }
       ],
       "full_history": [
@@ -789,18 +789,18 @@
         },
         {
           "date": "2026-10-22",
-          "close": 4055.0
+          "close": 4140.0
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 24880.0,
-      "daily_change_pct": -1.58,
+      "unit_price": 24810.0,
+      "daily_change_pct": -1.86,
       "buy_date": null,
-      "rsi": 51.78,
-      "ma20": 24406.5,
+      "rsi": 51.06,
+      "ma20": 24403.0,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -922,7 +922,7 @@
         },
         {
           "date": "2026-10-22",
-          "close": 24880.0
+          "close": 24810.0
         }
       ],
       "full_history": [
@@ -1176,7 +1176,7 @@
         },
         {
           "date": "2026-10-22",
-          "close": 24880.0
+          "close": 24810.0
         }
       ]
     },
