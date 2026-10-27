@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-27 16:19",
+  "last_updated": "2026-10-27 20:01",
   "total_ars": 0,
   "invested_ars": 0,
   "total_gain": 0,
@@ -22,11 +22,11 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 5860.0,
-      "daily_change_pct": -1.68,
+      "unit_price": 5835.0,
+      "daily_change_pct": -2.1,
       "buy_date": null,
-      "rsi": 42.52,
-      "ma20": 5937.75,
+      "rsi": 41.99,
+      "ma20": 5936.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -148,7 +148,7 @@
         },
         {
           "date": "2026-10-27",
-          "close": 5860.0
+          "close": 5835.0
         }
       ],
       "full_history": [
@@ -402,7 +402,7 @@
         },
         {
           "date": "2026-10-27",
-          "close": 5860.0
+          "close": 5835.0
         }
       ]
     },
@@ -796,14 +796,14 @@
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 23390.0,
-      "daily_change_pct": 0.21,
+      "unit_price": 23190.0,
+      "daily_change_pct": -0.64,
       "buy_date": null,
-      "rsi": 39.01,
-      "ma20": 24466.5,
+      "rsi": 37.48,
+      "ma20": 24456.5,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI 39.0 < 40 y precio bajo MA20 ($24,466)"
+        "RSI 37.5 < 40 y precio bajo MA20 ($24,456)"
       ],
       "sparkline": [
         {
@@ -924,7 +924,7 @@
         },
         {
           "date": "2026-10-27",
-          "close": 23390.0
+          "close": 23190.0
         }
       ],
       "full_history": [
@@ -1178,18 +1178,18 @@
         },
         {
           "date": "2026-10-27",
-          "close": 23390.0
+          "close": 23190.0
         }
       ]
     },
     {
       "symbol": "MIRG",
       "description": "MIRG",
-      "unit_price": 1815.0,
-      "daily_change_pct": 1.68,
+      "unit_price": 1830.0,
+      "daily_change_pct": 2.52,
       "buy_date": null,
-      "rsi": 26.86,
-      "ma20": 1743.75,
+      "rsi": 28.22,
+      "ma20": 1744.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -1311,7 +1311,7 @@
         },
         {
           "date": "2026-10-27",
-          "close": 1815.0
+          "close": 1830.0
         }
       ],
       "full_history": [
@@ -1565,7 +1565,7 @@
         },
         {
           "date": "2026-10-27",
-          "close": 1815.0
+          "close": 1830.0
         }
       ]
     }
