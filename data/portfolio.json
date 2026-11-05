@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-11-04 17:43",
+  "last_updated": "2026-11-04 22:06",
   "total_ars": 0,
   "invested_ars": 0,
   "total_gain": 0,
@@ -22,14 +22,14 @@
     {
       "symbol": "GGAL",
       "description": "GGAL",
-      "unit_price": 5150.0,
-      "daily_change_pct": -2.0,
+      "unit_price": 5165.0,
+      "daily_change_pct": -1.71,
       "buy_date": null,
-      "rsi": 30.39,
-      "ma20": 5741.75,
+      "rsi": 30.63,
+      "ma20": 5742.5,
       "recommendation": "COMPRAR",
       "signals": [
-        "RSI 30.4 < 40 y precio bajo MA20 ($5,742)"
+        "RSI 30.6 < 40 y precio bajo MA20 ($5,742)"
       ],
       "sparkline": [
         {
@@ -150,7 +150,7 @@
         },
         {
           "date": "2026-11-04",
-          "close": 5150.0
+          "close": 5165.0
         }
       ],
       "full_history": [
@@ -404,18 +404,18 @@
         },
         {
           "date": "2026-11-04",
-          "close": 5150.0
+          "close": 5165.0
         }
       ]
     },
     {
       "symbol": "GLOB",
       "description": "GLOB",
-      "unit_price": 4492.5,
-      "daily_change_pct": 5.27,
+      "unit_price": 4477.5,
+      "daily_change_pct": 4.92,
       "buy_date": null,
-      "rsi": 73.09,
-      "ma20": 3821.0,
+      "rsi": 72.83,
+      "ma20": 3820.25,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -537,7 +537,7 @@
         },
         {
           "date": "2026-11-04",
-          "close": 4492.5
+          "close": 4477.5
         }
       ],
       "full_history": [
@@ -791,18 +791,18 @@
         },
         {
           "date": "2026-11-04",
-          "close": 4492.5
+          "close": 4477.5
         }
       ]
     },
     {
       "symbol": "MELI",
       "description": "MELI",
-      "unit_price": 24280.0,
-      "daily_change_pct": 4.7,
+      "unit_price": 24360.0,
+      "daily_change_pct": 5.05,
       "buy_date": null,
-      "rsi": 52.25,
-      "ma20": 24288.5,
+      "rsi": 52.87,
+      "ma20": 24292.5,
       "recommendation": "MANTENER",
       "signals": [],
       "sparkline": [
@@ -924,7 +924,7 @@
         },
         {
           "date": "2026-11-04",
-          "close": 24280.0
+          "close": 24360.0
         }
       ],
       "full_history": [
@@ -1178,7 +1178,7 @@
         },
         {
           "date": "2026-11-04",
-          "close": 24280.0
+          "close": 24360.0
         }
       ]
     },
